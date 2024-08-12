@@ -1,0 +1,16 @@
+
+#####################################################################################################################
+
+0. Give each shader file the prefix s_. This is not strictly required, but results in better visibility
+
+1. Shader files that belong together (.vert, .frag, ...) must have the same name with the required file extention
+
+2. Run compile_glsl.bat
+
+3. The compiled shader files will be translated into [filename].[vert/frag].[spv] and moved to build and py folders
+
+4. Shader factory classes must open their spv files using naming convention explained in point 3.
+
+5. Shader factory classes must inherit from S_ShaderFactory
+
+#####################################################################################################################
