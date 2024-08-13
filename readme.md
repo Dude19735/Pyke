@@ -191,12 +191,12 @@ This is **only necessary** to generate a **Python** export. (Source: https://pyb
    $> pip install pybind11
    ```
 
-># How to build for C++
+# How to build for C++
 * Make sure all dependencies are installed as outlined in the previous section
 * Open the project with VSCode and run CMake config
 * Check out sample_viewer.cpp for a guideline on how to use the viewer inside a program
 
-># How to build for Python
+# How to build for Python
 * Open a terminal from inside the project folder
 * Check out setup_vkviewer.py
 * The Python bindings script is a bit static, so some paths may have to be adjusted
