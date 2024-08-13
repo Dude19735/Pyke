@@ -31,11 +31,11 @@ Python bindings can be created, but the script may have to be customized. There 
 # Examples
 Check out sample_viewer.cpp for an example on how the viewer works in C++ and test_py/test_viewer.py for a sample script on how the viewer works with the Python bindings.
 
-># Installation
+# Installation
 1. Follow the instructions in *Build requirements* for your platform (Windows, Linux)
 2. Follow instructions on *How to build for C++* or *How to export for Python*
 
-># Build requirements
+# Build requirements
 VSCode is a good 'works everywhere' platform. Thus the build process is described with this platform.
 
 ---
