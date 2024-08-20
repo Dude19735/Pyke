@@ -883,7 +883,7 @@ BOOST_AUTO_TEST_CASE(Test_Graphicspipeline, *all_tests) {
 // 	int camId = 0;
 // 	{
 // 		std::unique_ptr<VK4::Vk_Device> device = std::make_unique<VK4::Vk_Device>(name);
-// 		std::unique_ptr<VK4::Vk_Viewer> viewer = std::make_unique<VK4::Vk_Viewer>(device.get(), VK4::Vk_ViewerParams(1200, 1024));
+// 		std::unique_ptr<VK4::Vk_Viewer> viewer = std::make_unique<VK4::Vk_Viewer>(device.get(), VK4::Vk_ViewerParams("name", 1200, 1024));
 
 // 		std::unique_ptr<VK4::Vk_Rasterizer_IM> rasterizer = 
 // 			std::make_unique<VK4::Vk_Rasterizer_IM>(
@@ -939,7 +939,7 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Init, *all_tests) {
 		uint32_t width = 1200;
 		uint32_t height = 1024;
 		VK4::Vk_Device device(name);
-		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams(1200, 1024));
+		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams("name", 1200, 1024));
 
 		cam.vk_addCamera(
 			std::vector<VK4::Vk_CameraInit> {
@@ -997,7 +997,7 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Run, *all_tests) {
 		uint32_t width = 1800;
 		uint32_t height = 900;
 		VK4::Vk_Device device(name);
-		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams(1200, 1024));
+		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams("name", 1200, 1024));
 
 		cam.vk_addCamera(
 			std::vector<VK4::Vk_CameraInit> {
@@ -1069,7 +1069,7 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Scale, *all_tests) {
 		uint32_t width = 1800;
 		uint32_t height = 1000;
 		VK4::Vk_Device device(name);
-		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams(1200, 1024));
+		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams("name", 1200, 1024));
 
 		cam.vk_addCamera(
 			std::vector<VK4::Vk_CameraInit> {
@@ -1704,7 +1704,7 @@ BOOST_AUTO_TEST_CASE(Test_GridLayout_Global, *all_tests) {
 		uint32_t width = 1024;
 		uint32_t height = 800;
 		VK4::Vk_Device device(name);
-		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams(1200, 1024, VK4::Vk_ViewingType::GLOBAL));
+		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams("name", 1200, 1024, VK4::Vk_ViewingType::GLOBAL));
 
 		VK4::Vk_CameraSpecs specs {
 			.type = VK4::Vk_CameraType::Rasterizer_IM,
@@ -1757,7 +1757,7 @@ BOOST_AUTO_TEST_CASE(Test_GridLayout_Local, *all_tests) {
 		uint32_t width = 1400;
 		uint32_t height = 1400;
 		VK4::Vk_Device device(name);
-		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams(1200, 1024, VK4::Vk_ViewingType::LOCAL));
+		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams("name", 1200, 1024, VK4::Vk_ViewingType::LOCAL));
 
 		VK4::Vk_CameraSpecs specs {
 			.type = VK4::Vk_CameraType::Rasterizer_IM,
@@ -1810,7 +1810,7 @@ BOOST_AUTO_TEST_CASE(Test_GridLayout_Local_Irregular, *all_tests) {
 		uint32_t width = 1024;
 		uint32_t height = 800;
 		VK4::Vk_Device device(name);
-		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams(1200, 1024, VK4::Vk_ViewingType::LOCAL));
+		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams("name", 1200, 1024, VK4::Vk_ViewingType::LOCAL));
 
 		VK4::Vk_CameraSpecs specs {
 			.type = VK4::Vk_CameraType::Rasterizer_IM,
@@ -1858,7 +1858,7 @@ BOOST_AUTO_TEST_CASE(Test_GridLayout_Local_ObjectCentric, *all_tests) {
 		uint32_t width = 1024;
 		uint32_t height = 800;
 		VK4::Vk_Device device(name);
-		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams(width, height, VK4::Vk_ViewingType::LOCAL));
+		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams("name", width, height, VK4::Vk_ViewingType::LOCAL));
 
 		VK4::Vk_CameraSpecs specs_ObjectCentric {
 			.type = VK4::Vk_CameraType::Rasterizer_IM,
@@ -2048,14 +2048,14 @@ BOOST_AUTO_TEST_CASE(Test_FunctionWrapper, *all_tests) {
 	var3.second();
 }
 
-class Viewer {
+class [[deprecated]] Viewer {
 	public:
 	Viewer() : _angle(0.0f), _size(1.0f), _step(0.1f), _on(false) {
 		std::string name = "Viewer";
 		uint32_t width = 1024;
 		uint32_t height = 800;
 		_device = std::make_unique<VK4::Vk_Device>(name);
-		_cam = std::make_unique<VK4::Vk_Viewer>(_device.get(), VK4::Vk_ViewerParams(width, height, VK4::Vk_ViewingType::LOCAL, "."));
+		_cam = std::make_unique<VK4::Vk_Viewer>(_device.get(), VK4::Vk_ViewerParams("name", width, height, VK4::Vk_ViewingType::LOCAL, "."));
 
 		VK4::Vk_CameraSpecs specs_ObjectCentric {
 			.type = VK4::Vk_CameraType::Rasterizer_IM,
@@ -2276,7 +2276,7 @@ private:
 	}
 };
 
-BOOST_AUTO_TEST_CASE(Test_RegisterFunction, *new_test) {
+BOOST_AUTO_TEST_CASE(Test_RegisterFunction, *boost::unit_test::disabled()) {
 	{
 		Viewer v;
 	}
