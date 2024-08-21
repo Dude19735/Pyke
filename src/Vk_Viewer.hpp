@@ -81,10 +81,9 @@ namespace VK4 {
 			_freshlyAttachedOrDetachedObjects(false),
 			_name(params.name)
 		{
-			if(_device->_viewer != 0) {
+			if(!_device->vk_registerViewer(reinterpret_cast<uint64_t>(this))) {
 				Vk_Logger::RuntimeError(typeid(this), "Can't use device [{0}] for multiple viewers!", _device->vk_instance()->vk_applicationName());
 			}
-			_device->_viewer = reinterpret_cast<uint64_t>(this);
 			
 			Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create Viewer"));
 
@@ -122,11 +121,11 @@ namespace VK4 {
 			_swapchain.reset();
 			_renderpass.reset();
 			_surface.reset();
-			_device->_viewer = 0;
+			_device->vk_unregisterViewer();
 		}
 
 		std::string vk_getVersion() {
-			return "4.0";
+			return "4.01";
 		}
 
 		int vk_cameraId(int x, int y){
