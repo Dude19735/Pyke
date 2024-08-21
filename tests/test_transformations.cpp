@@ -4,8 +4,8 @@
 #include <iostream>
 #include <vector>
 
-#include "test_utilities.h"
-#include "../src/Vk_Rotations.h"
+#include "test_utilities.hpp"
+#include "../src/Vk_Rotations.hpp"
 
 BOOST_AUTO_TEST_SUITE(TestTransformations)
 

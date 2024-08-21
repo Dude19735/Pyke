@@ -78,7 +78,7 @@
 #endif
 
 #include <cinttypes>
-#include "Vk_Coloring.h"
+#include "Vk_Coloring.hpp"
 
 #define PRECISION 1e-6
 #define TYPE_VULKAN 'V'
@@ -86,7 +86,7 @@
 #define TYPE_DUMMY 'D'
 
 #include "./lwws_win/lwws_win.hpp"
-#include "Vk_Logger.h"
+#include "Vk_Logger.hpp"
 
 // #define THREAD_DEBUGGING_GLOBAL
 

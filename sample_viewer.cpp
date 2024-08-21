@@ -1,8 +1,8 @@
 #include <math.h>
-#include "./src/Vk_SampleObjects.h"
-#include "./src/Vk_ColorOp.h"
-#include "./src/camera/Vk_GridLayout.h"
-#include "./src/Vk_Viewer.h"
+#include "./src/Vk_SampleObjects.hpp"
+#include "./src/Vk_ColorOp.hpp"
+#include "./src/camera/Vk_GridLayout.hpp"
+#include "./src/Vk_Viewer.hpp"
 
 /**
  * Check out test_py/test_vkviewer.py to get a commented example. The functionalities depicted in the two examples is identical

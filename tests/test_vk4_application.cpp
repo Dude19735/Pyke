@@ -11,35 +11,35 @@
 
 #include "../src/Defines.h"
 
-// #include "../src/vk_renderer4/renderer/rasterizer/immediate_mode/Vk_Graphicspipeline_IM.h"
-// #include "../src/vk_renderer4/renderer/rasterizer/immediate_mode/Vk_Rasterizer_IM.h"
+// #include "../src/vk_renderer4/renderer/rasterizer/immediate_mode/Vk_Graphicspipeline_IM.hpp"
+// #include "../src/vk_renderer4/renderer/rasterizer/immediate_mode/Vk_Rasterizer_IM.hpp"
 
-#include "../src/Vk_ColorOp.h"
-#include "../src/application/Vk_Instance.h"
-#include "../src/application/Vk_Surface.h"
-#include "../src/application/Vk_Device.h"
-#include "../src/buffers/Vk_DataBuffer.h"
-#include "../src/buffers/Vk_UniformBuffer.h"
-#include "../src/objects/Vk_Shader.h"
-#include "../src/objects/dot/S_Dot_P_C.h"
-#include "../src/objects/line/S_Line_P_C.h"
-#include "../src/objects/mesh/S_Mesh_P_C.h"
-#include "../src/renderer/rasterizer/immediate_mode/Vk_Swapchain_IM.h"
-#include "../src/renderer/rasterizer/immediate_mode/Vk_RenderPass_IM.h"
-#include "../src/renderer/rasterizer/immediate_mode/Vk_Framebuffer_IM.h"
-#include "../src/renderer/rasterizer/immediate_mode/Vk_Rasterizer_IM.h"
-#include "../src/camera/Vk_GridLayout.h"
-#include "../src/camera/Vk_ViewerSteering_ObjectCentric.h"
-#include "../src/Vk_Function.h"
+#include "../src/Vk_ColorOp.hpp"
+#include "../src/application/Vk_Instance.hpp"
+#include "../src/application/Vk_Surface.hpp"
+#include "../src/application/Vk_Device.hpp"
+#include "../src/buffers/Vk_DataBuffer.hpp"
+#include "../src/buffers/Vk_UniformBuffer.hpp"
+#include "../src/objects/Vk_Shader.hpp"
+#include "../src/objects/dot/S_Dot_P_C.hpp"
+#include "../src/objects/line/S_Line_P_C.hpp"
+#include "../src/objects/mesh/S_Mesh_P_C.hpp"
+#include "../src/renderer/rasterizer/immediate_mode/Vk_Swapchain_IM.hpp"
+#include "../src/renderer/rasterizer/immediate_mode/Vk_RenderPass_IM.hpp"
+#include "../src/renderer/rasterizer/immediate_mode/Vk_Framebuffer_IM.hpp"
+#include "../src/renderer/rasterizer/immediate_mode/Vk_Rasterizer_IM.hpp"
+#include "../src/camera/Vk_GridLayout.hpp"
+#include "../src/camera/Vk_ViewerSteering_ObjectCentric.hpp"
+#include "../src/Vk_Function.hpp"
 
-// #include "../src/vk_renderer4/renderer/rasterizer/immediate_mode/Vk_Graphicspipeline_IM.h"
+// #include "../src/vk_renderer4/renderer/rasterizer/immediate_mode/Vk_Graphicspipeline_IM.hpp"
 
-#include "../src/Vk_Viewer.h"
+#include "../src/Vk_Viewer.hpp"
 
 #define TEST_SCENARIO_1
-#include "test_data.h"
+#include "test_data.hpp"
 #undef TEST_SCENARIO_1
-#include "test_utilities.h"
+#include "test_utilities.hpp"
 
 BOOST_AUTO_TEST_SUITE(RunTestVk4Application)
 
