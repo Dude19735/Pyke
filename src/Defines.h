@@ -355,8 +355,21 @@ namespace VK4 {
 	};
 
 	enum class Vk_BufferUpdateBehaviour {
-
+		GlobalLock, 		 /* one buffer but global lock at data transfer */
+		DoubleBuffering,     /* two buffers on GPU at all times */
+		LazyDoubleBuffering, /* create a new buffer on update and switch at update time */
+		Pinned				 /* use CPU accessible GPU memory for buffer */
 	};
+
+	static std::string Vk_BufferUpdateBehaviourToString(Vk_BufferUpdateBehaviour behaviour) {
+		switch (behaviour) {
+		case Vk_BufferUpdateBehaviour::GlobalLock: return "GlobalLock";
+		case Vk_BufferUpdateBehaviour::DoubleBuffering: return "DoubleBuffering";
+		case Vk_BufferUpdateBehaviour::LazyDoubleBuffering: return "LazyDoubleBuffering";
+		case Vk_BufferUpdateBehaviour::Pinned: return "Pinned";
+		default: return "Unknown";
+		}
+	}
 
 	enum class Vk_BufferSizeBehaviour {
 		Init_Empty_Grow_1_5,
@@ -366,6 +379,18 @@ namespace VK4 {
 		Init_1_0_Grow_2,
 		Init_1_5_Grow_2
 	};
+
+	static std::string Vk_BufferSizeBehaviourToString(Vk_BufferSizeBehaviour behaviour) {
+		switch (behaviour) {
+		case Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5: return "Init_1_0_Grow_1_5";
+		case Vk_BufferSizeBehaviour::Init_1_0_Grow_2: return "Init_1_0_Grow_2";
+		case Vk_BufferSizeBehaviour::Init_1_5_Grow_1_5: return "Init_1_5_Grow_1_5";
+		case Vk_BufferSizeBehaviour::Init_1_5_Grow_2: return "Init_1_5_Grow_2";
+		case Vk_BufferSizeBehaviour::Init_Empty_Grow_1_5: return "Init_Empty_Grow_1_5";
+		case Vk_BufferSizeBehaviour::Init_Empty_Grow_2: return "Init_Empty_Grow_2";
+		default: return "Unknown";
+		}
+	}
 
 	struct SwapchainSupportDetails {
 		VkSurfaceFormatKHR surfaceFormat;
