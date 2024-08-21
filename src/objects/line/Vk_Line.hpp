@@ -77,7 +77,7 @@ namespace VK4 {
 			CullMode cullMode,
 			// RenderType renderType,
 			std::unordered_map<std::string, int> bindingPoints,
-			Vk_BufferCharacteristics behaviour = Vk_BufferCharacteristics::Init_1_0_Grow_1_5
+			Vk_BufferSizeBehaviour behaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
 		)
 			:
 			I_Object<ObjectType_P_C>(device, objectName, shaderName, modelMatrix, "Vk_Line<ObjectType_P_C>", Topology::Lines, cullMode, RenderType::Wireframe),

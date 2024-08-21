@@ -354,7 +354,11 @@ namespace VK4 {
 #endif
 	};
 
-	enum class Vk_BufferCharacteristics {
+	enum class Vk_BufferUpdateBehaviour {
+
+	};
+
+	enum class Vk_BufferSizeBehaviour {
 		Init_Empty_Grow_1_5,
 		Init_Empty_Grow_2,
 		Init_1_0_Grow_1_5,
@@ -472,7 +476,7 @@ namespace VK4 {
 		if (strcmp(incomming, "pyvk._vkviewer.vk_render_type") == 0 && typeid(T) != typeid(RenderType)) return false;
 		if (strcmp(incomming, "pyvk._vkviewer.vk_topology") == 0 && typeid(T) != typeid(Topology)) return false;
 		if (strcmp(incomming, "pyvk._vkviewer.vk_cull_mode") == 0 && typeid(T) != typeid(CullMode)) return false;
-		if (strcmp(incomming, "pyvk._vkviewer.vk_buffer_characteristics") == 0 && typeid(T) != typeid(Vk_BufferCharacteristics)) return false;
+		if (strcmp(incomming, "pyvk._vkviewer.vk_buffer_characteristics") == 0 && typeid(T) != typeid(Vk_BufferSizeBehaviour)) return false;
 		ret = obj.cast<T>();
 		return true;
 	}

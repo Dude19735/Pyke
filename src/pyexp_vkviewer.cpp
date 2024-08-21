@@ -90,13 +90,13 @@ PYBIND11_MODULE(_vkviewer, m) {
 		.value("back", CullMode::Back)
 		.value("front", CullMode::Front);
 
-	py::enum_<Vk_BufferCharacteristics>(m, "vk_buffer_characteristics")
-		.value("init_empty_grow_1_5", Vk_BufferCharacteristics::Init_Empty_Grow_1_5)
-		.value("init_empty_grow_2", Vk_BufferCharacteristics::Init_Empty_Grow_2)
-		.value("init_1_0_grow_1_5", Vk_BufferCharacteristics::Init_1_0_Grow_1_5)
-		.value("init_1_5_grow_1_5", Vk_BufferCharacteristics::Init_1_5_Grow_1_5)
-		.value("init_1_0_grow_2", Vk_BufferCharacteristics::Init_1_0_Grow_2)
-		.value("init_1_5_grow_2", Vk_BufferCharacteristics::Init_1_5_Grow_2);
+	py::enum_<Vk_BufferSizeBehaviour>(m, "vk_buffer_characteristics")
+		.value("init_empty_grow_1_5", Vk_BufferSizeBehaviour::Init_Empty_Grow_1_5)
+		.value("init_empty_grow_2", Vk_BufferSizeBehaviour::Init_Empty_Grow_2)
+		.value("init_1_0_grow_1_5", Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5)
+		.value("init_1_5_grow_1_5", Vk_BufferSizeBehaviour::Init_1_5_Grow_1_5)
+		.value("init_1_0_grow_2", Vk_BufferSizeBehaviour::Init_1_0_Grow_2)
+		.value("init_1_5_grow_2", Vk_BufferSizeBehaviour::Init_1_5_Grow_2);
 
 
 	py::class_<Vk_RGBColor, std::shared_ptr<Vk_RGBColor>>(m, "vk_rgb_color")
@@ -253,7 +253,7 @@ PYBIND11_MODULE(_vkviewer, m) {
 			py::arg("points"), py::arg("colors"), py::arg("indices"),
 			py::arg("point_size"), py::arg("alpha"),
 			py::arg("cull_mode")=CullMode::NoCulling,
-			py::arg("behaviour")=Vk_BufferCharacteristics::Init_1_0_Grow_1_5,
+			py::arg("behaviour")=Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
 			"Create dot object with distinct buffers for points, colors and indices", 
 			py::call_guard<py::gil_scoped_release>())
 		.def("vk_update_points", 
@@ -284,7 +284,7 @@ PYBIND11_MODULE(_vkviewer, m) {
 			py::arg("points"), py::arg("colors"), py::arg("indices"),
 			py::arg("line_width"), py::arg("alpha"),
 			py::arg("cull_mode")=CullMode::NoCulling,
-			py::arg("behaviour")=Vk_BufferCharacteristics::Init_1_0_Grow_1_5,
+			py::arg("behaviour")=Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
 			"Create line object with distinct buffers for points, colors and indices", 
 			py::call_guard<py::gil_scoped_release>())
 		.def("vk_update_points", 
@@ -317,7 +317,7 @@ PYBIND11_MODULE(_vkviewer, m) {
 			py::arg("cull_mode")=CullMode::NoCulling,
 			py::arg("render_type")=RenderType::Solid,
 			py::arg("point_size"), py::arg("line_width"), 
-			py::arg("behaviour")=Vk_BufferCharacteristics::Init_1_0_Grow_1_5,
+			py::arg("behaviour")=Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
 			"Create mesh object with distinct buffers for points, colors and indices", 
 			py::call_guard<py::gil_scoped_release>())
 		.def("vk_update_points", 

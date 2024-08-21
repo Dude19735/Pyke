@@ -10,14 +10,14 @@
 
 namespace VK4 {
 
-	static std::string Vk_BufferCharacteristicsToString(Vk_BufferCharacteristics behaviour) {
+	static std::string Vk_BufferSizeBehaviourToString(Vk_BufferSizeBehaviour behaviour) {
 		switch (behaviour) {
-		case Vk_BufferCharacteristics::Init_1_0_Grow_1_5: return "Init_1_0_Grow_1_5";
-		case Vk_BufferCharacteristics::Init_1_0_Grow_2: return "Init_1_0_Grow_2";
-		case Vk_BufferCharacteristics::Init_1_5_Grow_1_5: return "Init_1_5_Grow_1_5";
-		case Vk_BufferCharacteristics::Init_1_5_Grow_2: return "Init_1_5_Grow_2";
-		case Vk_BufferCharacteristics::Init_Empty_Grow_1_5: return "Init_Empty_Grow_1_5";
-		case Vk_BufferCharacteristics::Init_Empty_Grow_2: return "Init_Empty_Grow_2";
+		case Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5: return "Init_1_0_Grow_1_5";
+		case Vk_BufferSizeBehaviour::Init_1_0_Grow_2: return "Init_1_0_Grow_2";
+		case Vk_BufferSizeBehaviour::Init_1_5_Grow_1_5: return "Init_1_5_Grow_1_5";
+		case Vk_BufferSizeBehaviour::Init_1_5_Grow_2: return "Init_1_5_Grow_2";
+		case Vk_BufferSizeBehaviour::Init_Empty_Grow_1_5: return "Init_Empty_Grow_1_5";
+		case Vk_BufferSizeBehaviour::Init_Empty_Grow_2: return "Init_Empty_Grow_2";
 		default: return "Unknown";
 		}
 	}
@@ -58,7 +58,7 @@ namespace VK4 {
 			const std::string& associatedObject,
 			const T_StructureType* structuredData,
 			size_t count,
-			Vk_BufferCharacteristics behaviour = Vk_BufferCharacteristics::Init_1_0_Grow_1_5,
+			Vk_BufferSizeBehaviour behaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
 			std::string objName = ""
 		)
 			:
@@ -171,7 +171,7 @@ namespace VK4 {
 				+ std::string(", ")
 				+ BufferTypeToString(_type)
 				+ std::string(", ")
-				+ Vk_BufferCharacteristicsToString(_behaviour);
+				+ Vk_BufferSizeBehaviourToString(_behaviour);
 		}
 
 		/*
@@ -255,7 +255,7 @@ namespace VK4 {
 		size_t _maxCount;
 		std::string _objName;
 		std::mutex _localMutex;
-		Vk_BufferCharacteristics _behaviour;
+		Vk_BufferSizeBehaviour _behaviour;
 		BufferType _type;
 		std::string _associatedObject;
 
@@ -305,16 +305,16 @@ namespace VK4 {
 			return BufferType::Error;
 		}
 
-		size_t getInitMaxCount(size_t count, Vk_BufferCharacteristics behaviour) {
-			if ((behaviour == Vk_BufferCharacteristics::Init_Empty_Grow_1_5) || (behaviour == Vk_BufferCharacteristics::Init_Empty_Grow_2)) {
+		size_t getInitMaxCount(size_t count, Vk_BufferSizeBehaviour behaviour) {
+			if ((behaviour == Vk_BufferSizeBehaviour::Init_Empty_Grow_1_5) || (behaviour == Vk_BufferSizeBehaviour::Init_Empty_Grow_2)) {
 				return static_cast<size_t>(std::ceil(1.0 * count));
 			}
 
-			if ((behaviour == Vk_BufferCharacteristics::Init_1_0_Grow_1_5) || (behaviour == Vk_BufferCharacteristics::Init_1_0_Grow_2)) {
+			if ((behaviour == Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5) || (behaviour == Vk_BufferSizeBehaviour::Init_1_0_Grow_2)) {
 				return static_cast<size_t>(std::ceil(1.0 * count));
 			}
 
-			if ((behaviour == Vk_BufferCharacteristics::Init_1_5_Grow_1_5) || (behaviour == Vk_BufferCharacteristics::Init_1_5_Grow_2)) {
+			if ((behaviour == Vk_BufferSizeBehaviour::Init_1_5_Grow_1_5) || (behaviour == Vk_BufferSizeBehaviour::Init_1_5_Grow_2)) {
 				return static_cast<size_t>(std::ceil(1.5 * count));
 			}
 
@@ -339,17 +339,17 @@ namespace VK4 {
 
 		size_t getNextMaxCount(size_t oldMaxCount) {
 			if (
-				(_behaviour == Vk_BufferCharacteristics::Init_1_0_Grow_2) ||
-				(_behaviour == Vk_BufferCharacteristics::Init_1_5_Grow_2) ||
-				(_behaviour == Vk_BufferCharacteristics::Init_Empty_Grow_2)) 
+				(_behaviour == Vk_BufferSizeBehaviour::Init_1_0_Grow_2) ||
+				(_behaviour == Vk_BufferSizeBehaviour::Init_1_5_Grow_2) ||
+				(_behaviour == Vk_BufferSizeBehaviour::Init_Empty_Grow_2)) 
 			{
 				return static_cast<size_t>(std::ceil(oldMaxCount * 2.0));
 			}
 
 			if (
-				(_behaviour == Vk_BufferCharacteristics::Init_1_0_Grow_1_5) || 
-				(_behaviour == Vk_BufferCharacteristics::Init_1_5_Grow_1_5) ||
-				(_behaviour == Vk_BufferCharacteristics::Init_Empty_Grow_1_5)) 
+				(_behaviour == Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5) || 
+				(_behaviour == Vk_BufferSizeBehaviour::Init_1_5_Grow_1_5) ||
+				(_behaviour == Vk_BufferSizeBehaviour::Init_Empty_Grow_1_5)) 
 			{
 				return static_cast<size_t>(std::ceil(oldMaxCount * 1.5));
 			}
@@ -639,7 +639,7 @@ namespace VK4 {
 				formatWithObjName(_objName, (
 					GlobalCasters::castYellow("\n\tBuffer create: ") + std::string("Create new buffer\n")
 					+ GlobalCasters::castYellow("\tBuffer create: ") + std::string("            type: ") + BufferTypeToString(_type) + "\n"
-					+ GlobalCasters::castYellow("\tBuffer create: ") + std::string(" characteristics: ") + Vk_BufferCharacteristicsToString(_behaviour) + "\n"
+					+ GlobalCasters::castYellow("\tBuffer create: ") + std::string(" characteristics: ") + Vk_BufferSizeBehaviourToString(_behaviour) + "\n"
 					+ GlobalCasters::castYellow("\tBuffer create: ") + std::string("       max count: ") + std::to_string(_maxCount) + "\n"
 					+ GlobalCasters::castYellow("\tBuffer create: ") + std::string("  required count: ") + std::to_string(_count) + "\n"
 				))
@@ -651,7 +651,7 @@ namespace VK4 {
 				formatWithObjName(_objName, (
 					GlobalCasters::castYellow("\n\tBuffer update: ") + std::string("Update buffer\n")
 					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string("            type: ") + BufferTypeToString(_type) + "\n"
-					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string(" characteristics: ") + Vk_BufferCharacteristicsToString(_behaviour) + "\n"
+					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string(" characteristics: ") + Vk_BufferSizeBehaviourToString(_behaviour) + "\n"
 					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string("       old count: ") + std::to_string(oldDataCount) + "\n"
 					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string("       new count: ") + std::to_string(newDataCount) + "\n"
 					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string("   old max count: ") + std::to_string(oldMaxCount) + "\n"
@@ -677,7 +677,7 @@ namespace VK4 {
 				formatWithObjName(_objName, (
 					GlobalCasters::castYellow("\n\tBuffer resize: ") + std::string("Resize buffer\n")
 					+ GlobalCasters::castYellow("\tBuffer resize: ") + std::string("            type: ") + BufferTypeToString(_type) + "\n"
-					+ GlobalCasters::castYellow("\tBuffer resize: ") + std::string(" characteristics: ") + Vk_BufferCharacteristicsToString(_behaviour) + "\n"
+					+ GlobalCasters::castYellow("\tBuffer resize: ") + std::string(" characteristics: ") + Vk_BufferSizeBehaviourToString(_behaviour) + "\n"
 					+ GlobalCasters::castYellow("\tBuffer resize: ") + std::string("   old max count: ") + std::to_string(_maxCount) + "\n"
 					+ GlobalCasters::castYellow("\tBuffer resize: ") + std::string("   new max count: ") + std::to_string(newMaxCount) + "\n"
 					+ GlobalCasters::castYellow("\tBuffer resize: ") + std::string("  required count: ") + std::to_string(_count) + "\n"

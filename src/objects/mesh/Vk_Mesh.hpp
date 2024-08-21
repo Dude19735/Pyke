@@ -79,7 +79,7 @@ namespace VK4 {
 			float lineWidth,
 			float alpha,
 			std::unordered_map<std::string, int> bindingPoints,
-			Vk_BufferCharacteristics behaviour = Vk_BufferCharacteristics::Init_1_0_Grow_1_5
+			Vk_BufferSizeBehaviour behaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
 		)
 			:
 			I_Object<ObjectType_P_C>(device, objectName, shaderName, modelMatrix, "Vk_Mesh<ObjectType_P_C>", Topology::Triangles, cullMode, renderType),

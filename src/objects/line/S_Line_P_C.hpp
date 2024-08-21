@@ -66,7 +66,7 @@ namespace VK4 {
 			// Topology topology = VK4::Topology::Points,
 			CullMode cullMode = VK4::CullMode::NoCulling,
 			// RenderType renderType = VK4::RenderType::Point,
-			Vk_BufferCharacteristics behaviour = Vk_BufferCharacteristics::Init_1_0_Grow_1_5
+			Vk_BufferSizeBehaviour behaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
 		) {
 #ifdef PYVK
 			glm::tmat4x4<point_type> m = Vk_NumpyTransformers::arrayToGLM4x4<point_type>(modelMatrix);
