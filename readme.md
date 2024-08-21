@@ -31,11 +31,11 @@ Python bindings can be created, but the script may have to be customized. There 
 # Examples
 Check out sample_viewer.cpp for an example on how the viewer works in C++ and test_py/test_viewer.py for a sample script on how the viewer works with the Python bindings.
 
-># Installation
+# Installation
 1. Follow the instructions in *Build requirements* for your platform (Windows, Linux)
 2. Follow instructions on *How to build for C++* or *How to export for Python*
 
-># Build requirements
+# Build requirements
 VSCode is a good 'works everywhere' platform. Thus the build process is described with this platform.
 
 ---
@@ -191,12 +191,12 @@ This is **only necessary** to generate a **Python** export. (Source: https://pyb
    $> pip install pybind11
    ```
 
-># How to build for C++
+# How to build for C++
 * Make sure all dependencies are installed as outlined in the previous section
 * Open the project with VSCode and run CMake config
 * Check out sample_viewer.cpp for a guideline on how to use the viewer inside a program
 
-># How to build for Python
+# How to build for Python
 * Open a terminal from inside the project folder
 * Check out setup_vkviewer.py
 * The Python bindings script is a bit static, so some paths may have to be adjusted
