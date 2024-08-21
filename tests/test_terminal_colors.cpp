@@ -7,8 +7,8 @@
 #include <tuple>
 #include <format>
 
-#include "../src/Vk_Coloring.h"
-#include "../src/Vk_Logger.h"
+#include "../src/Vk_Coloring.hpp"
+#include "../src/Vk_Logger.hpp"
 
 BOOST_AUTO_TEST_SUITE(RunTestTerminalColor)
 
