@@ -34,10 +34,77 @@ namespace VK4 {
             VkQueue queue;
 		};
 
-        typedef int TCurrentFrameIndex;
         struct Bridge {
-            int currentFrame;
-            std::map<TCurrentFrameIndex, std::queue<std::function<void()>>> updates;
+        private:
+            std::shared_mutex _mutex;
+            std::unique_ptr<std::shared_mutex[]> _frameMutex;
+            int _currentFrame;
+            std::vector<std::queue<std::function<void()>>> _updates;
+        public:
+            Bridge(int nFrames): _currentFrame(0)
+            {
+                for(uint8_t i=0; i<nFrames; ++i) {
+                    auto q = std::queue<std::function<void()>>();
+                    _updates.push_back(q);
+                }
+                _frameMutex = std::make_unique<std::shared_mutex[]>(nFrames);
+            }
+
+            void operator=(const Bridge& old){
+                _updates = std::move(old._updates);
+                _frameMutex = std::make_unique<std::shared_mutex[]>(_updates.size());
+                _currentFrame = old._currentFrame;
+            }
+
+            ~Bridge() { _updates.clear(); }
+
+            void incrFrameNr(){ 
+                auto lock = std::lock_guard<std::shared_mutex>(_mutex);
+                _currentFrame = (_currentFrame + 1) % _updates.size(); 
+            }
+            int nFrames() { 
+                // this one is constant over the lifetime of this object => no need for mutex
+                return _updates.size(); 
+            }
+
+            int currentFrame() { 
+                auto lock = std::shared_lock<std::shared_mutex>(_mutex);
+                return _currentFrame; 
+            }
+            void setCurrentFrameTo(int index) { 
+                auto lock = std::lock_guard<std::shared_mutex>(_mutex);
+                _currentFrame = index; 
+            }
+
+            void addSameUpdateToAllFrames(const std::function<void()>& func){
+                // use frame-local mutex inside addUpdate function
+                for(int i=0; i<_updates.size(); ++i){
+                    addUpdate(i, func);
+                }
+            }
+
+            void addUpdateForNextFrame(const std::function<void()>& func){
+                // use frame-local mutex inside addUpdate function
+                int nf = (_currentFrame+1) & _updates.size();
+                addUpdate(nf, func);
+            }
+
+            void addUpdate(int frameNr, const std::function<void()>& func){
+                if(frameNr >= _updates.size()) 
+                    Vk_Logger::RuntimeError(typeid(NoneObj), "Tried to add update to non-existing frame Nr {0}. Used number of frames is {1}", frameNr, _updates.size());
+                
+                auto lock = std::lock_guard<std::shared_mutex>(_frameMutex[frameNr]);
+                _updates.at(frameNr).push(func);
+            }
+
+            void runCurrentFrameUpdates(){
+                auto lock = std::lock_guard<std::shared_mutex>(_frameMutex[_currentFrame]);
+                auto& updates = _updates.at(_currentFrame);
+				while(!updates.empty()){
+					updates.front()();
+					updates.pop();
+				}
+            }
         };
 
         struct QueueFamilyIndex {
@@ -422,10 +489,7 @@ namespace VK4 {
 				}
 			}
 
-			for(uint8_t i=0; i<swapchainSupportDetails.nFramesInFlight; ++i){
-				auto q = std::queue<std::function<void()>>();
-				bridge.updates[i] = q;
-			}
+            bridge = Bridge(swapchainSupportDetails.nFramesInFlight);
 
 			return swapchainSupportDetails;
 			// }

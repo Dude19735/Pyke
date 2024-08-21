@@ -574,7 +574,7 @@ namespace VK4 {
 
 		void _screenshot(std::string filename)
 		{
-			const auto screenshot = _swapchain->vk_getFrameBuffer(_device->bridge.currentFrame);
+			const auto screenshot = _swapchain->vk_getFrameBuffer(_device->bridge.currentFrame());
 			_imageToJpegImage(filename, screenshot);
 		}
 
@@ -696,7 +696,7 @@ namespace VK4 {
 
 			{
 				auto lock = AcquireGlobalLock("vk_viewer[_drawFrame]");
-				int currentFrame = _device->bridge.currentFrame;
+				int currentFrame = _device->bridge.currentFrame();
 
 				// We have to wait for the current fence to be signaled to make sure that
 				VkResult res = vkWaitForFences(lDev, 1, &_inFlightFences[currentFrame], VK_TRUE, GLOBAL_FENCE_TIMEOUT);
@@ -748,11 +748,7 @@ namespace VK4 {
 					cam->vk_update(currentFrame);
 				}
 
-				auto& updates = _device->bridge.updates.at(currentFrame);
-				while(!updates.empty()){
-					updates.front()();
-					updates.pop();
-				}
+				_device->bridge.runCurrentFrameUpdates();
 
 				// reset the fence we waited for because we updated all the camera shaders with the
 				// potentially new view perspective => GPU can go on...
@@ -832,7 +828,7 @@ namespace VK4 {
 					}
 				}
 
-				_device->bridge.currentFrame = (currentFrame + 1) % nFramesInFlight;
+				_device->bridge.incrFrameNr();
 			}
 
 			return VK_SUCCESS;
@@ -916,7 +912,7 @@ namespace VK4 {
 			_createSyncResources(); // must be done after swapchain creation to get correct nFramesInFlight
 
 			_recordCommandBuffers(true);
-			_device->bridge.currentFrame = 0;
+			_device->bridge.setCurrentFrameTo(0);
 			_onResize = false;
 		}
 

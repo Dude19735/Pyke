@@ -24,7 +24,7 @@ namespace VK4 {
 
 		Vk_Device(std::string deviceName, Vk_DevicePreference devicePreference = Vk_DevicePreference::USE_ANY_GPU)
 			:
-			bridge(Vk_DeviceLib::Bridge{.currentFrame=0}),
+			bridge(Vk_DeviceLib::Bridge(0)),
 			_viewer(0),
 			_device(nullptr),
 			_graphicsQueues({}),
@@ -225,11 +225,7 @@ namespace VK4 {
 					Vk_Logger::Log(typeid(this), "nFramesInFlight changed to " + std::to_string(swapchainImageCount) + " from " + std::to_string(_swapchainSupportDetails.nFramesInFlight) + " due to swapchain initialization requirements!");
 					_swapchainSupportDetails.nFramesInFlight = swapchainImageCount;
 					
-					bridge.updates.clear();
-					for(uint32_t i=0; i<_swapchainSupportDetails.nFramesInFlight; ++i){
-						auto q = std::queue<std::function<void()>>();
-						bridge.updates[i] = q;
-					}
+					bridge = Vk_DeviceLib::Bridge(_swapchainSupportDetails.nFramesInFlight);
 				}
 			}
 			return _swapchainSupportDetailsUpToDate;

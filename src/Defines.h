@@ -355,19 +355,21 @@ namespace VK4 {
 	};
 
 	enum class Vk_BufferUpdateBehaviour {
-		GlobalLock, 		 /* one buffer but global lock at data transfer */
-		DoubleBuffering,     /* two buffers on GPU at all times */
-		LazyDoubleBuffering, /* create a new buffer on update and switch at update time */
-		Pinned				 /* use CPU accessible GPU memory for buffer */
+		GlobalLock, 		   /* one buffer but global lock at data transfer */
+		DoubleBuffering,       /* two buffers on GPU at all times */
+		LazyDoubleBuffering,   /* create a new buffer on update and switch at update time */
+		Pinned_GlobalLock,	   /* use CPU accessible memory on GPU with global lock at data transfer */
+		Pinned_DoubleBuffering /* use CPU accessible memory on GPU with double buffering */
 	};
 
 	static std::string Vk_BufferUpdateBehaviourToString(Vk_BufferUpdateBehaviour behaviour) {
 		switch (behaviour) {
-		case Vk_BufferUpdateBehaviour::GlobalLock: return "GlobalLock";
-		case Vk_BufferUpdateBehaviour::DoubleBuffering: return "DoubleBuffering";
-		case Vk_BufferUpdateBehaviour::LazyDoubleBuffering: return "LazyDoubleBuffering";
-		case Vk_BufferUpdateBehaviour::Pinned: return "Pinned";
-		default: return "Unknown";
+			case Vk_BufferUpdateBehaviour::GlobalLock: return "GlobalLock";
+			case Vk_BufferUpdateBehaviour::DoubleBuffering: return "DoubleBuffering";
+			case Vk_BufferUpdateBehaviour::LazyDoubleBuffering: return "LazyDoubleBuffering";
+			case Vk_BufferUpdateBehaviour::Pinned_GlobalLock: return "Pinned_GlobalLock";
+			case Vk_BufferUpdateBehaviour::Pinned_DoubleBuffering: return "Pinned_DoubleBuffering";
+			default: return "Unknown";
 		}
 	}
 

@@ -130,11 +130,11 @@ namespace VK4 {
 #endif
 
 			//int s = _uBuffer->vk_frameCount(); // this is a reminder => don't use it, just remember where it comes from and remember that the uBuffer has 10 frames by default!!!
-			int s = static_cast<int>(_device->bridge.updates.size());
+			int s = _device->bridge.nFrames();
 			for(int i=0; i<s; ++i){
-				_device->bridge.updates.at(i).push(
-					[this]() {
-						_uBuffer->vk_update(_device->bridge.currentFrame, static_cast<const void*>(&_modelMatrix));
+				_device->bridge.addUpdate(
+					i, [this, i]() {
+						_uBuffer->vk_update(static_cast<uint32_t>(i), static_cast<const void*>(&_modelMatrix));
 					}
 				);
 			}
