@@ -300,7 +300,7 @@ namespace VK4 {
 			_onResize = false;
 
 			while(window->windowEvents_Exist()){
-				_device->vk_cleanSingleTimeCommands();
+				// _device->vk_cleanSingleTimeCommands();
 				window->windowEvents_Pump();
 
 				if(window->windowShouldClose()){

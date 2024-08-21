@@ -47,7 +47,7 @@ namespace VK4 {
 			const T_StructureType* structuredData,
 			size_t count,
 			Vk_BufferUpdateBehaviour updateBehaviour,
-			Vk_BufferSizeBehaviour sizeBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
+			Vk_BufferSizeBehaviour sizeBehaviour,
 			std::string objName = ""
 		)
 			:

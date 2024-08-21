@@ -75,7 +75,8 @@ namespace VK4 {
 			float alpha,
 			CullMode cullMode,
 			std::unordered_map<std::string, int> bindingPoints,
-			Vk_BufferSizeBehaviour behaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
+			Vk_BufferUpdateBehaviour updateBehaviour,
+			Vk_BufferSizeBehaviour sizeBehaviour
 		)
 			:
 			I_Object<ObjectType_P_C>(device, objectName, shaderName, modelMatrix, "Vk_Dot<ObjectType_P_C>", Topology::Points, cullMode, RenderType::Point),
@@ -87,15 +88,15 @@ namespace VK4 {
 			_bindingPoints(bindingPoints)
 		{
 			_iBuffer = std::make_unique<Vk_DataBuffer<index_type>>(
-				device, objectName, indices, iLen, behaviour, _objectType.type() + "_index-buffer"
+				device, objectName, indices, iLen, updateBehaviour, sizeBehaviour, _objectType.type() + "_index-buffer"
 			);
 
 			_vBuffer = std::make_unique<Vk_DataBuffer<Vk_Vertex_P>>(
-				device, objectName, p, pLen, behaviour, _objectType.type() + "_position-buffer"
+				device, objectName, p, pLen, updateBehaviour, sizeBehaviour, _objectType.type() + "_position-buffer"
 			);
 
 			_cBuffer = std::make_unique<Vk_DataBuffer<Vk_Vertex_C>>(
-				device, objectName, c, cLen, behaviour, _objectType.type() + "_color-buffer"
+				device, objectName, c, cLen, updateBehaviour, sizeBehaviour, _objectType.type() + "_color-buffer"
 			);
 		}
 
