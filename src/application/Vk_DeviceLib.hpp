@@ -191,7 +191,48 @@ namespace VK4 {
         typedef std::unordered_map<PhysicalDevice*, std::map<VkMemoryPropertyFlags, GpuMemoryConfiguration>> TGpuMemoryConfig;
     	typedef std::unordered_map<PhysicalDevice*, std::vector<GpuMemoryHeapConfiguration>> TGpuHeapConfig;
 
+		static void setGpuMemoryConfig(std::vector<PhysicalDevice>& physicalDevices, TGpuHeapConfig& gpuHeapConfig, TGpuMemoryConfig& gpuMemoryConfig) {
+			for (auto& device : physicalDevices) {
+				VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
+				vkGetPhysicalDeviceMemoryProperties(device.physicalDevice, &deviceMemoryProperties);
+
+				for (uint32_t i = 0; i < deviceMemoryProperties.memoryHeapCount; ++i) {
+					double s = static_cast<double>(deviceMemoryProperties.memoryHeaps[i].size);
+					double s_kb = Vk_Lib::round(s / 1.0e3, 2);
+					double s_mb = Vk_Lib::round(s / 1.0e6, 2);
+					double s_gb = Vk_Lib::round(s / 1.0e9, 2);
+					gpuHeapConfig[&device].push_back(GpuMemoryHeapConfiguration{
+						.heapSize = deviceMemoryProperties.memoryHeaps[i].size,
+						.heapSizeKb = s_kb,
+						.heapSizeMb = s_mb,
+						.heapSizeGb = s_gb,
+						.heapIndex = static_cast<uint32_t>(i),
+						.heapConfigs = std::vector<GpuMemoryConfiguration*>()
+						});
+				}
+
+				for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; ++i) {
+					auto h = deviceMemoryProperties.memoryTypes[i];
+					std::string propStrShort;
+					std::string propStrLong;
+					devicePropertyFlagToString(h.propertyFlags, propStrShort, propStrLong);
+
+					gpuMemoryConfig[&device].insert({
+						h.propertyFlags,
+						GpuMemoryConfiguration{
+							.heapIndex = h.heapIndex,
+							.flagsStr = propStrShort,
+							.flagsStrLong = propStrLong
+						}
+						});
+
+					gpuHeapConfig[&device].at(h.heapIndex).heapConfigs.push_back(&gpuMemoryConfig[&device].at(h.propertyFlags));
+				}
+			}
+		}
+
         static void updateGpuHeapUsageStats(std::vector<PhysicalDevice>& physicalDevices, TGpuHeapConfig& gpuHeapConfig) {
+
 			VkPhysicalDeviceMemoryProperties2 props;
 			props.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
 
@@ -276,46 +317,6 @@ namespace VK4 {
 			table[0][3].format().font_background_color(tabulate::Color::yellow).font_color(tabulate::Color::blue);
 
 			stream << table << std::endl;
-		}
-
-        static void setGpuMemoryConfig(std::vector<PhysicalDevice>& physicalDevices, TGpuHeapConfig& gpuHeapConfig, TGpuMemoryConfig& gpuMemoryConfig) {
-			for (auto& device : physicalDevices) {
-				VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-				vkGetPhysicalDeviceMemoryProperties(device.physicalDevice, &deviceMemoryProperties);
-
-				for (uint32_t i = 0; i < deviceMemoryProperties.memoryHeapCount; ++i) {
-					double s = static_cast<double>(deviceMemoryProperties.memoryHeaps[i].size);
-					double s_kb = Vk_Lib::round(s / 1.0e3, 2);
-					double s_mb = Vk_Lib::round(s / 1.0e6, 2);
-					double s_gb = Vk_Lib::round(s / 1.0e9, 2);
-					gpuHeapConfig[&device].push_back(GpuMemoryHeapConfiguration{
-						.heapSize = deviceMemoryProperties.memoryHeaps[i].size,
-						.heapSizeKb = s_kb,
-						.heapSizeMb = s_mb,
-						.heapSizeGb = s_gb,
-						.heapIndex = static_cast<uint32_t>(i),
-						.heapConfigs = std::vector<GpuMemoryConfiguration*>()
-						});
-				}
-
-				for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; ++i) {
-					auto h = deviceMemoryProperties.memoryTypes[i];
-					std::string propStrShort;
-					std::string propStrLong;
-					devicePropertyFlagToString(h.propertyFlags, propStrShort, propStrLong);
-
-					gpuMemoryConfig[&device].insert({
-						h.propertyFlags,
-						GpuMemoryConfiguration{
-							.heapIndex = h.heapIndex,
-							.flagsStr = propStrShort,
-							.flagsStrLong = propStrLong
-						}
-						});
-
-					gpuHeapConfig[&device].at(h.heapIndex).heapConfigs.push_back(&gpuMemoryConfig[&device].at(h.propertyFlags));
-				}
-			}
 		}
 
         static VkBool32 getSupportedDepthFormat(VkFormat& depthFormat, Vk_DeviceLib::PhysicalDevice* pDev)

@@ -49,12 +49,12 @@ namespace VK4 {
 			// (instance after device...)
 
 			Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create Device"));
-			_setGpuMemoryConfig();
 			vk_invalidateSwapchainSupport();
 
 			auto surface = Vk_Surface(_instance.get(), "temp", 1, 1, false, false);
 			vk_configDeviceForSurface(&surface);
 			vk_invalidateSwapchainSupport(); // we still need to ask for support because we just created a 1x1 surface here
+			_setGpuMemoryConfig();
 		}
 
 		~Vk_Device() {

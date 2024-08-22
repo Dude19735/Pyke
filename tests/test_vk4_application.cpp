@@ -181,7 +181,7 @@ void updateTestCases(VK4::Vk_DataBuffer<T_DataType>* buffer, std::vector<T_DataT
 	testUpdateDataBuffer<T_DataType>(buffer, data8, size7);
 }
 
-BOOST_AUTO_TEST_CASE(Test_BufferResize2, *all_tests) {
+BOOST_AUTO_TEST_CASE(Test_BufferResize2, *new_test) {
 	std::string name = "test_app";
 
 	std::unique_ptr<VK4::Vk_Instance> instance = std::make_unique<VK4::Vk_Instance>(name);
@@ -193,7 +193,8 @@ BOOST_AUTO_TEST_CASE(Test_BufferResize2, *all_tests) {
 		// Vertices
 		typedef VK4::Vk_Vertex_PC Type;
 		auto data = UT::Vk4TestData::RandomLarge_Data<Type>(testCount, 1.0);
-		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
+		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
+			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
 		resizeTestCases<Type>(buffer.get(), testCount, data);
 		updateTestCases<Type>(buffer.get(), data);
 	}
@@ -201,7 +202,8 @@ BOOST_AUTO_TEST_CASE(Test_BufferResize2, *all_tests) {
 		// Vertices
 		typedef VK4::Vk_Vertex_PCN Type;
 		auto data = UT::Vk4TestData::RandomLarge_Data<Type>(testCount, 1.0);
-		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
+		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
+			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_2, "TestBuffer");
 
 		resizeTestCases<Type>(buffer.get(), testCount, data);
 		updateTestCases<Type>(buffer.get(), data);
@@ -210,7 +212,8 @@ BOOST_AUTO_TEST_CASE(Test_BufferResize2, *all_tests) {
 		// Vertices
 		typedef VK4::Vk_Vertex_PCNT Type;
 		auto data = UT::Vk4TestData::RandomLarge_Data<Type>(testCount, 1.0);
-		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
+		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
+			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_5_Grow_1_5, "TestBuffer");
 	
 		resizeTestCases<Type>(buffer.get(), testCount, data);
 		updateTestCases<Type>(buffer.get(), data);
@@ -219,14 +222,15 @@ BOOST_AUTO_TEST_CASE(Test_BufferResize2, *all_tests) {
 		// Vertices
 		typedef VK4::index_type Type;
 		auto data = UT::Vk4TestData::RandomLarge_Data<Type>(testCount, 1.0);
-		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
+		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
+			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_5_Grow_2, "TestBuffer");
 	
 		resizeTestCases<Type>(buffer.get(), testCount, data);
 		updateTestCases<Type>(buffer.get(), data);
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Test_BufferResize, *all_tests) {
+BOOST_AUTO_TEST_CASE(Test_BufferResize, *new_test) {
 	std::string name = "test_app";
 
 	std::unique_ptr<VK4::Vk_Instance> instance = std::make_unique<VK4::Vk_Instance>(name);
@@ -238,7 +242,8 @@ BOOST_AUTO_TEST_CASE(Test_BufferResize, *all_tests) {
 		auto data = UT::Vk4TestData::Cube1_PC();
 		typedef VK4::Vk_Vertex_PC Type;
 
-		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
+		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
+			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
 
 		assert(buffer->vk_cpuDataBufferCount() == 0);
 		const std::vector<Type>* wbData = buffer->vk_getData();
@@ -286,7 +291,8 @@ BOOST_AUTO_TEST_CASE(Test_BuffersWriteback, *all_tests) {
 		auto data = UT::Vk4TestData::Cube1_PC();
 		typedef VK4::Vk_Vertex_PC Type;
 
-		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
+		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
+			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
 
 		assert(buffer->vk_cpuDataBufferCount() == 0);
 		const std::vector<Type>* wbData = buffer->vk_getData();
@@ -303,7 +309,8 @@ BOOST_AUTO_TEST_CASE(Test_BuffersWriteback, *all_tests) {
 		auto data = UT::Vk4TestData::Cube1_PCN();
 		typedef VK4::Vk_Vertex_PCN Type;
 
-		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
+		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
+			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
 
 		assert(buffer->vk_cpuDataBufferCount() == 0);
 		const std::vector<Type>* wbData = buffer->vk_getData();
@@ -320,7 +327,8 @@ BOOST_AUTO_TEST_CASE(Test_BuffersWriteback, *all_tests) {
 		auto data = UT::Vk4TestData::Cube1_PCNT();
 		typedef VK4::Vk_Vertex_PCNT Type;
 
-		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
+		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
+			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
 
 		assert(buffer->vk_cpuDataBufferCount() == 0);
 		const std::vector<Type>* wbData = buffer->vk_getData();
@@ -337,7 +345,8 @@ BOOST_AUTO_TEST_CASE(Test_BuffersWriteback, *all_tests) {
 		auto data = UT::Vk4TestData::Cube1_PCNT_Indices();
 		typedef VK4::index_type Type;
 
-		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
+		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
+			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
 
 		assert(buffer->vk_cpuDataBufferCount() == 0);
 		const std::vector<Type>* wbData = buffer->vk_getData();

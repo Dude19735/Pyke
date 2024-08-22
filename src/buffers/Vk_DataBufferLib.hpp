@@ -41,6 +41,12 @@ namespace VK4 {
             }
         }
 
+		template<class T_StructureType>
+		struct StructuredData {
+			size_t count;
+			const T_StructureType* data;
+		};
+
         template<class T_StructureType>
         static BufferType getInitBufferType() {
 			std::string name = std::string(typeid(T_StructureType).name());
@@ -217,6 +223,7 @@ namespace VK4 {
             const std::string& objName, 
             BufferType type,
             Vk_BufferSizeBehaviour sizeBehaviour,
+			Vk_BufferUpdateBehaviour updateBehaviour,
             size_t oldMaxCount, 
             size_t newMaxCount, 
             size_t oldDataCount, 
@@ -226,7 +233,8 @@ namespace VK4 {
 				Vk_Lib::formatWithObjName(objName, (
 					GlobalCasters::castYellow("\n\tBuffer update: ") + std::string("Update buffer\n")
 					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string("            type: ") + BufferTypeToString(type) + "\n"
-					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string(" characteristics: ") + Vk_BufferSizeBehaviourToString(sizeBehaviour) + "\n"
+					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string("  size behaviour: ") + Vk_BufferSizeBehaviourToString(sizeBehaviour) + "\n"
+					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string(" update behavour: ") + Vk_BufferUpdateBehaviourToString(updateBehaviour) + "\n"
 					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string("       old count: ") + std::to_string(oldDataCount) + "\n"
 					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string("       new count: ") + std::to_string(newDataCount) + "\n"
 					+ GlobalCasters::castYellow("\tBuffer update: ") + std::string("   old max count: ") + std::to_string(oldMaxCount) + "\n"
@@ -299,6 +307,9 @@ namespace VK4 {
 			);
 		}
 
+		/*
+		 * Destroys the Vulkan objects and clears the vectors
+		*/
         static void destroyGpuBuffers(
             Vk_Device* device,
             std::vector<VkBuffer>& buffers, 
@@ -307,8 +318,13 @@ namespace VK4 {
 			for(int i=0; i<buffers.size(); ++i){
 				destroyGpuBuffer(device, buffers.at(i), buffersMemory.at(i));
 			}
+			buffers.clear();
+			buffersMemory.clear();
 		}
 
+		/*
+		 * Destroys the associated Vulkan objects. Does NOT set them to nullptr.
+		*/
 		static void destroyGpuBuffer(
             Vk_Device* device,
             VkBuffer buffer, 
@@ -325,32 +341,38 @@ namespace VK4 {
             Vk_Device* device,
             VkDeviceMemory gpuMemoryPtr, 
             T_StructureType* cpuMemoryPtr, 
-            std::uint64_t size
+            std::uint64_t copyByteSize
         ) {
 			VkDevice lDev = device->vk_lDev();
 
 			void* data;
-			vkMapMemory(lDev, gpuMemoryPtr, 0, static_cast<VkDeviceSize>(size), 0, &data);
-			memcpy(static_cast<void*>(cpuMemoryPtr), data, size);
+			vkMapMemory(lDev, gpuMemoryPtr, 0, static_cast<VkDeviceSize>(copyByteSize), 0, &data);
+			memcpy(static_cast<void*>(cpuMemoryPtr), data, copyByteSize);
 			vkUnmapMemory(lDev, gpuMemoryPtr);
 		}
 
 		static void copyGpuToGpu(
             Vk_Device* device,
             const std::string& objName, 
-            VkBuffer srcBuffer, 
+            VkBuffer srcBuffer,
+			std::uint64_t srcBufferSize, 
             VkBuffer dstBuffer, 
-            std::uint64_t size, 
-            std::uint64_t srcOffset=0, 
-            std::uint64_t dstOffset=0
+			std::uint64_t dstBufferSize,
+            std::uint64_t copyByteSize, 
+            std::uint64_t srcByteOffset=0, 
+            std::uint64_t dstByteOffset=0
         ) {
-			assert(size > srcOffset);
+			// make sure that we access inside the source buffer
+			assert(srcBufferSize >= srcByteOffset + copyByteSize);
+			// make sure that we access inside the dst buffer
+			assert(dstBufferSize >= dstByteOffset + copyByteSize);
+
 			device->vk_copyBuffer(
 				Vk_Device::CommandCapabilities::RuntimeCopy,
 				srcBuffer, dstBuffer,
-				static_cast<VkDeviceSize>(size),
-				static_cast<VkDeviceSize>(srcOffset),
-				static_cast<VkDeviceSize>(dstOffset),
+				static_cast<VkDeviceSize>(copyByteSize),
+				static_cast<VkDeviceSize>(srcByteOffset),
+				static_cast<VkDeviceSize>(dstByteOffset),
 				objName
 			);
 		}
@@ -358,19 +380,21 @@ namespace VK4 {
         template<class T_StructureType>
 		static void copyCpuToGpu(
             Vk_Device* device,
-            const T_StructureType* cpuMemoryPtr, 
+            const Vk_DataBufferLib::StructuredData<T_StructureType>& structuredData, 
             VkDeviceMemory gpuMemoryPtr, 
-            std::uint64_t size, 
-            std::uint64_t srcOffset=0, 
-            std::uint64_t dstOffset=0
+            std::uint64_t copyByteSize, 
+            std::uint64_t srcByteOffset=0, 
+            std::uint64_t dstByteOffset=0
         ) {
-			assert(size > srcOffset);
+			// need srcByteOffset to be at most the total data size-1
+			assert(structuredData.count*sizeof(T_StructureType) >= srcByteOffset + copyByteSize);
+
 			VkDevice lDev = device->vk_lDev();
 
 			void* data;
-			const T_StructureType* offsetCpuMemoryPtr = cpuMemoryPtr + (srcOffset /sizeof(T_StructureType));
-			vkMapMemory(lDev, gpuMemoryPtr, static_cast<VkDeviceSize>(dstOffset), static_cast<VkDeviceSize>(size), 0, &data);
-			memcpy(data, static_cast<const void*>(offsetCpuMemoryPtr), static_cast<size_t>(size));
+			const T_StructureType* offsetCpuMemoryPtr = structuredData.data + (srcByteOffset /sizeof(T_StructureType));
+			vkMapMemory(lDev, gpuMemoryPtr, static_cast<VkDeviceSize>(dstByteOffset), static_cast<VkDeviceSize>(copyByteSize), 0, &data);
+			memcpy(data, static_cast<const void*>(offsetCpuMemoryPtr), static_cast<size_t>(copyByteSize));
 			vkUnmapMemory(lDev, gpuMemoryPtr);
 		}
 
@@ -437,8 +461,8 @@ namespace VK4 {
             Vk_Device* device,
             BufferType type,
             VkBuffer buffer, 
-            const T_StructureType* structuredData, 
-            size_t count, 
+			uint64_t bufferByteSize,
+            const Vk_DataBufferLib::StructuredData<T_StructureType>& structuredData,
             size_t from, 
             size_t to,
             const std::string& objName = "",
@@ -451,17 +475,21 @@ namespace VK4 {
 			// create host buffer to copy all necessary data into cpu accessible memory, lets call it stagingBuffer
 			VkBuffer stagingBuffer = VK_NULL_HANDLE;
 			VkDeviceMemory stagingBufferMemory = VK_NULL_HANDLE;
-			uint64_t dataSize = static_cast<uint64_t>(count * sizeof(T_StructureType));
-			uint64_t dataFrom = static_cast<uint64_t>(from * sizeof(T_StructureType));
-			uint64_t dataTo = static_cast<uint64_t>(to * sizeof(T_StructureType));
+			uint64_t dataSize = static_cast<uint64_t>(structuredData.count * sizeof(T_StructureType));
+			uint64_t byteFrom = static_cast<uint64_t>(from * sizeof(T_StructureType));
+			uint64_t byteTo = static_cast<uint64_t>(to * sizeof(T_StructureType));
 
 			// if the buffer is initially empty, no need to copy random stuff, just create the vertex buffer
-			createStagingBuffer(device, type, stagingBuffer, stagingBufferMemory, dataTo - dataFrom, Usage::Source);
+			createStagingBuffer(device, type, stagingBuffer, stagingBufferMemory, byteTo - byteFrom, Usage::Source);
 
             std::string nn = "#Create#" + objName + associatedObject;
 			// map memory into variable to actually use it
-			copyCpuToGpu(device, structuredData, stagingBufferMemory, dataTo - dataFrom, dataFrom, dataFrom);
-			copyGpuToGpu(device, nn, stagingBuffer, buffer, dataTo - dataFrom, dataFrom, dataFrom);
+			uint64_t copyByteSize = byteTo - byteFrom;
+			// srcByteOffset = byteFrom, dstByteOffset = 0 because that is the staging buffer offset that only houses the new data
+			copyCpuToGpu(device, structuredData, stagingBufferMemory, copyByteSize, byteFrom, 0);
+			// srcByteOffset = 0 because that is the staging buffer offset that only houses the new data, 
+			// dstByteOffset = byteFrom because we need to place the data in the right spot
+			copyGpuToGpu(device, nn, stagingBuffer, byteTo - byteFrom, buffer, bufferByteSize, copyByteSize, 0, byteFrom);
 			destroyGpuBuffer(device, stagingBuffer, stagingBufferMemory);
 		}
 
