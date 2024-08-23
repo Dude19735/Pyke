@@ -95,7 +95,8 @@ namespace VK4 {
 		}
 
 		/*
-		* Resize the buffer to hold a max of newCount
+		* Resize the buffer to hold a max of newCount. This does not resize according to the resize strategy.
+		* The resize strategy is only used if the buffer has to be enlarged because some new data does not fit.
 		*/
 		void vk_resize(size_t newCount) {
 			auto lock = std::lock_guard<std::shared_mutex>(_localMutex);
@@ -104,14 +105,16 @@ namespace VK4 {
 
 		/*
 		* Get the max amount of elements the buffer will be able to hold after the
-		* next resize according to the resize strategy of the buffer
+		* next resize according to the resize strategy of the buffer. The resize
+		* strategy is only used if the buffer has to be enlarged because some new data
+		* does not fit.
 		*/
 		size_t vk_nextBufferMaxCount(size_t count) {
 			return getNextMaxCount(count);
 		}
 
 		/*
-		* Return a string holding the object name the buffer is holding, the type and resize
+		* Return a string holding the object name the buffer is holding, the type, update and resize
 		* strategy
 		*/
 		std::string vk_toString() {
@@ -121,6 +124,8 @@ namespace VK4 {
 				+ std::string(", ")
 				+ Vk_DataBufferLib::BufferTypeToString(_type)
 				+ std::string(", ")
+				+ Vk_BufferUpdateBehaviourToString(_updateBehaviour)
+				+ std::string(", ")
 				+ Vk_BufferSizeBehaviourToString(_sizeBehaviour);
 		}
 
@@ -128,10 +133,10 @@ namespace VK4 {
 		* Write the data of the GPU buffer into a CPU size vector and return a pointer
 		* to the CPU sized buffer. Call vk_clearCpuBuffer() to clear the CPU sized data vector.
 		*/
-		const std::vector<T_StructureType>* vk_getData() {
+		const std::vector<T_StructureType>& vk_getData() {
 			auto lock = std::lock_guard<std::shared_mutex>(_localMutex);
 			getDataToCpu();
-			return &_cpuDataBuffer;
+			return _cpuDataBuffer;
 		}
 		
 		/*
@@ -206,14 +211,18 @@ namespace VK4 {
 		*        # newCount = oldCount, newFrom = X1 > 0, newTo = X2 < newCount
 		*        # newCount = oldCount - X, newFrom = 0, newTo = newCount
 		*/
-		void vk_update(
+		int64_t vk_update(
 			const T_StructureType* structuredData,
 			size_t newCount,
 			size_t newFrom,
 			size_t newTo=0
 		) {
 			auto lock = std::lock_guard<std::shared_mutex>(_localMutex);
+			auto t1 = std::chrono::high_resolution_clock::now();
 			updateDataBufferForUpdateStrategy({.count=newCount, .data=structuredData}, newFrom, newTo);
+			auto t2 = std::chrono::high_resolution_clock::now();
+			auto diff = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+			return diff;
 		}
 
 	private:
@@ -357,7 +366,7 @@ namespace VK4 {
 			// copy data from staging buffer to non-cpu accessible vertex buffer
 			// free memory afterwards
 			if (structuredData.data != nullptr) {
-				copyDataToBufferForUpdateStrategy(structuredData, 0, bufferCount());
+				Vk_DataBufferLib::copyDataToBufferWithStaging(_device, _type, _buffer.at(_bufferIndex), maxBufferSize(), structuredData, 0, bufferCount(), _objName, _associatedObject);
 			}
 		}
 
@@ -402,7 +411,7 @@ namespace VK4 {
 				for(int i=0; i<2; ++i){
 					VkBuffer lBuffer;
 					VkDeviceMemory lBufferMemory;
-					Vk_DataBufferLib::createDeviceLocalBuffer(_device, _type, lBuffer, lBufferMemory, maxSize, Vk_DataBufferLib::Usage::Both);
+					Vk_DataBufferLib::createDeviceLocalCPUAccessibleBuffer(_device, _type, lBuffer, lBufferMemory, maxSize, Vk_DataBufferLib::Usage::Both);
 					_buffer.push_back(lBuffer);
 					_bufferMemory.push_back(lBufferMemory);
 				}
@@ -413,15 +422,27 @@ namespace VK4 {
 		}
 
 		void copyDataToBufferForUpdateStrategy(const Vk_DataBufferLib::StructuredData<T_StructureType>& structuredData, size_t from, size_t to){
-			if(_updateBehaviour == Vk_BufferUpdateBehaviour::GlobalLock || _updateBehaviour == Vk_BufferUpdateBehaviour::Pinned_GlobalLock){
+			if(_updateBehaviour == Vk_BufferUpdateBehaviour::GlobalLock){
 				// lock everything => potentially async, but in reality not really
 				auto lock = AcquireGlobalLock("Vk_DataBuffer[copyDataToBufferForUpdateStrategy]");
 				Vk_DataBufferLib::copyDataToBufferWithStaging(_device, _type, _buffer.at(0), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
 			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::DoubleBuffering || _updateBehaviour == Vk_BufferUpdateBehaviour::Pinned_DoubleBuffering){
+			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Pinned_GlobalLock){
+				auto lock = AcquireGlobalLock("Vk_DataBuffer[copyDataToBufferForUpdateStrategy]");
+				Vk_DataBufferLib::copyDataToBufferDirect(_device, _type, _bufferMemory.at(0), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
+			}
+			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::DoubleBuffering){
 				// copy to not used buffer and then flip them inside a synchronized bridge update
 				// the update function is globally synched, so no need for mutexes here apart from the local one
 				Vk_DataBufferLib::copyDataToBufferWithStaging(_device, _type, _buffer.at((_bufferIndex+1)%2), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
+				_device->bridge.addUpdateForNextFrame(
+					[this](){ this->_bufferIndex = (this->_bufferIndex+1)%2; }
+				);
+			}
+			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Pinned_DoubleBuffering){
+				// copy to not used buffer and then flip them inside a synchronized bridge update
+				// the update function is globally synched, so no need for mutexes here apart from the local one
+				Vk_DataBufferLib::copyDataToBufferDirect(_device, _type, _bufferMemory.at((_bufferIndex+1)%2), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
 				_device->bridge.addUpdateForNextFrame(
 					[this](){ this->_bufferIndex = (this->_bufferIndex+1)%2; }
 				);

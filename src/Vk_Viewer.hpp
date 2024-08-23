@@ -46,6 +46,7 @@ namespace VK4 {
 			_viewingType(Vk_ViewingType::GLOBAL),
 			_lastSteeredCamera(nullptr),
 			_running(false),
+			_programableStop(false),
 			_initWidth(0),
 			_initHeight(0),
 			_freshPoolSize(0),			
@@ -73,6 +74,7 @@ namespace VK4 {
 			_viewingType(params.viewingType),
 			_lastSteeredCamera(nullptr),
 			_running(false),
+			_programableStop(false),
 			_initWidth(params.width),
 			_initHeight(params.height),
 			_freshPoolSize(params.freshPoolSize),			
@@ -100,6 +102,10 @@ namespace VK4 {
 		~Vk_Viewer() {
 			Vk_Logger::Log(typeid(this), GlobalCasters::castDestructorTitle("Destroy Viewer"));
 			// make sure to keep the dependencies correctly (instance last, device right before that one)
+			{
+				auto lock = std::lock_guard<std::shared_mutex>(_runMutex);
+				_programableStop = true;
+			}
 			_eventThread.join();
 			_cameras.clear();
 
@@ -243,77 +249,13 @@ namespace VK4 {
 		}
 
 		void vk_runThread() {
-			_eventThread = std::thread(&Vk_Viewer::vk_run, this);
+			_eventThread = std::thread(&Vk_Viewer::_run, this);
 			while(!vk_running());
 		}
 
-		void vk_run() {
-			_surface = std::make_unique<Vk_Surface>(_device->vk_instance(), _name, _initWidth, _initHeight, true, true);
-			_surface->vk_lwws_window()->bind_IntKey_Callback(this, &Vk_Viewer::_onKey);
-			_surface->vk_lwws_window()->bind_MouseAction_Callback(this, &Vk_Viewer::_onMouseAction);
-			_surface->vk_lwws_window()->bind_WindowState_Callback(this, &Vk_Viewer::_onWindowAction);
-
-			auto window = _surface->vk_lwws_window();
-			window->windowEvents_Init();
-
-			_renderpass = std::make_unique<Vk_RenderPass_IM>(_device, _surface.get());
-			_swapchain = std::make_unique<Vk_Swapchain_IM>(_device, _surface.get());
-			_framebuffer = std::make_unique<Vk_Framebuffer_IM>(_device, _surface.get(), _swapchain.get(), _renderpass.get());
-
-			const auto& caps = _device->vk_swapchainSupportActiveDevice(_surface.get());
-			_commandBuffer.resize(caps.nFramesInFlight);
-			VkCommandBufferAllocateInfo allocInfo{};
-			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			allocInfo.commandPool = _device->vk_renderingCommandPool();
-			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			allocInfo.commandBufferCount = static_cast<uint32_t>(_commandBuffer.size());
-
-			VK_CHECK(vkAllocateCommandBuffers(
-				_device->vk_lDev(),
-				&allocInfo,
-				_commandBuffer.data()),
-				"Failed to allocate command buffers!"
-			);
-
-			_createSyncResources();
-
-			for(auto& cam : _cameras){
-				_attachRenderer(
-					cam.second.get(), 
-					I_Renderer::Vk_PipelineAuxilliaries {
-						.surface=_surface.get(), 
-						.renderpass=_renderpass.get(),
-						.swapchain=_swapchain.get(),
-						.framebuffer=_framebuffer.get()
-					}
-				);
-			}
-
-			vk_build();
-			window->emit_windowEvent_Paint();
-
-			{
-				auto lock = std::lock_guard<std::shared_mutex>(_runMutex);
-				_running = true;
-			}
-			_onResize = false;
-
-			while(window->windowEvents_Exist()){
-				// _device->vk_cleanSingleTimeCommands();
-				window->windowEvents_Pump();
-
-				if(window->windowShouldClose()){
-					goto terminate;
-				}
-			}
-
-			terminate:
-			Vk_ThreadSafe::Vk_ThreadSafe_DeviceWaitIdle(_device->vk_lDev());
-			{
-				auto lock = std::lock_guard<std::shared_mutex>(_runMutex);
-				_running = false;
-			}
-			_threadPool.stop();
+		void vk_stopThread() {
+			auto lock = std::lock_guard<std::shared_mutex>(_runMutex);
+			_programableStop = true;
 		}
 
 		void vk_redraw() {
@@ -510,6 +452,7 @@ namespace VK4 {
 		// add a threadpool
 		Vk_ThreadPool _threadPool;
 		bool _running = false;
+		bool _programableStop = false;
 		std::thread _eventThread;
 		std::shared_mutex _runMutex;
 		int _initWidth;
@@ -587,6 +530,80 @@ namespace VK4 {
 //         █       █    █   █    █ █           █     █ █          █    █     █ █     █ █     █ █     █         
 //         █       █     █ ███    █            █     █ ███████    █    █     █ ███████ ██████   █████          
 // ############################################################################################################
+		void _run() {
+			_surface = std::make_unique<Vk_Surface>(_device->vk_instance(), _name, _initWidth, _initHeight, true, true);
+			_surface->vk_lwws_window()->bind_IntKey_Callback(this, &Vk_Viewer::_onKey);
+			_surface->vk_lwws_window()->bind_MouseAction_Callback(this, &Vk_Viewer::_onMouseAction);
+			_surface->vk_lwws_window()->bind_WindowState_Callback(this, &Vk_Viewer::_onWindowAction);
+
+			auto window = _surface->vk_lwws_window();
+			window->windowEvents_Init();
+
+			_renderpass = std::make_unique<Vk_RenderPass_IM>(_device, _surface.get());
+			_swapchain = std::make_unique<Vk_Swapchain_IM>(_device, _surface.get());
+			_framebuffer = std::make_unique<Vk_Framebuffer_IM>(_device, _surface.get(), _swapchain.get(), _renderpass.get());
+
+			const auto& caps = _device->vk_swapchainSupportActiveDevice(_surface.get());
+			_commandBuffer.resize(caps.nFramesInFlight);
+			VkCommandBufferAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			allocInfo.commandPool = _device->vk_renderingCommandPool();
+			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			allocInfo.commandBufferCount = static_cast<uint32_t>(_commandBuffer.size());
+
+			VK_CHECK(vkAllocateCommandBuffers(
+				_device->vk_lDev(),
+				&allocInfo,
+				_commandBuffer.data()),
+				"Failed to allocate command buffers!"
+			);
+
+			_createSyncResources();
+
+			for(auto& cam : _cameras){
+				_attachRenderer(
+					cam.second.get(), 
+					I_Renderer::Vk_PipelineAuxilliaries {
+						.surface=_surface.get(), 
+						.renderpass=_renderpass.get(),
+						.swapchain=_swapchain.get(),
+						.framebuffer=_framebuffer.get()
+					}
+				);
+			}
+
+			vk_build();
+			window->emit_windowEvent_Paint();
+
+			{
+				auto lock = std::lock_guard<std::shared_mutex>(_runMutex);
+				_running = true;
+			}
+			_onResize = false;
+
+			while(window->windowEvents_Exist()){
+				// _device->vk_cleanSingleTimeCommands();
+				window->windowEvents_Pump();
+
+				{
+					auto lock = std::shared_lock<std::shared_mutex>(_runMutex);
+					if(_programableStop) goto terminate;
+				}
+
+				if(window->windowShouldClose()){
+					goto terminate;
+				}
+			}
+
+			terminate:
+			Vk_ThreadSafe::Vk_ThreadSafe_DeviceWaitIdle(_device->vk_lDev());
+			{
+				auto lock = std::lock_guard<std::shared_mutex>(_runMutex);
+				_running = false;
+				_programableStop = false;
+			}
+			_threadPool.stop();
+		}
 
 		std::unique_ptr<I_ViewerSteering> _getSteering(const Vk_CameraInit& init){
 			if(init.specs.steeringType == Vk_SteeringType::CAMERA_CENTRIC){

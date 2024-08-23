@@ -427,7 +427,7 @@ namespace VK4 {
 			VkBufferUsageFlags usageFlags = getUsageFlags(type, usage);
 			device->vk_createBuffer(
 				usageFlags,
-				VK_MEMORY_PROPERTY_RDMA_CAPABLE_BIT_NV,
+				VK_MEMORY_PROPERTY_RDMA_CAPABLE_BIT_NV | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 				buffer,
 				memory,
 				static_cast<VkDeviceSize>(size)
@@ -491,6 +491,31 @@ namespace VK4 {
 			// dstByteOffset = byteFrom because we need to place the data in the right spot
 			copyGpuToGpu(device, nn, stagingBuffer, byteTo - byteFrom, buffer, bufferByteSize, copyByteSize, 0, byteFrom);
 			destroyGpuBuffer(device, stagingBuffer, stagingBufferMemory);
+		}
+
+		template<class T_StructureType>
+        static void copyDataToBufferDirect(
+            Vk_Device* device,
+            BufferType type,
+            VkDeviceMemory bufferMemory, 
+			uint64_t bufferByteSize,
+            const Vk_DataBufferLib::StructuredData<T_StructureType>& structuredData,
+            size_t from, 
+            size_t to,
+            const std::string& objName = "",
+            const std::string& associatedObject = ""
+        ){
+            if(from > to){
+                Vk_Logger::RuntimeError(typeid(NoneObj), "Data [from, to] must be an interval of positive length but is {0} items long!", to-from);
+            }
+			uint64_t byteFrom = static_cast<uint64_t>(from * sizeof(T_StructureType));
+			uint64_t byteTo = static_cast<uint64_t>(to * sizeof(T_StructureType));
+
+            // std::string nn = "#Create#" + objName + associatedObject;
+			// map memory into variable to actually use it
+			uint64_t copyByteSize = byteTo - byteFrom;
+			// srcByteOffset = byteFrom, dstByteOffset = 0 because that is the staging buffer offset that only houses the new data
+			copyCpuToGpu(device, structuredData, bufferMemory, copyByteSize, byteFrom, byteTo);
 		}
 
         static std::uint64_t getStagingBufferMaxMemory(

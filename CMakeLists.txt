@@ -76,25 +76,19 @@ add_subdirectory(src)
 add_subdirectory(tests)
 
 ##########################################################################################################
-# some primitive test for colors
-add_executable(test_terminal_colors "tests/test_terminal_colors.cpp")
-target_compile_definitions(test_terminal_colors PRIVATE $<$<CONFIG:Debug>:_DEBUG=1>) # this actually works (adds _DEBUG=1 if the setting is debug mode)
-target_include_directories(test_terminal_colors PRIVATE ${Boost_INCLUDE_DIRS})
-
-##########################################################################################################
-# extensive tests for the viewer
-add_executable(test_vk4_application "tests/test_vk4_application.cpp")
-target_compile_definitions(test_vk4_application PRIVATE $<$<CONFIG:Debug>:_DEBUG=1>) # this actually works (adds _DEBUG=1 if the setting is debug mode)
-target_include_directories(test_vk4_application PRIVATE ${Boost_INCLUDE_DIRS} ${glm_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})
+# all tests
+add_executable(test_vk4_all "tests/test_vk4_all.cpp")
+target_compile_definitions(test_vk4_all PRIVATE $<$<CONFIG:Debug>:_DEBUG=1>) # this actually works (adds _DEBUG=1 if the setting is debug mode)
+target_include_directories(test_vk4_all PRIVATE ${Boost_INCLUDE_DIRS} ${glm_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})
 # target_link_libraries(test_vk4_application ExternalLib)
 if(UNIX)
-    target_include_directories(test_vk4_application PRIVATE ${X11_INCLUDE_DIR})
-    target_link_libraries(test_vk4_application ${Vulkan_LIBRARIES} ${X11_LIBRARIES} ${X11_xcb_LIB})
+    target_include_directories(test_vk4_all PRIVATE ${X11_INCLUDE_DIR})
+    target_link_libraries(test_vk4_all ${Vulkan_LIBRARIES} ${X11_LIBRARIES} ${X11_xcb_LIB})
 elseif(WIN32)
-    target_link_directories(test_vk4_application PRIVATE ${Vulkan_LIBRARIES})
-    target_link_libraries(test_vk4_application vulkan-1)
+    target_link_directories(test_vk4_all PRIVATE ${Vulkan_LIBRARIES})
+    target_link_libraries(test_vk4_all vulkan-1)
     add_custom_command( # compile shaders and put them inside an h file
-        TARGET test_vk4_application
+        TARGET test_vk4_all
         PRE_BUILD
         COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/src/vk_renderer4/objects/compile_glsl2.py"
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -102,7 +96,7 @@ elseif(WIN32)
 endif()
 
 ##########################################################################################################
-# sample viewer
+# sample viewer: example on how to create and use the viewer
 add_executable(sample_viewer "sample_viewer.cpp")
 target_compile_definitions(sample_viewer PRIVATE $<$<CONFIG:Debug>:_DEBUG=1>) # this actually works (adds _DEBUG=1 if the setting is debug mode)
 target_include_directories(sample_viewer PRIVATE ${glm_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})

@@ -290,6 +290,22 @@ namespace UT{
 			return geometry;
 		}
 
+		std::vector<VK4::Vk_Vertex_PC> Cube2_PC()
+		{
+			std::vector<VK4::Vk_Vertex_PC> geometry =
+			{
+				VK4::Vk_Vertex_PC { glm::tvec3<VK4::point_type>( 2, 2, 2),  glm::tvec3<VK4::point_type>(0.7,   0,   0) },
+				VK4::Vk_Vertex_PC { glm::tvec3<VK4::point_type>(-2, 2, 2),  glm::tvec3<VK4::point_type>(0,   0.7,   0) },
+				VK4::Vk_Vertex_PC { glm::tvec3<VK4::point_type>(-2,-2, 2),  glm::tvec3<VK4::point_type>(0,     0, 0.7) },
+				VK4::Vk_Vertex_PC { glm::tvec3<VK4::point_type>( 2,-2, 2),  glm::tvec3<VK4::point_type>(0.7, 0.7,   0) },
+				VK4::Vk_Vertex_PC { glm::tvec3<VK4::point_type>( 2, 2,-2),  glm::tvec3<VK4::point_type>(0,   0.7, 0.7) },
+				VK4::Vk_Vertex_PC { glm::tvec3<VK4::point_type>(-2, 2,-2),  glm::tvec3<VK4::point_type>(0.7,   0, 0.7) },
+				VK4::Vk_Vertex_PC { glm::tvec3<VK4::point_type>(-2,-2,-2),  glm::tvec3<VK4::point_type>(0.7, 0.2,   0) },
+				VK4::Vk_Vertex_PC { glm::tvec3<VK4::point_type>( 2,-2,-2),  glm::tvec3<VK4::point_type>(0.2,   0, 0.2) }
+			};
+			return geometry;
+		}
+
 		std::vector<VK4::Vk_Vertex_PCN> Cube1_PCN()
 		{
 			std::vector<VK4::Vk_Vertex_PCN> geometry =
@@ -302,6 +318,22 @@ namespace UT{
 				VK4::Vk_Vertex_PCN { glm::tvec3<VK4::point_type>(-1, 1,-1),  glm::tvec3<VK4::point_type>(1.0,   0, 1.0),  glm::tvec3<VK4::point_type>(-1, 1,-1) },
 				VK4::Vk_Vertex_PCN { glm::tvec3<VK4::point_type>(-1,-1,-1),  glm::tvec3<VK4::point_type>(1.0, 0.5,   0),  glm::tvec3<VK4::point_type>(-1,-1,-1) },
 				VK4::Vk_Vertex_PCN { glm::tvec3<VK4::point_type>( 1,-1,-1),  glm::tvec3<VK4::point_type>(0.5,   0, 0.5),  glm::tvec3<VK4::point_type>( 1,-1,-1) }
+			};
+			return geometry;
+		}
+
+		std::vector<VK4::Vk_Vertex_PCN> Cube2_PCN()
+		{
+			std::vector<VK4::Vk_Vertex_PCN> geometry =
+			{
+				VK4::Vk_Vertex_PCN { glm::tvec3<VK4::point_type>( 2, 2, 2),  glm::tvec3<VK4::point_type>(0.7,   0,   0),  glm::tvec3<VK4::point_type>( 1, 1, 1) },
+				VK4::Vk_Vertex_PCN { glm::tvec3<VK4::point_type>(-2, 2, 2),  glm::tvec3<VK4::point_type>(0,   0.7,   0),  glm::tvec3<VK4::point_type>(-1, 1, 1) },
+				VK4::Vk_Vertex_PCN { glm::tvec3<VK4::point_type>(-2,-2, 2),  glm::tvec3<VK4::point_type>(0,     0, 0.7),  glm::tvec3<VK4::point_type>(-1,-1, 1) },
+				VK4::Vk_Vertex_PCN { glm::tvec3<VK4::point_type>( 2,-2, 2),  glm::tvec3<VK4::point_type>(0.7, 0.7,   0),  glm::tvec3<VK4::point_type>( 1,-1, 1) },
+				VK4::Vk_Vertex_PCN { glm::tvec3<VK4::point_type>( 2, 2,-2),  glm::tvec3<VK4::point_type>(0,   0.7, 0.7),  glm::tvec3<VK4::point_type>( 1, 1,-1) },
+				VK4::Vk_Vertex_PCN { glm::tvec3<VK4::point_type>(-2, 2,-2),  glm::tvec3<VK4::point_type>(0.7,   0, 0.7),  glm::tvec3<VK4::point_type>(-1, 1,-1) },
+				VK4::Vk_Vertex_PCN { glm::tvec3<VK4::point_type>(-2,-2,-2),  glm::tvec3<VK4::point_type>(0.7, 0.2,   0),  glm::tvec3<VK4::point_type>(-1,-1,-1) },
+				VK4::Vk_Vertex_PCN { glm::tvec3<VK4::point_type>( 2,-2,-2),  glm::tvec3<VK4::point_type>(0.2,   0, 0.2),  glm::tvec3<VK4::point_type>( 1,-1,-1) }
 			};
 			return geometry;
 		}
@@ -324,6 +356,28 @@ namespace UT{
 			/*11*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>(-1, 1, 1),  glm::tvec3<VK4::point_type>(0,   1.0,   0),  glm::tvec3<VK4::point_type>(-1, 1, 1), glm::tvec2<VK4::point_type>(0.50f, 0.00f) },
 			/*12*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>( 1, 1, 1),  glm::tvec3<VK4::point_type>(1.0,   0,   0),  glm::tvec3<VK4::point_type>( 1, 1, 1), glm::tvec2<VK4::point_type>(0.50f, 0.75f) },
 			/*13*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>( 1, 1,-1),  glm::tvec3<VK4::point_type>(0,   1.0, 1.0),  glm::tvec3<VK4::point_type>( 1, 1,-1), glm::tvec2<VK4::point_type>(0.75f, 0.75f) },
+			};
+			return normals;
+		}
+
+		std::vector<VK4::Vk_Vertex_PCNT> Cube2_PCNT()
+		{
+			std::vector<VK4::Vk_Vertex_PCNT> normals = {
+			/*00*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>( 2, 2, 2),  glm::tvec3<VK4::point_type>(0.7,   0,   0),  glm::tvec3<VK4::point_type>( 1, 1, 1), glm::tvec2<VK4::point_type>(0.25f, 0.50f) },
+			/*01*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>(-2, 2, 2),  glm::tvec3<VK4::point_type>(0,   0.7,   0),  glm::tvec3<VK4::point_type>(-1, 1, 1), glm::tvec2<VK4::point_type>(0.25f, 0.25f) },
+			/*02*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>(-2,-2, 2),  glm::tvec3<VK4::point_type>(0,     0, 0.7),  glm::tvec3<VK4::point_type>(-1,-1, 1), glm::tvec2<VK4::point_type>(0.50f, 0.25f) },
+			/*03*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>( 2,-2, 2),  glm::tvec3<VK4::point_type>(0.7, 0.7,   0),  glm::tvec3<VK4::point_type>( 1,-1, 1), glm::tvec2<VK4::point_type>(0.50f, 0.50f) },
+			/*04*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>( 2, 2,-2),  glm::tvec3<VK4::point_type>(0,   0.7, 0.7),  glm::tvec3<VK4::point_type>( 1, 1,-1), glm::tvec2<VK4::point_type>(0.00f, 0.50f) },
+			/*05*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>(-2, 2,-2),  glm::tvec3<VK4::point_type>(0.7,   0, 0.7),  glm::tvec3<VK4::point_type>(-1, 1,-1), glm::tvec2<VK4::point_type>(0.00f, 0.25f) },
+			/*06*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>(-2,-2,-2),  glm::tvec3<VK4::point_type>(0.7, 0.2,   0),  glm::tvec3<VK4::point_type>(-1,-1,-1), glm::tvec2<VK4::point_type>(0.75f, 0.25f) },
+			/*07*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>( 2,-2,-2),  glm::tvec3<VK4::point_type>(0.2,   0, 0.2),  glm::tvec3<VK4::point_type>( 1,-1,-1), glm::tvec2<VK4::point_type>(0.75f, 0.50f) },
+
+			/*08*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>(-2, 2,-2),  glm::tvec3<VK4::point_type>(0.7,   0, 0.7),  glm::tvec3<VK4::point_type>(-1, 1,-1), glm::tvec2<VK4::point_type>(1.00f, 0.25f) },
+			/*09*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>( 2, 2,-2),  glm::tvec3<VK4::point_type>(0,   0.7, 0.7),  glm::tvec3<VK4::point_type>( 1, 1,-1), glm::tvec2<VK4::point_type>(1.00f, 0.50f) },
+			/*10*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>(-2, 2,-2),  glm::tvec3<VK4::point_type>(0.7,   0, 0.7),  glm::tvec3<VK4::point_type>(-1, 1,-1), glm::tvec2<VK4::point_type>(0.75f, 0.00f) },
+			/*11*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>(-2, 2, 2),  glm::tvec3<VK4::point_type>(0,   0.7,   0),  glm::tvec3<VK4::point_type>(-1, 1, 1), glm::tvec2<VK4::point_type>(0.50f, 0.00f) },
+			/*12*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>( 2, 2, 2),  glm::tvec3<VK4::point_type>(0.7,   0,   0),  glm::tvec3<VK4::point_type>( 1, 1, 1), glm::tvec2<VK4::point_type>(0.50f, 0.75f) },
+			/*13*/	VK4::Vk_Vertex_PCNT { glm::tvec3<VK4::point_type>( 2, 2,-2),  glm::tvec3<VK4::point_type>(0,   0.7, 0.7),  glm::tvec3<VK4::point_type>( 1, 1,-1), glm::tvec2<VK4::point_type>(0.75f, 0.75f) },
 			};
 			return normals;
 		}
@@ -352,6 +406,29 @@ namespace UT{
 			return Cube1_PCNT_Indices();
 		}
 
+		std::vector<VK4::index_type> Cube2_PCNT_Indices() {
+			std::vector<VK4::index_type> indices = { 
+				/*top   */ 0,1,2,  2,3,0,
+				/*back  */ 0,5,1,  0,4,5,  
+				/*right */ 3,7,0,  7,4,0,  
+				/*left  */ 1,5,2,  5,6,2,  
+				/*front */ 7,3,2,  2,6,7,  
+				/*bottom*/ 7,6,5,  5,4,7 
+			};
+			return indices;
+		}
+
+		std::vector<VK4::index_type> Cube2_P_C_Indices() {
+			return Cube2_PCNT_Indices();
+		}
+
+		std::vector<VK4::index_type> Cube2_PC_Indices() {
+			return Cube2_PCNT_Indices();
+		}
+
+		std::vector<VK4::index_type> Cube2_PCN_Indices() {
+			return Cube2_PCNT_Indices();
+		}
 
 // ############################################################################################################
 //        █████  █     █ ██████  ███████         █     █         █     █ ███████ ██████  █     █  █████        

@@ -1,5 +1,6 @@
-#define BOOST_TEST_MODULE RunTestTerminalColor
-#include "boost/test/included/unit_test.hpp"
+#ifndef BOOST_TEST_INCLUDED
+    #include "boost/test/included/unit_test.hpp"
+#endif
 
 #include <iostream>
 #include <typeinfo>
