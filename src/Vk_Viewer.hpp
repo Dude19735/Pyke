@@ -726,6 +726,7 @@ namespace VK4 {
 				}
 
 				if(_rebuildBeforeNextFrame.at(currentFrame)){
+					_device->bridge.runCurrentFrameUpdates();
 					_recordCommandBuffer(currentFrame);
 				}
 
@@ -764,8 +765,6 @@ namespace VK4 {
 					auto& cam = c.second;
 					cam->vk_update(currentFrame);
 				}
-
-				_device->bridge.runCurrentFrameUpdates();
 
 				// reset the fence we waited for because we updated all the camera shaders with the
 				// potentially new view perspective => GPU can go on...

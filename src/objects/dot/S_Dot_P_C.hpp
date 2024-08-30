@@ -67,11 +67,9 @@ namespace VK4 {
 			const std::vector<index_type>& i,
 			float pointSize,
 			float alpha,
-			// Topology topology = VK4::Topology::Points,
-			CullMode cullMode = VK4::CullMode::NoCulling,
-			// RenderType renderType = VK4::RenderType::Point,
 			Vk_BufferUpdateBehaviour updateBehaviour = Vk_BufferUpdateBehaviour::Staged_GlobalLock,
-			Vk_BufferSizeBehaviour sizeBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
+			Vk_BufferSizeBehaviour sizeBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
+			CullMode cullMode = VK4::CullMode::NoCulling
 		){
 			if(!(p.size() == c.size() && p.size() == 3*i.size())){
 				Vk_Logger::RuntimeError(typeid(NoneObj), "Vertices and Colors sizes must be 3 times larger than Index size but sizes are V={0}, C={1}, I={2}", p.size(), c.size(), i.size());
@@ -119,11 +117,9 @@ namespace VK4 {
 #endif
 			float pointSize,
 			float alpha,
-			// Topology topology = VK4::Topology::Points,
-			CullMode cullMode = VK4::CullMode::NoCulling,
-			// RenderType renderType = VK4::RenderType::Point,
 			Vk_BufferUpdateBehaviour updateBehaviour = Vk_BufferUpdateBehaviour::Staged_GlobalLock,
-			Vk_BufferSizeBehaviour sizeBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
+			Vk_BufferSizeBehaviour sizeBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
+			CullMode cullMode = VK4::CullMode::NoCulling
 		) {
 #ifdef PYVK
 			glm::tmat4x4<point_type> m = Vk_NumpyTransformers::arrayToGLM4x4<point_type>(modelMatrix);

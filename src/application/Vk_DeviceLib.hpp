@@ -85,8 +85,8 @@ namespace VK4 {
 
             void addUpdateForNextFrame(const std::function<void()>& func){
                 // use frame-local mutex inside addUpdate function
-                int nf = (_currentFrame+1) & _updates.size();
-                addUpdate(nf, func);
+                // int nf = (_currentFrame+1) % _updates.size();
+                addUpdate(_currentFrame, func);
             }
 
             void addUpdate(int frameNr, const std::function<void()>& func){

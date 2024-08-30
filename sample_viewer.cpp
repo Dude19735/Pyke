@@ -67,7 +67,7 @@ class Viewer {
 			"test_object",
 			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 1.5,1.5,0,1},
 			cp, cc, ci, _pointSize, _alpha,
-			VK4::CullMode::NoCulling
+			VK4::Vk_BufferUpdateBehaviour::Staged_GlobalLock
 		);
 
 		_line = VK4::S_Line_P_C::create(
@@ -76,7 +76,7 @@ class Viewer {
 			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, -1.5,1.5,0,1},
 			VK4::Vk_SampleObjects::Line_P(), VK4::Vk_SampleObjects::Line_C(), VK4::Vk_SampleObjects::Line_P_C_Indices(),
 			_lineWidth, 1.0f,
-			VK4::CullMode::NoCulling
+			VK4::Vk_BufferUpdateBehaviour::Direct_GlobalLock
 		);
 
 		float f=-4.0f;
@@ -89,8 +89,7 @@ class Viewer {
 			VK4::Vk_SampleObjects::Coords_P(f,t,l, f,t,l, f,t,l), 
 			VK4::Vk_SampleObjects::Coords_C(1.0f, 1.0f, 1.0f), 
 			VK4::Vk_SampleObjects::Coords_P_C_Indices(),
-			2.0f, 1.0f,
-			VK4::CullMode::NoCulling
+			2.0f, 1.0f
 		);
 
 		_mesh = VK4::S_Mesh_P_C::create(
@@ -103,7 +102,8 @@ class Viewer {
 			1.0f,
 			VK4::CullMode::Back,
 			VK4::RenderType::Solid,
-			1.0f, 1.0f
+			1.0f, 1.0f,
+			VK4::Vk_BufferUpdateBehaviour::Staged_DoubleBuffering
 		);
 
 		_mesh2 = VK4::S_Mesh_P_C::create(
@@ -116,7 +116,8 @@ class Viewer {
 			1.0f,
 			VK4::CullMode::Back,
 			VK4::RenderType::Wireframe,
-			1.0f, 1.0f
+			1.0f, 1.0f,
+			VK4::Vk_BufferUpdateBehaviour::Direct_DoubleBuffering
 		);
 
 		_mesh2Normals = VK4::S_Line_P_C::create(
@@ -125,7 +126,7 @@ class Viewer {
 			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 1.5,-1.5,0,1},
 			VK4::Vk_SampleObjects::Cube2_NormalLines_P(0.5f, _angle), VK4::Vk_SampleObjects::Cube2_NormalLines_C(), VK4::Vk_SampleObjects::Cube2_NormalLines_Indices(),
 			_lineWidth, 1.0f,
-			VK4::CullMode::NoCulling
+			VK4::Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering
 		);
 
 		_cam->vk_registerAction('r', this, &Viewer::rotate);
@@ -239,8 +240,8 @@ private:
 		if(_size >= 1.5f) _step = -0.01f;
 		else if(_size <= 0.5f) _step = 0.01f;
 		_size += _step;
-		_dot->vk_updateModelMatrix(glm::tmat4x4<VK4::point_type>{_size,0,0,0, 0,_size,0,0, 0,0,_size,0, 0,0,0,1});
-		_cam->vk_redraw();
+		_dot->vk_updateModelMatrix(glm::tmat4x4<VK4::point_type>{_size,0,0,0, 0,_size,0,0, 0,0,_size,0, 1.5,1.5,0,1});
+		_cam->vk_rebuildAndRedraw();
 		std::this_thread::sleep_for(std::chrono::microseconds(5000));
 
 		if(_on) repeat();
