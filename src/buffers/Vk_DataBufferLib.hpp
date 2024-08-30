@@ -427,7 +427,7 @@ namespace VK4 {
 			VkBufferUsageFlags usageFlags = getUsageFlags(type, usage);
 			device->vk_createBuffer(
 				usageFlags,
-				VK_MEMORY_PROPERTY_RDMA_CAPABLE_BIT_NV | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 				buffer,
 				memory,
 				static_cast<VkDeviceSize>(size)
@@ -480,7 +480,10 @@ namespace VK4 {
 			uint64_t byteTo = static_cast<uint64_t>(to * sizeof(T_StructureType));
 
 			// if the buffer is initially empty, no need to copy random stuff, just create the vertex buffer
+			// auto t1 = std::chrono::high_resolution_clock::now();
 			createStagingBuffer(device, type, stagingBuffer, stagingBufferMemory, byteTo - byteFrom, Usage::Source);
+			// auto t2 = std::chrono::high_resolution_clock::now();
+			// std::cout << "############################333" << std::endl << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() << std::endl << "############################333" << std::endl;
 
             std::string nn = "#Create#" + objName + associatedObject;
 			// map memory into variable to actually use it
@@ -515,7 +518,7 @@ namespace VK4 {
 			// map memory into variable to actually use it
 			uint64_t copyByteSize = byteTo - byteFrom;
 			// srcByteOffset = byteFrom, dstByteOffset = 0 because that is the staging buffer offset that only houses the new data
-			copyCpuToGpu(device, structuredData, bufferMemory, copyByteSize, byteFrom, byteTo);
+			copyCpuToGpu(device, structuredData, bufferMemory, copyByteSize, byteFrom, byteFrom);
 		}
 
         static std::uint64_t getStagingBufferMaxMemory(

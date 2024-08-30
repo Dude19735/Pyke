@@ -13,6 +13,9 @@ namespace VK4 {
 			,_debugMessenger(VK_NULL_HANDLE)
 #endif
 		{
+#ifdef _DEBUG
+			Vk_Logger::Warn(typeid(this), GlobalCasters::castHighlightYellow(std::string("Debug mode enabled")));
+#endif
 			initApplication();
 			Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle(std::string("Create Instance: ") + _applicationName));
 		}
@@ -71,9 +74,9 @@ namespace VK4 {
 
 			// get available layers
 			uint32_t availableLayerCount = 0;
-			VK_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, nullptr), "Failed to get instance layer property count");
+			Vk_CheckVkResult(typeid(this), vkEnumerateInstanceLayerProperties(&availableLayerCount, nullptr), "Failed to get instance layer property count");
 			std::vector<VkLayerProperties> availableLayers(availableLayerCount);
-			VK_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers.data()), "Failed to enumerate available layers");
+			Vk_CheckVkResult(typeid(this), vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers.data()), "Failed to enumerate available layers");
 
 
 			// verify that all required layers are available
@@ -99,7 +102,7 @@ namespace VK4 {
 			instanceCreateInfo.ppEnabledLayerNames = requiredValidationLayers.data();
 
 			// create instance
-			VK_CHECK(vkCreateInstance(&instanceCreateInfo, nullptr, &_instance), "Failed to create instance");
+			Vk_CheckVkResult(typeid(this), vkCreateInstance(&instanceCreateInfo, nullptr, &_instance), "Failed to create instance");
 
 			// create debugger
 #ifdef _DEBUG
@@ -134,6 +137,9 @@ namespace VK4 {
 #endif
 			// add the necessary instance extension for the memory budget thing
 			extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+			// check which one of these is the actual one
+			// extensions.push_back(VK_NV_EXTERNAL_MEMORY_RDMA_EXTENSION_NAME);
+			// extensions.push_back(VK_NV_EXTERNAL_MEMORY_EXTENSION_NAME);
 
 #ifdef _DEBUG
 			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);

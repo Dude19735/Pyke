@@ -70,7 +70,7 @@ namespace VK4 {
 			// Topology topology = VK4::Topology::Points,
 			CullMode cullMode = VK4::CullMode::NoCulling,
 			// RenderType renderType = VK4::RenderType::Point,
-			Vk_BufferUpdateBehaviour updateBehaviour = Vk_BufferUpdateBehaviour::GlobalLock,
+			Vk_BufferUpdateBehaviour updateBehaviour = Vk_BufferUpdateBehaviour::Staged_GlobalLock,
 			Vk_BufferSizeBehaviour sizeBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
 		){
 			if(!(p.size() == c.size() && p.size() == 3*i.size())){
@@ -122,7 +122,7 @@ namespace VK4 {
 			// Topology topology = VK4::Topology::Points,
 			CullMode cullMode = VK4::CullMode::NoCulling,
 			// RenderType renderType = VK4::RenderType::Point,
-			Vk_BufferUpdateBehaviour updateBehaviour = Vk_BufferUpdateBehaviour::GlobalLock,
+			Vk_BufferUpdateBehaviour updateBehaviour = Vk_BufferUpdateBehaviour::Staged_GlobalLock,
 			Vk_BufferSizeBehaviour sizeBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
 		) {
 #ifdef PYVK
@@ -201,7 +201,7 @@ namespace VK4 {
 			layoutInfo.pBindings = bindings.data();
 
 			VkDescriptorSetLayout layout;
-			VK_CHECK(
+			Vk_CheckVkResult(typeid(NoneObj), 
 				vkCreateDescriptorSetLayout(
 					lDev,
 					&layoutInfo,
@@ -237,7 +237,7 @@ namespace VK4 {
 			poolInfo.maxSets = freshPoolSize; // one set per shader and framebuffer
 
 			VkDescriptorPool pool;
-			VK_CHECK(
+			Vk_CheckVkResult(typeid(NoneObj), 
 				vkCreateDescriptorPool(
 					lDev,
 					&poolInfo,
@@ -270,7 +270,7 @@ namespace VK4 {
 			std::vector<VkDescriptorSet> sets(count);
 
 			VkResult res = vkAllocateDescriptorSets(lDev, &allocInfo, sets.data());
-			VK_CHECK(res, "Failed to allocate descriptor sets!");
+			Vk_CheckVkResult(typeid(NoneObj), res, "Failed to allocate descriptor sets!");
 
 			// return the ones created in this go for the assigned object to use
 			return sets;

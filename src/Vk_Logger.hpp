@@ -8,10 +8,10 @@
 
 #include "Vk_Coloring.hpp"
 
-// #ifdef _DEBUG
-// #define DEBUG_TRACE  
-// #define DEBUG_LOG
-// #endif
+#ifdef _DEBUG
+#define DEBUG_TRACE  
+#define DEBUG_LOG
+#endif
 #define MESSAGE
 #define DEBUG_WARN
 #define DEBUG_ERROR 

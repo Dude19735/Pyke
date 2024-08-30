@@ -168,7 +168,7 @@ namespace VK4 {
 			deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(devExtensions.size());
 			deviceCreateInfo.ppEnabledExtensionNames = devExtensions.data();
 
-			VK_CHECK(
+			Vk_CheckVkResult(typeid(this), 
 				vkCreateDevice(_activePhysicalDevice->physicalDevice, &deviceCreateInfo, nullptr, &_device),
 				"Failed to create logical device"
 			);
@@ -185,7 +185,7 @@ namespace VK4 {
 			cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 			cmdPoolInfo.queueFamilyIndex = _activePhysicalDevice->queueFamilyIndices.graphicsFamilyIndex;
 			cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-			VK_CHECK(
+			Vk_CheckVkResult(typeid(this), 
 				vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_renderingCommandPool),
 				"Unable to create command pool"
 			);
@@ -195,7 +195,7 @@ namespace VK4 {
 			cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 			cmdPoolInfo.queueFamilyIndex = _activePhysicalDevice->queueFamilyIndices.transferFamilyIndex;
 			cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-			VK_CHECK(
+			Vk_CheckVkResult(typeid(this), 
 				vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_copyCommandPool),
 				"Unable to create command pool"
 			);
@@ -205,7 +205,7 @@ namespace VK4 {
 			cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 			cmdPoolInfo.queueFamilyIndex = _activePhysicalDevice->queueFamilyIndices.graphicsFamilyIndex;
 			cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-			VK_CHECK(
+			Vk_CheckVkResult(typeid(this), 
 				vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_initializationCommandPool),
 				"Unable to create command pool"
 			);

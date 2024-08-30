@@ -355,20 +355,21 @@ namespace VK4 {
 	};
 
 	enum class Vk_BufferUpdateBehaviour {
-		GlobalLock, 		   /* one buffer but global lock at data transfer */
-		DoubleBuffering,       /* two buffers on GPU at all times */
-		LazyDoubleBuffering,   /* create a new buffer on update and switch at update time */
-		Pinned_GlobalLock,	   /* use CPU accessible memory on GPU with global lock at data transfer */
-		Pinned_DoubleBuffering /* use CPU accessible memory on GPU with double buffering */
+		Staged_GlobalLock, 		   			/* one buffer but global lock at data transfer */
+		Staged_DoubleBuffering,    			/* two buffers on GPU at all times */
+		Staged_LazyDoubleBuffering,			/* create a new buffer on update and switch at update time */
+		/* TODO: add pinned staging for the three versions above where the staging buffer is preallocated */
+		Direct_GlobalLock,	   				/* use CPU accessible memory on GPU with global lock at data transfer */
+		Direct_DoubleBuffering 				/* use CPU accessible memory on GPU with double buffering */
 	};
 
 	static std::string Vk_BufferUpdateBehaviourToString(Vk_BufferUpdateBehaviour behaviour) {
 		switch (behaviour) {
-			case Vk_BufferUpdateBehaviour::GlobalLock: return "GlobalLock";
-			case Vk_BufferUpdateBehaviour::DoubleBuffering: return "DoubleBuffering";
-			case Vk_BufferUpdateBehaviour::LazyDoubleBuffering: return "LazyDoubleBuffering";
-			case Vk_BufferUpdateBehaviour::Pinned_GlobalLock: return "Pinned_GlobalLock";
-			case Vk_BufferUpdateBehaviour::Pinned_DoubleBuffering: return "Pinned_DoubleBuffering";
+			case Vk_BufferUpdateBehaviour::Staged_GlobalLock: return "Staged_GlobalLock";
+			case Vk_BufferUpdateBehaviour::Staged_DoubleBuffering: return "Staged_DoubleBuffering";
+			case Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering: return "Staged_LazyDoubleBuffering";
+			case Vk_BufferUpdateBehaviour::Direct_GlobalLock: return "Direct_GlobalLock";
+			case Vk_BufferUpdateBehaviour::Direct_DoubleBuffering: return "Direct_DoubleBuffering";
 			default: return "Unknown";
 		}
 	}
@@ -410,27 +411,6 @@ namespace VK4 {
 		int height;
 		int width;
 	};
-
-	//template<typename T>
-	//static T cast(std::map<std::string, py::object>& params, const std::string& name, const std::string& message = "") {
-	//	if (strcmp(typeid(T).name(), params.at(name).ptr()->ob_type->tp_name) != 0) {
-	//		Vk_Logger::RuntimeError(typeid(this), 
-	//			(
-	//				std::string("\n************************************************************************\n") +
-	//				std::string("Faulty typecast: <") +
-	//				GlobalCasters::castHighlightYellow(name) +
-	//				std::string("> must be of type <") +
-	//				GlobalCasters::castHighlightYellow(std::string(typeid(T).name())) +
-	//				std::string("> but has type <") +
-	//				GlobalCasters::castHighlightYellow(std::string(params.at(name).ptr()->ob_type->tp_name)) +
-	//				std::string(">\n") +
-	//				(message.compare("") != 0 ? std::string("*** Message: ") + message : std::string("")) +
-	//				std::string(" ***\n************************************************************************\n")
-	//			)
-	//		);
-	//	}
-	//	return params.at(name).cast<T>();
-	//}
 
 	enum class RenderType {
 		Solid,
@@ -486,6 +466,68 @@ namespace VK4 {
 			return "Front";
 		default:
 			return "Unknown";
+		}
+	}
+
+	static std::string Vk_VkResult2String(VkResult res){
+		switch(res) {
+			case VK_SUCCESS: return "VK_SUCCESS";
+			case VK_NOT_READY: return "VK_NOT_READY";
+			case VK_TIMEOUT: return "VK_TIMEOUT";
+			case VK_EVENT_SET: return "VK_EVENT_SET";
+			case VK_EVENT_RESET: return "VK_EVENT_RESET";
+			case VK_INCOMPLETE: return "VK_INCOMPLETE";
+			case VK_ERROR_OUT_OF_HOST_MEMORY: return "VK_ERROR_OUT_OF_HOST_MEMORY";
+			case VK_ERROR_OUT_OF_DEVICE_MEMORY: return "VK_ERROR_OUT_OF_DEVICE_MEMORY";
+			case VK_ERROR_INITIALIZATION_FAILED: return "VK_ERROR_INITIALIZATION_FAILED";
+			case VK_ERROR_DEVICE_LOST: return "VK_ERROR_DEVICE_LOST";
+			case VK_ERROR_MEMORY_MAP_FAILED: return "VK_ERROR_MEMORY_MAP_FAILED";
+			case VK_ERROR_LAYER_NOT_PRESENT: return "VK_ERROR_LAYER_NOT_PRESENT";
+			case VK_ERROR_EXTENSION_NOT_PRESENT: return "VK_ERROR_EXTENSION_NOT_PRESENT";
+			case VK_ERROR_FEATURE_NOT_PRESENT: return "VK_ERROR_FEATURE_NOT_PRESENT";
+			case VK_ERROR_INCOMPATIBLE_DRIVER: return "VK_ERROR_INCOMPATIBLE_DRIVER";
+			case VK_ERROR_TOO_MANY_OBJECTS: return "VK_ERROR_TOO_MANY_OBJECTS";
+			case VK_ERROR_FORMAT_NOT_SUPPORTED: return "VK_ERROR_FORMAT_NOT_SUPPORTED";
+			case VK_ERROR_FRAGMENTED_POOL: return "VK_ERROR_FRAGMENTED_POOL";
+			case VK_ERROR_UNKNOWN: return "VK_ERROR_UNKNOWN";
+			case VK_ERROR_OUT_OF_POOL_MEMORY: return "VK_ERROR_OUT_OF_POOL_MEMORY";
+			case VK_ERROR_INVALID_EXTERNAL_HANDLE: return "VK_ERROR_INVALID_EXTERNAL_HANDLE";
+			case VK_ERROR_FRAGMENTATION: return "VK_ERROR_FRAGMENTATION";
+			case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS: return "VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS";
+			case VK_PIPELINE_COMPILE_REQUIRED: return "VK_PIPELINE_COMPILE_REQUIRED";
+			case VK_ERROR_SURFACE_LOST_KHR: return "VK_ERROR_SURFACE_LOST_KHR";
+			case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR: return "VK_ERROR_NATIVE_WINDOW_IN_USE_KHR";
+			case VK_SUBOPTIMAL_KHR: return "VK_SUBOPTIMAL_KHR";
+			case VK_ERROR_OUT_OF_DATE_KHR: return "VK_ERROR_OUT_OF_DATE_KHR";
+			case VK_ERROR_INCOMPATIBLE_DISPLAY_KHR: return "VK_ERROR_INCOMPATIBLE_DISPLAY_KHR";
+			case VK_ERROR_VALIDATION_FAILED_EXT: return "VK_ERROR_VALIDATION_FAILED_EXT";
+			case VK_ERROR_INVALID_SHADER_NV: return "VK_ERROR_INVALID_SHADER_NV";
+			case VK_ERROR_IMAGE_USAGE_NOT_SUPPORTED_KHR: return "VK_ERROR_IMAGE_USAGE_NOT_SUPPORTED_KHR";
+			case VK_ERROR_VIDEO_PICTURE_LAYOUT_NOT_SUPPORTED_KHR: return "VK_ERROR_VIDEO_PICTURE_LAYOUT_NOT_SUPPORTED_KHR";
+			case VK_ERROR_VIDEO_PROFILE_OPERATION_NOT_SUPPORTED_KHR: return "VK_ERROR_VIDEO_PROFILE_OPERATION_NOT_SUPPORTED_KHR";
+			case VK_ERROR_VIDEO_PROFILE_FORMAT_NOT_SUPPORTED_KHR: return "VK_ERROR_VIDEO_PROFILE_FORMAT_NOT_SUPPORTED_KHR";
+			case VK_ERROR_VIDEO_PROFILE_CODEC_NOT_SUPPORTED_KHR: return "VK_ERROR_VIDEO_PROFILE_CODEC_NOT_SUPPORTED_KHR";
+			case VK_ERROR_VIDEO_STD_VERSION_NOT_SUPPORTED_KHR: return "VK_ERROR_VIDEO_STD_VERSION_NOT_SUPPORTED_KHR";
+			case VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT: return "VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT";
+			case VK_ERROR_NOT_PERMITTED_KHR: return "VK_ERROR_NOT_PERMITTED_KHR";
+			case VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT: return "VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT";
+			case VK_THREAD_IDLE_KHR: return "VK_THREAD_IDLE_KHR";
+			case VK_THREAD_DONE_KHR: return "VK_THREAD_DONE_KHR";
+			case VK_OPERATION_DEFERRED_KHR: return "VK_OPERATION_DEFERRED_KHR";
+			case VK_OPERATION_NOT_DEFERRED_KHR: return "VK_OPERATION_NOT_DEFERRED_KHR";
+		#ifdef VK_ENABLE_BETA_EXTENSIONS
+			case VK_ERROR_INVALID_VIDEO_STD_PARAMETERS_KHR: return "VK_ERROR_INVALID_VIDEO_STD_PARAMETERS_KHR";
+		#endif
+			case VK_ERROR_COMPRESSION_EXHAUSTED_EXT: return "VK_ERROR_COMPRESSION_EXHAUSTED_EXT";
+			case VK_ERROR_INCOMPATIBLE_SHADER_BINARY_EXT: return "VK_ERROR_INCOMPATIBLE_SHADER_BINARY_EXT";
+			case VK_RESULT_MAX_ENUM: return "VK_RESULT_MAX_ENUM";
+			default: return "VK_NON_REGISTERED_ERROR_CODE";
+		}
+	}
+
+	static void Vk_CheckVkResult(const std::type_info& info, VkResult res, const std::string& msg){
+		if(res != VK_SUCCESS){
+			Vk_Logger::RuntimeError(info, "Failed with error code {0}: " + msg, Vk_VkResult2String(res));
 		}
 	}
 

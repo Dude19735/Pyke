@@ -54,7 +54,7 @@ namespace VK4 {
 				// amount of layers in image views => single images => 1 layer
 				framebufferInfo.layers = imageViewLayerCount;
 
-				VK_CHECK(vkCreateFramebuffer(_device->vk_lDev(), &framebufferInfo, nullptr, &_framebuffers[i]), "Failed to create frame buffer");
+				Vk_CheckVkResult(typeid(this), vkCreateFramebuffer(_device->vk_lDev(), &framebufferInfo, nullptr, &_framebuffers[i]), "Failed to create frame buffer");
 			}
 		}
 

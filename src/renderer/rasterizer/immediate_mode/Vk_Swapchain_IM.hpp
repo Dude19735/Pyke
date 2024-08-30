@@ -89,11 +89,11 @@ namespace VK4 {
 
 			VkDevice lDev = _device->vk_lDev();
 			VkResult res = vkCreateSwapchainKHR(lDev, &swapchainCreateInfo, nullptr, &_swapchain);
-			VK_CHECK(res, "Failed to create swapchain");
+			Vk_CheckVkResult(typeid(this), res, "Failed to create swapchain");
 
 			// retreive images from swap chain (basically map the memory into a vector)
 			VkResult result = vkGetSwapchainImagesKHR(lDev, _swapchain, &_swapchainImageCount, nullptr);
-			VK_CHECK(result, "Failed to get swapchain");
+			Vk_CheckVkResult(typeid(this), result, "Failed to get swapchain");
 
 			_swapchainImages.resize(_swapchainImageCount);
 			vkGetSwapchainImagesKHR(lDev, _swapchain, &_swapchainImageCount, _swapchainImages.data());

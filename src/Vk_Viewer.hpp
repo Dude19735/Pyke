@@ -551,7 +551,7 @@ namespace VK4 {
 			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 			allocInfo.commandBufferCount = static_cast<uint32_t>(_commandBuffer.size());
 
-			VK_CHECK(vkAllocateCommandBuffers(
+			Vk_CheckVkResult(typeid(this), vkAllocateCommandBuffers(
 				_device->vk_lDev(),
 				&allocInfo,
 				_commandBuffer.data()),
@@ -640,7 +640,7 @@ namespace VK4 {
 			VkCommandBufferBeginInfo beginInfo{};
 			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-			VK_CHECK(vkBeginCommandBuffer(_commandBuffer[index], &beginInfo), "Failed to begin recording command buffer!");
+			Vk_CheckVkResult(typeid(this), vkBeginCommandBuffer(_commandBuffer[index], &beginInfo), "Failed to begin recording command buffer!");
 
 			VkRenderPassBeginInfo renderPassInfo{};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -700,7 +700,7 @@ namespace VK4 {
 			}
 
 			vkCmdEndRenderPass(_commandBuffer[index]);
-			VK_CHECK(vkEndCommandBuffer(_commandBuffer[index]), "Failed to record command buffer!");
+			Vk_CheckVkResult(typeid(this), vkEndCommandBuffer(_commandBuffer[index]), "Failed to record command buffer!");
 		}
 
 		void _redraw() {
@@ -787,7 +787,7 @@ namespace VK4 {
 				submitInfo.pSignalSemaphores = signalSemaphores;
 				
 				{
-					VK_CHECK(
+					Vk_CheckVkResult(typeid(this), 
 						Vk_ThreadSafe::Vk_ThreadSafe_QueueSubmit(
 							_device->vk_graphicsQueue(),
 							1,
@@ -903,12 +903,9 @@ namespace VK4 {
 			fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 			for (int i = 0; i < nFramesInFlight; i++) {
-				VK_CHECK(
-					vkCreateSemaphore(lDev, &semaphoreInfo, nullptr, &_imageAvailableSemaphores[i]) != VK_SUCCESS ||
-					vkCreateSemaphore(lDev, &semaphoreInfo, nullptr, &_renderFinishedSemaphores[i]) != VK_SUCCESS ||
-					vkCreateFence(lDev, &fenceInfo, nullptr, &_inFlightFences[i]),
-					"Failed to create synchronization objects for a frame!"
-				);
+				Vk_CheckVkResult(typeid(this), vkCreateSemaphore(lDev, &semaphoreInfo, nullptr, &_imageAvailableSemaphores[i]), "Failed to create image available semaphore for a frame!");
+				Vk_CheckVkResult(typeid(this), vkCreateSemaphore(lDev, &semaphoreInfo, nullptr, &_renderFinishedSemaphores[i]), "Failed to create render finished semaphore");
+				Vk_CheckVkResult(typeid(this), vkCreateFence(lDev, &fenceInfo, nullptr, &_inFlightFences[i]), "Failed to create in flight fences");
 			}
 		}
 

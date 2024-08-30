@@ -533,7 +533,7 @@ namespace VK4 {
 			/*out*/ PhysicalDevice*& activePhysicalDevice
         ){
 			uint32_t deviceCount = 0;
-			VK_CHECK(
+			Vk_CheckVkResult(typeid(NoneObj), 
 				vkEnumeratePhysicalDevices(instance->vk_instance(), &deviceCount, nullptr),
 				"Failed to enumerate physical devices"
 			);
@@ -548,7 +548,7 @@ namespace VK4 {
 				Vk_Logger::RuntimeError(typeid(NoneObj), msg);
 			}
 			else{
-				VK_CHECK(res, "Failed to load physical devices");
+				Vk_CheckVkResult(typeid(NoneObj), res, "Failed to load physical devices");
 			}
 
 			// iterate over all available physical devices to find a good one
@@ -692,12 +692,12 @@ namespace VK4 {
 			fenceCreateInfo.flags = 0;
 			VkFence fence;
 
-			VK_CHECK(vkCreateFence(device, &fenceCreateInfo, nullptr, &fence), "Unable to create fence");
+			Vk_CheckVkResult(typeid(NoneObj), vkCreateFence(device, &fenceCreateInfo, nullptr, &fence), "Unable to create fence");
 
 			VkResult res = Vk_ThreadSafe::Vk_ThreadSafe_QueueSubmit(queue, 1, &submitInfo, fence);
-			VK_CHECK(res, "Unable to submit fence to queue");
+			Vk_CheckVkResult(typeid(NoneObj), res, "Unable to submit fence to queue");
 
-			VK_CHECK(vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX), "Unable to wait for fences");
+			Vk_CheckVkResult(typeid(NoneObj), vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX), "Unable to wait for fences");
 			vkDestroyFence(device, fence, nullptr);
 		}
 
@@ -795,11 +795,11 @@ namespace VK4 {
 			cmdBufAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 			cmdBufAllocateInfo.commandBufferCount = 1;
 
-			VK_CHECK(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &copyCmdBuffer), "Unable to command buffers");
+			Vk_CheckVkResult(typeid(NoneObj), vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &copyCmdBuffer), "Unable to command buffers");
 
 			VkCommandBufferBeginInfo cmdBufferBeginInfo{};
 			cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			VK_CHECK(vkBeginCommandBuffer(copyCmdBuffer, &cmdBufferBeginInfo), "Unable to begin command buffer recording");
+			Vk_CheckVkResult(typeid(NoneObj), vkBeginCommandBuffer(copyCmdBuffer, &cmdBufferBeginInfo), "Unable to begin command buffer recording");
 
 			insertImageMemoryBarrier(
 				copyCmdBuffer,
@@ -833,7 +833,7 @@ namespace VK4 {
 				VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }
 			);
 
-			VK_CHECK(vkEndCommandBuffer(copyCmdBuffer), "Unable to end command buffer recording");// Transition destination image to transfer destination layout
+			Vk_CheckVkResult(typeid(NoneObj), vkEndCommandBuffer(copyCmdBuffer), "Unable to end command buffer recording");// Transition destination image to transfer destination layout
 		}
 
         static VkImageView createImageView(
@@ -862,7 +862,7 @@ namespace VK4 {
 			createInfo.subresourceRange.layerCount = 1;
 
 			VkImageView imageView;
-			VK_CHECK(vkCreateImageView(device, &createInfo, nullptr, &imageView), "Failed to create image view");
+			Vk_CheckVkResult(typeid(NoneObj), vkCreateImageView(device, &createInfo, nullptr, &imageView), "Failed to create image view");
 
 			return imageView;
 		}
@@ -921,7 +921,7 @@ namespace VK4 {
 			imageInfo.samples = numSamples;
 			imageInfo.flags = 0;
 
-			VK_CHECK(vkCreateImage(device, &imageInfo, nullptr, &image), "Failed to create image");
+			Vk_CheckVkResult(typeid(NoneObj), vkCreateImage(device, &imageInfo, nullptr, &image), "Failed to create image");
 
 			VkMemoryRequirements memRequirements;
 			vkGetImageMemoryRequirements(device, image, &memRequirements);
@@ -952,14 +952,14 @@ namespace VK4 {
 			allocInfo.commandPool = commandPool; // may want to specify another command pool for this kind of short lived command buffers
 			allocInfo.commandBufferCount = 1;
 			VkCommandBuffer buffer;
-			VK_CHECK(vkAllocateCommandBuffers(device, &allocInfo, &buffer), "Unable to allocate single-time-command-buffer");
+			Vk_CheckVkResult(typeid(NoneObj), vkAllocateCommandBuffers(device, &allocInfo, &buffer), "Unable to allocate single-time-command-buffer");
 
 			VkFenceCreateInfo fenceInfo{};
 			fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 			// we must create the fences in the signaled state to ensure that on the first call to vkWaitForFences won't wait indefinitely
 			// fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT
 			VkFence fence;
-			VK_CHECK(vkCreateFence(device, &fenceInfo, nullptr, &fence),"Failed to create synchronization objects for a frame!");
+			Vk_CheckVkResult(typeid(NoneObj), vkCreateFence(device, &fenceInfo, nullptr, &fence),"Failed to create synchronization objects for a frame!");
 
 			SingleTimeCommand singleTimeCommand = {
 				.commandBuffer=buffer, 
@@ -1270,7 +1270,7 @@ namespace VK4 {
 			bufferCreateInfo.usage = usageFlags;
 			bufferCreateInfo.size = size;
 			bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-			VK_CHECK(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &buffer), "Unable to create buffer");
+			Vk_CheckVkResult(typeid(NoneObj), vkCreateBuffer(device, &bufferCreateInfo, nullptr, &buffer), "Unable to create buffer");
 
 			// Create the memory backing up the buffer handle
 			VkMemoryRequirements memReqs;
@@ -1292,12 +1292,12 @@ namespace VK4 {
 
 			if (data != nullptr) {
 				void* mapped;
-				VK_CHECK(vkMapMemory(device, memory, 0, size, 0, &mapped), "Unable to map memory for buffer creation");
+				Vk_CheckVkResult(typeid(NoneObj), vkMapMemory(device, memory, 0, size, 0, &mapped), "Unable to map memory for buffer creation");
 				memcpy(mapped, data, size);
 				vkUnmapMemory(device, memory);
 			}
 
-			VK_CHECK(vkBindBufferMemory(device, buffer, memory, 0), "Unable to bind buffer memory to device");
+			Vk_CheckVkResult(typeid(NoneObj), vkBindBufferMemory(device, buffer, memory, 0), "Unable to bind buffer memory to device");
 
 			return VK_SUCCESS;
 		}

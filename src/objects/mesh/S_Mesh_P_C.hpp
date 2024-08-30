@@ -68,7 +68,7 @@ namespace VK4 {
 			RenderType renderType = VK4::RenderType::Solid,
 			float pointSize=1.0f,
 			float lineWidth=1.0f,
-			Vk_BufferUpdateBehaviour sizeBehaviour = Vk_BufferUpdateBehaviour::GlobalLock,
+			Vk_BufferUpdateBehaviour sizeBehaviour = Vk_BufferUpdateBehaviour::Staged_GlobalLock,
 			Vk_BufferSizeBehaviour updateBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
 		) {
 #ifdef PYVK
@@ -133,7 +133,7 @@ namespace VK4 {
 			layoutInfo.pBindings = bindings.data();
 
 			VkDescriptorSetLayout layout;
-			VK_CHECK(
+			Vk_CheckVkResult(typeid(NoneObj), 
 				vkCreateDescriptorSetLayout(
 					lDev,
 					&layoutInfo,
@@ -168,7 +168,7 @@ namespace VK4 {
 			poolInfo.maxSets = freshPoolSize; // one set per shader and framebuffer
 
 			VkDescriptorPool pool;
-			VK_CHECK(
+			Vk_CheckVkResult(typeid(NoneObj), 
 				vkCreateDescriptorPool(
 					lDev,
 					&poolInfo,
@@ -200,7 +200,7 @@ namespace VK4 {
 			std::vector<VkDescriptorSet> sets(count);
 
 			VkResult res = vkAllocateDescriptorSets(lDev, &allocInfo, sets.data());
-			VK_CHECK(res, "Failed to allocate descriptor sets!");
+			Vk_CheckVkResult(typeid(NoneObj), res, "Failed to allocate descriptor sets!");
 
 			// return the ones created in this go for the assigned object to use
 			return sets;

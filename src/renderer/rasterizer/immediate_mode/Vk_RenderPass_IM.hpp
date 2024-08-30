@@ -152,7 +152,7 @@ namespace VK4 {
 			renderPassInfo.dependencyCount = 1;
 			renderPassInfo.pDependencies = &dependency;
 
-			VK_CHECK(vkCreateRenderPass(_device->vk_lDev(), &renderPassInfo, nullptr, &_renderPass), "Failed to create render pass");
+			Vk_CheckVkResult(typeid(this), vkCreateRenderPass(_device->vk_lDev(), &renderPassInfo, nullptr, &_renderPass), "Failed to create render pass");
 		}
 		
 		~Vk_RenderPass_IM()

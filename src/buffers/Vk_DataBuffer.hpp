@@ -14,7 +14,6 @@ namespace VK4 {
 	template<typename T_StructureType>
 	class Vk_DataBuffer {
 	public:
-
 		Vk_DataBuffer(
 			Vk_Device* const device,
 			const std::string& associatedObject,
@@ -55,7 +54,8 @@ namespace VK4 {
 		}
 
 		/*
-		* Get the Vulkan buffer descriptor
+		* Get the Vulkan buffer descriptor.
+		* This will return a pointer to the current buffer
 		*/
 		VkBuffer vk_buffer() {
 			auto lock = std::shared_lock<std::shared_mutex>(_localMutex);
@@ -197,6 +197,7 @@ namespace VK4 {
 		* Update the buffer with the new structuredData of size newCount from the offset
 		* newFrom on. This will update the data in the buffer starting from the newFrom offset up
 		* to newTo offset.
+		*
 		* Both newFrom and newTo must be smaller than newCount. newCount is the **total** count of the
 		* new buffer data. **count** is the number of elements, not the byte size.
 		* The minimal value for newTo is 1 (newFrom + 1) to update at least one entry.
@@ -210,6 +211,12 @@ namespace VK4 {
 		*        # newCount = oldCount + X, newFrom = oldCount, newTo = oldCount + X
 		*        # newCount = oldCount, newFrom = X1 > 0, newTo = X2 < newCount
 		*        # newCount = oldCount - X, newFrom = 0, newTo = newCount
+		*
+		* The total update duration [us] is returned.
+		* For the two 'GlobalLock' update strategies, the update is completely synchronized.
+		* For all other update strategies, the update goes into the currently not used buffer or a newly
+		* allocated one that is later switched (lazy). The switch is performed inside the draw method
+		* after a vk_rebuildAndRedraw() call on the viewer.
 		*/
 		int64_t vk_update(
 			const T_StructureType* structuredData,
@@ -371,7 +378,7 @@ namespace VK4 {
 		}
 
 		void allocateBufferForUpdateStrategy(std::uint64_t maxSize) {
-			if(_updateBehaviour == Vk_BufferUpdateBehaviour::GlobalLock){
+			if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_GlobalLock){
 				// create one real buffer in non-cpu accessible memory
 				VkBuffer lBuffer;
 				VkDeviceMemory lBufferMemory;
@@ -379,7 +386,7 @@ namespace VK4 {
 				_buffer.push_back(lBuffer);
 				_bufferMemory.push_back(lBufferMemory);
 			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::LazyDoubleBuffering){
+			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering){
 				// create one buffer and leave the other one empty
 				VkBuffer lBuffer;
 				VkDeviceMemory lBufferMemory;
@@ -389,7 +396,7 @@ namespace VK4 {
 				_buffer.push_back(nullptr);
 				_bufferMemory.push_back(nullptr);
 			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::DoubleBuffering){
+			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_DoubleBuffering){
 				// create two real _buffers in non-cpu accessible memory
 				for(int i=0; i<2; ++i){
 					VkBuffer lBuffer;
@@ -399,7 +406,7 @@ namespace VK4 {
 					_bufferMemory.push_back(lBufferMemory);
 				}
 			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Pinned_GlobalLock){
+			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Direct_GlobalLock){
 				// create one real _buffer in cpu-accessible memory
 				VkBuffer lBuffer;
 				VkDeviceMemory lBufferMemory;
@@ -407,7 +414,7 @@ namespace VK4 {
 				_buffer.push_back(lBuffer);
 				_bufferMemory.push_back(lBufferMemory);
 			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Pinned_DoubleBuffering){
+			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Direct_DoubleBuffering){
 				for(int i=0; i<2; ++i){
 					VkBuffer lBuffer;
 					VkDeviceMemory lBufferMemory;
@@ -421,33 +428,98 @@ namespace VK4 {
 			}
 		}
 
+		void flipIndex(int attempts){
+			// Try to lock the localMutex to avoid a potential wait time. There should be no danger
+			// of a deadlock here
+			if(_localMutex.try_lock()){
+				// if we manage to get the lock, flip the buffer index...
+				this->_bufferIndex = (this->_bufferIndex+1)%2; 
+				_localMutex.unlock();
+			}
+			else {
+				// ...otherwise, add the flip function to the device updates one more time
+				if(attempts == 0) return;
+
+				// try "attempts" times to flip the buffer. If it doesn't work, re-enqueue the
+				// flip command. Note: this is not recursion. It's adding one lambda function to a queue
+				// using the **up-to-date** _bufferIndex
+				_device->bridge.addUpdateForNextFrame(
+					[this, &attempts](){ 
+						if(_localMutex.try_lock()){
+							this->_bufferIndex = (this->_bufferIndex+1)%2; 
+							_localMutex.unlock();
+						}
+						else{
+							flipIndex(attempts - 1);
+						}
+					}
+				);
+			}
+		}
+
+		void flipAndEraseWorker(){
+			int oldInd = _bufferIndex;
+			// Note: this can take some time...
+			Vk_DataBufferLib::destroyGpuBuffer(this->_device, _buffer.at(oldInd), _bufferMemory.at(oldInd));
+			_buffer.at(oldInd) = nullptr;
+			_bufferMemory.at(oldInd) = nullptr;
+			_bufferIndex = (_bufferIndex+1)%2; 
+		}
+
+		void flipAndErase(int attempts){
+			// Try to lock the localMutex to avoid a potential wait time. There should be no danger
+			// of a deadlock here
+			if(_localMutex.try_lock()){
+				// if we manage to get the lock, flip the buffer index...
+				flipAndEraseWorker();
+				_localMutex.unlock();
+			}
+			else {
+				// ...otherwise, add the flip function to the device updates one more time
+				if(attempts == 0) return;
+
+				// try "attempts" times to flip the buffer. If it doesn't work, re-enqueue the
+				// flip command. Note: this is not recursion. It's adding one lambda function to a queue
+				// using the **up-to-date** _bufferIndex
+				_device->bridge.addUpdateForNextFrame(
+					[this, &attempts](){ 
+						if(_localMutex.try_lock()){
+							flipAndEraseWorker();
+							_localMutex.unlock();
+						}
+						else{
+							flipAndErase(attempts - 1);
+						}
+					}
+				);
+			}
+		}
+
 		void copyDataToBufferForUpdateStrategy(const Vk_DataBufferLib::StructuredData<T_StructureType>& structuredData, size_t from, size_t to){
-			if(_updateBehaviour == Vk_BufferUpdateBehaviour::GlobalLock){
-				// lock everything => potentially async, but in reality not really
+			if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_GlobalLock){
+				// this one must be global lock because we copy data during a rendering process
+				// which changes data that the rendering commands access during drawing
 				auto lock = AcquireGlobalLock("Vk_DataBuffer[copyDataToBufferForUpdateStrategy]");
 				Vk_DataBufferLib::copyDataToBufferWithStaging(_device, _type, _buffer.at(0), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
 			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Pinned_GlobalLock){
+			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Direct_GlobalLock){
+				// this one must be global lock because we copy data during a rendering process
+				// which changes data that the rendering commands access during drawing
 				auto lock = AcquireGlobalLock("Vk_DataBuffer[copyDataToBufferForUpdateStrategy]");
 				Vk_DataBufferLib::copyDataToBufferDirect(_device, _type, _bufferMemory.at(0), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
 			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::DoubleBuffering){
+			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_DoubleBuffering){
 				// copy to not used buffer and then flip them inside a synchronized bridge update
 				// the update function is globally synched, so no need for mutexes here apart from the local one
 				Vk_DataBufferLib::copyDataToBufferWithStaging(_device, _type, _buffer.at((_bufferIndex+1)%2), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
-				_device->bridge.addUpdateForNextFrame(
-					[this](){ this->_bufferIndex = (this->_bufferIndex+1)%2; }
-				);
+				_device->bridge.addUpdateForNextFrame( [this](){ this->flipIndex(3); });
 			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Pinned_DoubleBuffering){
+			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Direct_DoubleBuffering){
 				// copy to not used buffer and then flip them inside a synchronized bridge update
-				// the update function is globally synched, so no need for mutexes here apart from the local one
 				Vk_DataBufferLib::copyDataToBufferDirect(_device, _type, _bufferMemory.at((_bufferIndex+1)%2), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
-				_device->bridge.addUpdateForNextFrame(
-					[this](){ this->_bufferIndex = (this->_bufferIndex+1)%2; }
-				);
+				_device->bridge.addUpdateForNextFrame( [this](){ this->flipIndex(3); } );
 			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::LazyDoubleBuffering){
+			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering){
 				// first allocate new buffer
 				std::uint64_t maxSize = static_cast<std::uint64_t>(maxBufferSize());
 				VkBuffer lBuffer;
@@ -459,15 +531,7 @@ namespace VK4 {
 				// then copy data into it
 				Vk_DataBufferLib::copyDataToBufferWithStaging(_device, _type, _buffer.at(ind), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
 				// then schedule index switch and deletion of old data (this will be executed in sync, so no need for mutexes)
-				_device->bridge.addUpdateForNextFrame(
-					[this](){ 
-						int oldInd = _bufferIndex;
-						Vk_DataBufferLib::destroyGpuBuffer(this->_device, _buffer.at(oldInd), _bufferMemory.at(oldInd));
-						_buffer.at(oldInd) = nullptr;
-						_bufferMemory.at(oldInd) = nullptr;
-						_bufferIndex = (_bufferIndex+1)%2; 
-					}
-				);
+				_device->bridge.addUpdateForNextFrame( [this](){ this->flipAndErase(3); } );
 			}
 			else {
 				Vk_Logger::RuntimeError(typeid(this), "Unknown update behaviour strategy {0}", Vk_BufferUpdateBehaviourToString(_updateBehaviour));

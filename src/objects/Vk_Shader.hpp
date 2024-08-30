@@ -46,7 +46,7 @@ namespace VK4 {
 			createInfo.codeSize = buffer.size();
 			createInfo.pCode = reinterpret_cast<const uint32_t*>(buffer.data());
 
-			VK_CHECK(vkCreateShaderModule(_device->vk_lDev(), &createInfo, nullptr, &_shaderModule), "Failed to create shader module!");
+			Vk_CheckVkResult(typeid(this), vkCreateShaderModule(_device->vk_lDev(), &createInfo, nullptr, &_shaderModule), "Failed to create shader module!");
 		}
 
 		~Vk_Shader() {

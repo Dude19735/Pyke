@@ -36,7 +36,7 @@ namespace VK4 {
 #elif defined(VK_USE_PLATFORM_XCB_KHR) || defined(VK_USE_PLATFORM_XLIB_KHR)
 			_window = std::make_unique<LWWS::LWWS_Window_X11>(_title, _windowWidth, _windowHeight, _resizable, _disableMousePointerOnHover, _hoverTimeoutMS, false);
 #endif
-			VK_CHECK(createVulkanWindowSurface(_instance->vk_instance(), nullptr, &_surface), "Failed to create Vulkan surface!");
+			Vk_CheckVkResult(typeid(this), createVulkanWindowSurface(_instance->vk_instance(), nullptr, &_surface), "Failed to create Vulkan surface!");
 		}
 
 		~Vk_Surface()

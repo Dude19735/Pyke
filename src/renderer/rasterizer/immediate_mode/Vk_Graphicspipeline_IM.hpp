@@ -210,7 +210,7 @@ namespace VK4 {
 			pipelineLayoutInfo.pushConstantRangeCount = 1;
 			pipelineLayoutInfo.pPushConstantRanges = &pushConstant;
 
-			VK_CHECK(vkCreatePipelineLayout(
+			Vk_CheckVkResult(typeid(this), vkCreatePipelineLayout(
 				_device->vk_lDev(),
 				&pipelineLayoutInfo,
 				nullptr, &_pipelineLayout),
@@ -252,7 +252,7 @@ namespace VK4 {
 			pipelineInfo.basePipelineIndex = -1;
 			// pipelineInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT; // specify this to use pipeline derivatives
 
-			VK_CHECK(vkCreateGraphicsPipelines(
+			Vk_CheckVkResult(typeid(this), vkCreateGraphicsPipelines(
 				_device->vk_lDev(),
 				VK_NULL_HANDLE,
 				1,
