@@ -194,7 +194,7 @@ namespace VK4 {
 				Vk_Logger::RuntimeError(typeid(this), "Camera with id {0} does't exist. Possible are [{1}].", camId, possible);
 			}
 
-			if(_device != object->vk_device()) {
+			if(_device != object->vk_device()){
 				Vk_Logger::RuntimeError(
 					typeid(this), 
 					"Only objects with device [{0}] can be attached, not with object's [{1}] device [{2}]", 
@@ -212,6 +212,7 @@ namespace VK4 {
 			return false;
 		}
 
+private: /* TODO: move this one */
 		// this one should be private
 		void vk_build() {
 			Vk_ThreadSafe::Vk_ThreadSafe_DeviceWaitIdle(_device->vk_lDev());
@@ -219,6 +220,7 @@ namespace VK4 {
 			_recordCommandBuffers();
 			_freshlyAttachedOrDetachedObjects = false;
 		}
+public:
 
 		void vk_rebuildAndRedraw() {
 			auto lock = AcquireGlobalLock("vk_viewer[vk_rebuildAndRedraw]");

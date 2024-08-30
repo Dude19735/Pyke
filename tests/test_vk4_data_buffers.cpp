@@ -42,8 +42,8 @@
 
 BOOST_AUTO_TEST_SUITE(RunTestVk4DataBuffers)
 
-auto new_test = boost::unit_test::enabled();
-auto all_tests = boost::unit_test::disabled();
+auto new_test = boost::unit_test::disabled();
+auto all_tests = boost::unit_test::enabled();
 
 template<class T_DataType, class ..._Types>
 void testBuffer1(std::ostream& stream, int trials, VK4::Vk_Device* const device, std::string name, const _Types&... test_config) {
@@ -119,43 +119,43 @@ void updateTestCases(VK4::Vk_DataBuffer<T_DataType>* buffer, std::vector<T_DataT
 	size_t size1 = data1.size();
 
 	size_t size2 = static_cast<size_t>(std::ceil(1.25 * size1));
-	std::vector<T_DataType> tempData2 = UT::Vk4TestData::RandomLarge_Data<T_DataType>(size2 - size1, 2.0);
+	std::vector<T_DataType> tempData2 = UT::Vk4TestData::ConstLarge_Data<T_DataType>(size2 - size1, 2.0);
 	std::vector<T_DataType> data2 = std::vector<T_DataType>(data1);
 	data2.insert(data2.end(), tempData2.begin(), tempData2.end());
 	testUpdateDataBuffer<T_DataType>(buffer, data2, size1);
 
 	size_t size3 = static_cast<size_t>(std::ceil(1.5 * size1));
-	std::vector<T_DataType> tempData3 = UT::Vk4TestData::RandomLarge_Data<T_DataType>(size3 - size2, 3.0);
+	std::vector<T_DataType> tempData3 = UT::Vk4TestData::ConstLarge_Data<T_DataType>(size3 - size2, 3.0);
 	std::vector<T_DataType> data3 = std::vector<T_DataType>(data2);
 	data3.insert(data3.end(), tempData3.begin(), tempData3.end());
 	testUpdateDataBuffer<T_DataType>(buffer, data3, size2);
 
 	size_t size4 = static_cast<size_t>(std::ceil(1.75 * size1));
-	std::vector<T_DataType> tempData4 = UT::Vk4TestData::RandomLarge_Data<T_DataType>(size4 - size3, 4.0);
+	std::vector<T_DataType> tempData4 = UT::Vk4TestData::ConstLarge_Data<T_DataType>(size4 - size3, 4.0);
 	std::vector<T_DataType> data4 = std::vector<T_DataType>(data3);
 	data4.insert(data4.end(), tempData4.begin(), tempData4.end());
 	testUpdateDataBuffer<T_DataType>(buffer, data4, size3);
 
 	size_t size5 = static_cast<size_t>(std::ceil(2.0 * size1));
-	std::vector<T_DataType> tempData5 = UT::Vk4TestData::RandomLarge_Data<T_DataType>(size5 - size4, 5.0);
+	std::vector<T_DataType> tempData5 = UT::Vk4TestData::ConstLarge_Data<T_DataType>(size5 - size4, 5.0);
 	std::vector<T_DataType> data5 = std::vector<T_DataType>(data4);
 	data5.insert(data5.end(), tempData5.begin(), tempData5.end());
 	testUpdateDataBuffer<T_DataType>(buffer, data5, size4);
 
 	size_t size6 = static_cast<size_t>(std::ceil(2.25 * size1));
-	std::vector<T_DataType> tempData6 = UT::Vk4TestData::RandomLarge_Data<T_DataType>(size6 - size5, 6.0);
+	std::vector<T_DataType> tempData6 = UT::Vk4TestData::ConstLarge_Data<T_DataType>(size6 - size5, 6.0);
 	std::vector<T_DataType> data6 = std::vector<T_DataType>(data5);
 	data6.insert(data6.end(), tempData6.begin(), tempData6.end());
 	testUpdateDataBuffer<T_DataType>(buffer, data6, size5);
 
 	size_t size7 = static_cast<size_t>(std::ceil(3.1 * size1));
-	std::vector<T_DataType> tempData7 = UT::Vk4TestData::RandomLarge_Data<T_DataType>(size7 - size6, 7.0);
+	std::vector<T_DataType> tempData7 = UT::Vk4TestData::ConstLarge_Data<T_DataType>(size7 - size6, 7.0);
 	std::vector<T_DataType> data7 = std::vector<T_DataType>(data6);
 	data7.insert(data7.end(), tempData7.begin(), tempData7.end());
 	testUpdateDataBuffer<T_DataType>(buffer, data7, size6);
 
 	size_t size8 = static_cast<size_t>(std::ceil(5.5 * size1));
-	std::vector<T_DataType> tempData8 = UT::Vk4TestData::RandomLarge_Data<T_DataType>(size8 - size7, 8.0);
+	std::vector<T_DataType> tempData8 = UT::Vk4TestData::ConstLarge_Data<T_DataType>(size8 - size7, 8.0);
 	std::vector<T_DataType> data8 = std::vector<T_DataType>(data7);
 	data8.insert(data8.end(), tempData8.begin(), tempData8.end());
 	testUpdateDataBuffer<T_DataType>(buffer, data8, size7);
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(Test_BufferResize2, *all_tests) {
 	{
 		// Vertices
 		typedef VK4::Vk_Vertex_PC Type;
-		auto data = UT::Vk4TestData::RandomLarge_Data<Type>(testCount, 1.0);
+		auto data = UT::Vk4TestData::ConstLarge_Data<Type>(testCount, 1.0);
 		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
 			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::Staged_GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_Empty_Grow_1_5, "TestBuffer");
 		resizeTestCases<Type>(buffer.get(), testCount, data);
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(Test_BufferResize2, *all_tests) {
 	{
 		// Vertices
 		typedef VK4::Vk_Vertex_PC Type;
-		auto data = UT::Vk4TestData::RandomLarge_Data<Type>(testCount, 1.0);
+		auto data = UT::Vk4TestData::ConstLarge_Data<Type>(testCount, 1.0);
 		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
 			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::Staged_GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_Empty_Grow_2, "TestBuffer");
 		resizeTestCases<Type>(buffer.get(), testCount, data);
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(Test_BufferResize2, *all_tests) {
 	{
 		// Vertices
 		typedef VK4::Vk_Vertex_PC Type;
-		auto data = UT::Vk4TestData::RandomLarge_Data<Type>(testCount, 1.0);
+		auto data = UT::Vk4TestData::ConstLarge_Data<Type>(testCount, 1.0);
 		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
 			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::Staged_GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5, "TestBuffer");
 		resizeTestCases<Type>(buffer.get(), testCount, data);
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(Test_BufferResize2, *all_tests) {
 	{
 		// Vertices
 		typedef VK4::Vk_Vertex_PCN Type;
-		auto data = UT::Vk4TestData::RandomLarge_Data<Type>(testCount, 1.0);
+		auto data = UT::Vk4TestData::ConstLarge_Data<Type>(testCount, 1.0);
 		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
 			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::Staged_GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_0_Grow_2, "TestBuffer");
 
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(Test_BufferResize2, *all_tests) {
 	{
 		// Vertices
 		typedef VK4::Vk_Vertex_PCNT Type;
-		auto data = UT::Vk4TestData::RandomLarge_Data<Type>(testCount, 1.0);
+		auto data = UT::Vk4TestData::ConstLarge_Data<Type>(testCount, 1.0);
 		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
 			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::Staged_GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_5_Grow_1_5, "TestBuffer");
 	
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(Test_BufferResize2, *all_tests) {
 	{
 		// Vertices
 		typedef VK4::index_type Type;
-		auto data = UT::Vk4TestData::RandomLarge_Data<Type>(testCount, 1.0);
+		auto data = UT::Vk4TestData::ConstLarge_Data<Type>(testCount, 1.0);
 		std::unique_ptr<VK4::Vk_DataBuffer<Type>> buffer = std::make_unique<VK4::Vk_DataBuffer<Type>>(
 			device.get(), "TestObj", data.data(), data.size(), VK4::Vk_BufferUpdateBehaviour::Staged_GlobalLock, VK4::Vk_BufferSizeBehaviour::Init_1_5_Grow_2, "TestBuffer");
 	
@@ -360,15 +360,15 @@ BOOST_AUTO_TEST_CASE(Test_BuffersWriteback, *all_tests) {
 template<class T_DataType>
 void testBuffer1Batch(std::ostream& outStream, int trials, VK4::Vk_Device* const device, std::string name, VK4::Vk_BufferUpdateBehaviour updateBehaviour){
 	size_t size = 25000;
-	auto pc1 = UT::Vk4TestData::RandomLarge_Data<VK4::Vk_Vertex_PC>(size, 2.3);
-	auto pcn1 = UT::Vk4TestData::RandomLarge_Data<VK4::Vk_Vertex_PCN>(size, 2.3);
-	auto pcnt1 = UT::Vk4TestData::RandomLarge_Data<VK4::Vk_Vertex_PCNT>(size, 2.3);
-	auto indices1 = UT::Vk4TestData::RandomLarge_Data<VK4::index_type>(size, 2.3);
+	auto pc1 = UT::Vk4TestData::ConstLarge_Data<VK4::Vk_Vertex_PC>(size, 2.3);
+	auto pcn1 = UT::Vk4TestData::ConstLarge_Data<VK4::Vk_Vertex_PCN>(size, 2.3);
+	auto pcnt1 = UT::Vk4TestData::ConstLarge_Data<VK4::Vk_Vertex_PCNT>(size, 2.3);
+	auto indices1 = UT::Vk4TestData::ConstLarge_Data<VK4::index_type>(size, 2.3);
 
-	auto pc2 = UT::Vk4TestData::RandomLarge_Data<VK4::Vk_Vertex_PC>(size, 8.2);
-	auto pcn2 = UT::Vk4TestData::RandomLarge_Data<VK4::Vk_Vertex_PCN>(size, 8.2);
-	auto pcnt2 = UT::Vk4TestData::RandomLarge_Data<VK4::Vk_Vertex_PCNT>(size, 8.2);
-	auto indices2 = UT::Vk4TestData::RandomLarge_Data<VK4::index_type>(size, 8.2);
+	auto pc2 = UT::Vk4TestData::ConstLarge_Data<VK4::Vk_Vertex_PC>(size, 8.2);
+	auto pcn2 = UT::Vk4TestData::ConstLarge_Data<VK4::Vk_Vertex_PCN>(size, 8.2);
+	auto pcnt2 = UT::Vk4TestData::ConstLarge_Data<VK4::Vk_Vertex_PCNT>(size, 8.2);
+	auto indices2 = UT::Vk4TestData::ConstLarge_Data<VK4::index_type>(size, 8.2);
 
 	testBuffer1<VK4::Vk_Vertex_PC>(outStream, trials, device, 		name, pc1, pc2,				updateBehaviour, VK4::Vk_BufferSizeBehaviour::Init_Empty_Grow_1_5);
 	testBuffer1<VK4::Vk_Vertex_PCN>(outStream, trials, device, 	name, pcn1, pcn2, 			updateBehaviour, VK4::Vk_BufferSizeBehaviour::Init_Empty_Grow_1_5);
@@ -402,7 +402,7 @@ void testBuffer1Batch(std::ostream& outStream, int trials, VK4::Vk_Device* const
 	outStream << "==============================================================================================================" << std::endl;
 }
 
-BOOST_AUTO_TEST_CASE(Test_Buffers, *new_test) {
+BOOST_AUTO_TEST_CASE(Test_Buffers, *all_tests) {
 	std::string name = "test_app";
 
 	std::unique_ptr<VK4::Vk_Instance> instance = std::make_unique<VK4::Vk_Instance>(name);

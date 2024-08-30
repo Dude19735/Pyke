@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <random>
 #include "Defines.h"
 #include "./objects/Vk_Structures.hpp"
 
@@ -17,7 +18,7 @@ namespace VK4{
 //       █     █ █     █ █     █ ██████  ███████ █     █         ███████ █     █ █     █  █████  ███████       
 // ############################################################################################################
 		template<class T_DataType>
-		static std::vector<T_DataType> RandomLarge_Data(size_t size, VK4::point_type value) {
+		static std::vector<T_DataType> ConstLarge_Data(size_t size, VK4::point_type value) {
 			if constexpr(std::is_same_v<T_DataType,VK4::Vk_Vertex_PC>){
 				std::vector<VK4::Vk_Vertex_PC> data;
 				for (size_t i = 0; i < size; ++i) {
@@ -62,7 +63,47 @@ namespace VK4{
 				return data;
 			}
 
-			return std::vector<VK4::index_type>();
+			return std::vector<T_DataType>();
+		}
+
+		template<class T_DataType>
+		static std::vector<T_DataType> UniformRandom_PointObjData(size_t size, VK4::point_type minValue, VK4::point_type maxValue) {
+			std::random_device rd;  // Will be used to obtain a seed for the random number engine
+			std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+
+			if constexpr(std::is_same_v<T_DataType,VK4::Vk_Vertex_P>){
+				std::uniform_real_distribution<> randP(minValue, maxValue);
+				std::vector<VK4::Vk_Vertex_P> data;
+				for (size_t i = 0; i < size; ++i) {
+					data.push_back(VK4::Vk_Vertex_P{ 
+						glm::tvec3<VK4::point_type>(randP(gen), randP(gen), randP(gen))
+					});
+				}
+				return data;
+			}
+
+			if constexpr(std::is_same_v<T_DataType,VK4::Vk_Vertex_C>){
+				std::uniform_real_distribution<> randC(0, 1.0);
+				std::vector<VK4::Vk_Vertex_C> data;
+				for (size_t i = 0; i < size; ++i) {
+					data.push_back(VK4::Vk_Vertex_C{ 
+						glm::tvec3<VK4::point_type>(randC(gen), randC(gen), randC(gen))
+					});
+				}
+				return data;
+			}
+
+			// no randomness here because we may want to display the data
+			if constexpr(std::is_same_v<T_DataType,VK4::index_type>){
+				std::vector<VK4::index_type> data;
+				for (size_t i = 0; i < size; ++i) {
+					data.push_back(i);
+				}
+				return data;
+			}
+
+			Vk_Logger::RuntimeError(typeid(NoneObj), "Requested unsuported data type for random data generator!");
+			return std::vector<T_DataType>();
 		}
 
 // ############################################################################################################

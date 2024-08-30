@@ -88,7 +88,7 @@
 #include "./lwws_win/lwws_win.hpp"
 #include "Vk_Logger.hpp"
 
-// #define THREAD_DEBUGGING_GLOBAL
+#define THREAD_DEBUGGING_GLOBAL
 
 namespace VK4 {
 	//static VkSampleCountFlagBits offscreen_samples = VK_SAMPLE_COUNT_1_BIT;
@@ -102,7 +102,7 @@ namespace VK4 {
 	template<typename ObjType>
 	using t_func = void (ObjType::*)(std::function<void()>);
 
-	std::recursive_mutex global_mutex;
+	std::shared_mutex global_mutex;
 	std::mutex queue_submit_mutex;
 	std::mutex queue_wait_idle_mutex;
 	std::mutex device_wait_idle_mutex;

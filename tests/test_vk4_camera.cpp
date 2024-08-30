@@ -87,15 +87,13 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Init, *all_tests) {
 			&device,
 			"test_object",
 			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
-			cp, cc, ci, 2.0f, 1.0f,
-			VK4::CullMode::NoCulling
+			cp, cc, ci, 2.0f, 1.0f
 		);
 		auto dot2 = VK4::S_Dot_P_C::create(
 			&device,
 			"test_object_2",
 			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
-			cp, cc, ci, 2.0f, 1.0f,
-			VK4::CullMode::NoCulling
+			cp, cc, ci, 2.0f, 1.0f
 		);
 
         cam.vk_runThread();
@@ -169,8 +167,7 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Run, *all_tests) {
 			&device,
 			"test_object",
 			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
-			cp, cc, ci, 2.0f, 1.0f,
-			VK4::CullMode::NoCulling
+			cp, cc, ci, 2.0f, 1.0f
 		);
 
         cam.vk_runThread();
@@ -244,8 +241,7 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Scale, *new_test) {
 			&device,
 			"test_object",
 			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
-			cp, cc, ci, 2.0f, 1.0f,
-			VK4::CullMode::NoCulling
+			cp, cc, ci, 2.0f, 1.0f
 		);
 
         cam.vk_runThread();
@@ -861,8 +857,7 @@ BOOST_AUTO_TEST_CASE(Test_GridLayout_Global, *all_tests) {
 			&device,
 			"test_object",
 			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
-			cp, cc, ci, 2.0f, 1.0f,
-			VK4::CullMode::NoCulling
+			cp, cc, ci, 2.0f, 1.0f
 		);
 
         cam.vk_runThread();
@@ -915,8 +910,7 @@ BOOST_AUTO_TEST_CASE(Test_GridLayout_Local, *all_tests) {
 			&device,
 			"test_object",
 			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
-			cp, cc, ci, 2.0f, 1.0f,
-			VK4::CullMode::NoCulling
+			cp, cc, ci, 2.0f, 1.0f
 		);
 
         cam.vk_runThread();
@@ -964,8 +958,7 @@ BOOST_AUTO_TEST_CASE(Test_GridLayout_Local_Irregular, *all_tests) {
 			&device,
 			"test_object",
 			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
-			cp, cc, ci, 2.0f, 1.0f,
-			VK4::CullMode::NoCulling
+			cp, cc, ci, 2.0f, 1.0f
 		);
 
         cam.vk_runThread();
@@ -1029,8 +1022,7 @@ BOOST_AUTO_TEST_CASE(Test_GridLayout_Local_ObjectCentric, *all_tests) {
 			&device,
 			"test_object",
 			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
-			cp, cc, ci, 2.0f, 1.0f,
-			VK4::CullMode::NoCulling
+			cp, cc, ci, 2.0f, 1.0f
 		);
 
         cam.vk_runThread();

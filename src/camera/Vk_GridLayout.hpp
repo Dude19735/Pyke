@@ -14,11 +14,11 @@ namespace VK4 {
         _yCount(yCount), _xCount(xCount), _xSpacing(xSpacing), _ySpacing(ySpacing) 
         {
             if(yCount < 1 || xCount < 1){
-                Vk_Logger::RuntimeError(typeid(this), "Both yCount and xCount must be greater than 0!");
+                Vk_Logger::RuntimeError(typeid(this), "Both yCount and xCount must be greater than 0 but yCount={0} and xCount={1}!", yCount, xCount);
             }
 
             if(ySpacing < 0 || xSpacing < 0){
-                Vk_Logger::RuntimeError(typeid(this), "Spacing must be greater or equal 0!");
+                Vk_Logger::RuntimeError(typeid(this), "Spacing must be greater or equal!");
             }
         }
 

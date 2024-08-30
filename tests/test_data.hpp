@@ -20,11 +20,11 @@ namespace UT{
 //       █     █ █     █ █     █ ██████  ███████ █     █         ███████ █     █ █     █  █████  ███████       
 // ############################################################################################################
 		template<class T_DataType>
-		std::vector<T_DataType> RandomLarge_Data(size_t size, VK4::point_type value) {
+		std::vector<T_DataType> ConstLarge_Data(size_t size, VK4::point_type value) {
 		}
 
 		template<>
-		std::vector<VK4::Vk_Vertex_PC> RandomLarge_Data<VK4::Vk_Vertex_PC>(size_t size, VK4::point_type value) {
+		std::vector<VK4::Vk_Vertex_PC> ConstLarge_Data<VK4::Vk_Vertex_PC>(size_t size, VK4::point_type value) {
 			std::vector<VK4::Vk_Vertex_PC> data;
 			for (size_t i = 0; i < size; ++i) {
 				data.push_back(VK4::Vk_Vertex_PC{ 
@@ -36,7 +36,7 @@ namespace UT{
 		}
 
 		template<>
-		std::vector<VK4::Vk_Vertex_PCN> RandomLarge_Data<VK4::Vk_Vertex_PCN>(size_t size, VK4::point_type value) {
+		std::vector<VK4::Vk_Vertex_PCN> ConstLarge_Data<VK4::Vk_Vertex_PCN>(size_t size, VK4::point_type value) {
 			std::vector<VK4::Vk_Vertex_PCN> data;
 			for (size_t i = 0; i < size; ++i) {
 				data.push_back(VK4::Vk_Vertex_PCN{ 
@@ -49,7 +49,7 @@ namespace UT{
 		}
 
 		template<>
-		std::vector<VK4::Vk_Vertex_PCNT> RandomLarge_Data<VK4::Vk_Vertex_PCNT>(size_t size, VK4::point_type value) {
+		std::vector<VK4::Vk_Vertex_PCNT> ConstLarge_Data<VK4::Vk_Vertex_PCNT>(size_t size, VK4::point_type value) {
 			std::vector<VK4::Vk_Vertex_PCNT> data;
 			for (size_t i = 0; i < size; ++i) {
 				data.push_back(VK4::Vk_Vertex_PCNT{ 
@@ -63,7 +63,7 @@ namespace UT{
 		}
 
 		template<>
-		std::vector<VK4::index_type> RandomLarge_Data<VK4::index_type>(size_t size, VK4::point_type value) {
+		std::vector<VK4::index_type> ConstLarge_Data<VK4::index_type>(size_t size, VK4::point_type value) {
 			std::vector<VK4::index_type> data;
 			for (size_t i = 0; i < size; ++i) {
 				data.push_back(static_cast<VK4::index_type>(value));
