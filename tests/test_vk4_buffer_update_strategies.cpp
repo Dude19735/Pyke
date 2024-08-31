@@ -103,7 +103,10 @@ class TestViewer {
 
 		_cam->vk_attachToAll(_dot);
 		_cam->vk_attachToAll(_coords);
-		_cam->vk_rebuildAndRedraw();
+		// _cam->vk_rebuildAndRedraw();
+
+		// defered
+		// immediate
 
 		/* empty space to do stuff */
 		if(manual){
@@ -141,8 +144,8 @@ private:
 
 	void update(std::function<void()> repeat){
 		auto cp = VK4::Vk_SampleObjects::UniformRandom_PointObjData<VK4::Vk_Vertex_P>(_size, _minVal, _maxVal);
-		_dot->vk_updatePoints(cp, 0);
-		_cam->vk_rebuildAndRedraw();
+		_dot->vk_updatePoints(cp, 0, 0, VK4::Vk_ObjUpdate::Promptly);
+		// _cam->vk_rebuildAndRedraw();
 		std::cout << "update..." << std::endl;
 		if(_on) repeat();
 	}

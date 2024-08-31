@@ -248,12 +248,12 @@ namespace VK4 {
 		}
 
 		void vk_submitWork(VkCommandBuffer cmdBuffer) {
-			auto lock = AcquireGlobalLock("vk_device[vk_submitWork]");
+			auto lock = AcquireGlobalWriteLock("vk_device[vk_submitWork]");
 			Vk_DeviceLib::submitWork(_device, cmdBuffer, _graphicsQueues[0]);
 		}
 
 		void vk_copyDeviceBufferToVector(void* dstPtr, VkDeviceMemory deviceBufferMemory, VkDeviceSize size) {
-			auto lock = AcquireGlobalLock("vk_device[vk_copyDeviceBufferToVector]");
+			auto lock = AcquireGlobalWriteLock("vk_device[vk_copyDeviceBufferToVector]");
 			Vk_DeviceLib::copyDeviceBufferToVector(_device, dstPtr, deviceBufferMemory, size);
 		}
 

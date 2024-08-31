@@ -11,6 +11,7 @@
 #include "../buffers/Vk_DataBuffer.hpp"
 #include "../buffers/Vk_UniformBuffer.hpp"
 #include "Vk_ObjectType.hpp"
+#include "Vk_ObjectLib.hpp"
 
 namespace VK4 {
 	

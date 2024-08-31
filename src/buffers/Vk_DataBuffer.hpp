@@ -2,6 +2,7 @@
 
 #include <mutex>
 #include <typeinfo>
+#include <atomic>
 
 #include "../Defines.h"
 // #include "../Vk_Logger.hpp"
@@ -58,7 +59,8 @@ namespace VK4 {
 		* This will return a pointer to the current buffer
 		*/
 		VkBuffer vk_buffer() {
-			auto lock = std::shared_lock<std::shared_mutex>(_localMutex);
+			// _bufferIndex is an atomic. It will always point to an existing entry
+			// of _buffer
 			return _buffer.at(_bufferIndex);
 		}
 
@@ -244,7 +246,7 @@ namespace VK4 {
 		Vk_DataBufferLib::BufferType _type;
 		std::string _associatedObject;
 
-		int _bufferIndex;
+		std::atomic_int32_t _bufferIndex;
 		std::vector<VkBuffer> _buffer;
 		std::vector<VkDeviceMemory> _bufferMemory;
 
@@ -428,36 +430,36 @@ namespace VK4 {
 			}
 		}
 
-		void flipIndex(int attempts){
+		void flipIndex(){
 			// Try to lock the localMutex to avoid a potential wait time. There should be no danger
 			// of a deadlock here
-			if(_localMutex.try_lock()){
+			// if(_localMutex.try_lock()){
 				// if we manage to get the lock, flip the buffer index...
-				this->_bufferIndex = (this->_bufferIndex+1)%2; 
-				_localMutex.unlock();
-			}
-			else {
-				// ...otherwise, add the flip function to the device updates one more time
-				if(attempts == 0) return;
+				_bufferIndex = (this->_bufferIndex+1)%2; 
+			// 	_localMutex.unlock();
+			// }
+			// else {
+			// 	// ...otherwise, add the flip function to the device updates one more time
+			// 	if(attempts == 0) return;
 
-				// try "attempts" times to flip the buffer. If it doesn't work, re-enqueue the
-				// flip command. Note: this is not recursion. It's adding one lambda function to a queue
-				// using the **up-to-date** _bufferIndex
-				_device->bridge.addUpdateForNextFrame(
-					[this, &attempts](){ 
-						if(_localMutex.try_lock()){
-							this->_bufferIndex = (this->_bufferIndex+1)%2; 
-							_localMutex.unlock();
-						}
-						else{
-							flipIndex(attempts - 1);
-						}
-					}
-				);
-			}
+			// 	// try "attempts" times to flip the buffer. If it doesn't work, re-enqueue the
+			// 	// flip command. Note: this is not recursion. It's adding one lambda function to a queue
+			// 	// using the **up-to-date** _bufferIndex
+			// 	_device->bridge.addUpdateForNextFrame(
+			// 		[this, &attempts](){ 
+			// 			if(_localMutex.try_lock()){
+			// 				this->_bufferIndex = (this->_bufferIndex+1)%2; 
+			// 				_localMutex.unlock();
+			// 			}
+			// 			else{
+			// 				flipIndex(attempts - 1);
+			// 			}
+			// 		}
+			// 	);
+			// }
 		}
 
-		void flipAndEraseWorker(){
+		void flipIndexAndErase(){
 			int oldInd = _bufferIndex;
 			// Note: this can take some time...
 			Vk_DataBufferLib::destroyGpuBuffer(this->_device, _buffer.at(oldInd), _bufferMemory.at(oldInd));
@@ -466,58 +468,58 @@ namespace VK4 {
 			_bufferIndex = (_bufferIndex+1)%2; 
 		}
 
-		void flipAndErase(int attempts){
-			// Try to lock the localMutex to avoid a potential wait time. There should be no danger
-			// of a deadlock here
-			if(_localMutex.try_lock()){
-				// if we manage to get the lock, flip the buffer index...
-				flipAndEraseWorker();
-				_localMutex.unlock();
-			}
-			else {
-				// ...otherwise, add the flip function to the device updates one more time
-				if(attempts == 0) return;
+		// void flipAndErase(int attempts){
+		// 	// Try to lock the localMutex to avoid a potential wait time. There should be no danger
+		// 	// of a deadlock here
+		// 	if(_localMutex.try_lock()){
+		// 		// if we manage to get the lock, flip the buffer index...
+		// 		flipIndexAndErase();
+		// 		_localMutex.unlock();
+		// 	}
+		// 	else {
+		// 		// ...otherwise, add the flip function to the device updates one more time
+		// 		if(attempts == 0) return;
 
-				// try "attempts" times to flip the buffer. If it doesn't work, re-enqueue the
-				// flip command. Note: this is not recursion. It's adding one lambda function to a queue
-				// using the **up-to-date** _bufferIndex
-				_device->bridge.addUpdateForNextFrame(
-					[this, &attempts](){ 
-						if(_localMutex.try_lock()){
-							flipAndEraseWorker();
-							_localMutex.unlock();
-						}
-						else{
-							flipAndErase(attempts - 1);
-						}
-					}
-				);
-			}
-		}
+		// 		// try "attempts" times to flip the buffer. If it doesn't work, re-enqueue the
+		// 		// flip command. Note: this is not recursion. It's adding one lambda function to a queue
+		// 		// using the **up-to-date** _bufferIndex
+		// 		_device->bridge.addUpdateForNextFrame(
+		// 			[this, &attempts](){ 
+		// 				if(_localMutex.try_lock()){
+		// 					flipIndexAndErase();
+		// 					_localMutex.unlock();
+		// 				}
+		// 				else{
+		// 					flipAndErase(attempts - 1);
+		// 				}
+		// 			}
+		// 		);
+		// 	}
+		// }
 
 		void copyDataToBufferForUpdateStrategy(const Vk_DataBufferLib::StructuredData<T_StructureType>& structuredData, size_t from, size_t to){
 			if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_GlobalLock){
 				// this one must be global lock because we copy data during a rendering process
 				// which changes data that the rendering commands access during drawing
-				auto lock = AcquireGlobalLock("Vk_DataBuffer[copyDataToBufferForUpdateStrategy]");
+				auto lock = AcquireGlobalWriteLock("Vk_DataBuffer[copyDataToBufferForUpdateStrategy]");
 				Vk_DataBufferLib::copyDataToBufferWithStaging(_device, _type, _buffer.at(0), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
 			}
 			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Direct_GlobalLock){
 				// this one must be global lock because we copy data during a rendering process
 				// which changes data that the rendering commands access during drawing
-				auto lock = AcquireGlobalLock("Vk_DataBuffer[copyDataToBufferForUpdateStrategy]");
+				auto lock = AcquireGlobalWriteLock("Vk_DataBuffer[copyDataToBufferForUpdateStrategy]");
 				Vk_DataBufferLib::copyDataToBufferDirect(_device, _type, _bufferMemory.at(0), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
 			}
 			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_DoubleBuffering){
 				// copy to not used buffer and then flip them inside a synchronized bridge update
 				// the update function is globally synched, so no need for mutexes here apart from the local one
 				Vk_DataBufferLib::copyDataToBufferWithStaging(_device, _type, _buffer.at((_bufferIndex+1)%2), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
-				_device->bridge.addUpdateForNextFrame( [this](){ this->flipIndex(3); });
+				_device->bridge.addUpdateForNextFrame( [this](){ this->flipIndex(); });
 			}
 			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Direct_DoubleBuffering){
 				// copy to not used buffer and then flip them inside a synchronized bridge update
 				Vk_DataBufferLib::copyDataToBufferDirect(_device, _type, _bufferMemory.at((_bufferIndex+1)%2), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
-				_device->bridge.addUpdateForNextFrame( [this](){ this->flipIndex(3); } );
+				_device->bridge.addUpdateForNextFrame( [this](){ this->flipIndex(); } );
 			}
 			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering){
 				// first allocate new buffer
@@ -531,7 +533,7 @@ namespace VK4 {
 				// then copy data into it
 				Vk_DataBufferLib::copyDataToBufferWithStaging(_device, _type, _buffer.at(ind), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
 				// then schedule index switch and deletion of old data (this will be executed in sync, so no need for mutexes)
-				_device->bridge.addUpdateForNextFrame( [this](){ this->flipAndErase(3); } );
+				_device->bridge.addUpdateForNextFrame( [this](){ this->flipIndexAndErase(); } );
 			}
 			else {
 				Vk_Logger::RuntimeError(typeid(this), "Unknown update behaviour strategy {0}", Vk_BufferUpdateBehaviourToString(_updateBehaviour));

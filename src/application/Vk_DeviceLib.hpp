@@ -38,14 +38,24 @@ namespace VK4 {
         private:
             std::shared_mutex _mutex;
             std::unique_ptr<std::shared_mutex[]> _frameMutex;
-            int _currentFrame;
             std::vector<std::queue<std::function<void()>>> _updates;
+			std::unique_ptr<bool[]> _rebuildFrame;
+			int _currentFrame;
+			LWWS::LWWS_Window* _window;
         public:
-            Bridge(int nFrames): _currentFrame(0)
+            Bridge(int nFrames)
+			:
+			_frameMutex(nullptr),
+			_updates({}),
+			_rebuildFrame(nullptr), 
+			_currentFrame(0), 
+			_window(nullptr)
             {
+				_rebuildFrame = std::make_unique<bool[]>(nFrames);
                 for(uint8_t i=0; i<nFrames; ++i) {
                     auto q = std::queue<std::function<void()>>();
                     _updates.push_back(q);
+					_rebuildFrame[i] = false;
                 }
                 _frameMutex = std::make_unique<std::shared_mutex[]>(nFrames);
             }
@@ -56,7 +66,13 @@ namespace VK4 {
                 _currentFrame = old._currentFrame;
             }
 
-            ~Bridge() { _updates.clear(); }
+            ~Bridge() { 
+				_updates.clear(); 
+			}
+
+			void assignWindow(LWWS::LWWS_Window* window){
+				_window = window;
+			}
 
             void incrFrameNr(){ 
                 auto lock = std::lock_guard<std::shared_mutex>(_mutex);
@@ -92,18 +108,47 @@ namespace VK4 {
             void addUpdate(int frameNr, const std::function<void()>& func){
                 if(frameNr >= _updates.size()) 
                     Vk_Logger::RuntimeError(typeid(NoneObj), "Tried to add update to non-existing frame Nr {0}. Used number of frames is {1}", frameNr, _updates.size());
-                
+                // std::cout << "lock for frame " << frameNr << std::endl;
                 auto lock = std::lock_guard<std::shared_mutex>(_frameMutex[frameNr]);
+				// std::cout << "locked for frame " << frameNr << std::endl;
                 _updates.at(frameNr).push(func);
+				// std::cout << "unlock for frame " << frameNr << std::endl;
             }
 
-            void runCurrentFrameUpdates(){
+			void rebuildFrames(){
+				if(_window == nullptr){
+					Vk_Logger::RuntimeError(typeid(NoneObj), "Bridge has no window. Call device->bridge.assignWindow(_surface->vk_lwws_window())!");
+				}
+
+				for(int i=0; i<_updates.size(); ++i){
+					auto lock = std::lock_guard<std::shared_mutex>(_frameMutex[i]);	
+					_rebuildFrame[i] = true;
+				}
+				_window->emit_windowEvent_Paint();
+			}
+
+			void clearAllQueues(){
+				for(int i=0; i<_updates.size(); ++i){
+					auto lock = std::lock_guard<std::shared_mutex>(_frameMutex[i]);	
+					auto empty = std::queue<std::function<void()>>();
+					std::swap(_updates.at(i), empty);
+					_rebuildFrame[i] = false;
+				}
+			}
+
+            bool runCurrentFrameUpdates(){
                 auto lock = std::lock_guard<std::shared_mutex>(_frameMutex[_currentFrame]);
+				
+				if(!_rebuildFrame[_currentFrame]) return false;
+				_rebuildFrame[_currentFrame] = false;
+
                 auto& updates = _updates.at(_currentFrame);
 				while(!updates.empty()){
 					updates.front()();
 					updates.pop();
 				}
+
+				return true;
             }
         };
 

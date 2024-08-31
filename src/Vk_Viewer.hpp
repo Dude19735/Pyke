@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <map>
+#include <set>
 #include <atomic>
 #include <fstream>
 #include <functional>
@@ -42,7 +43,7 @@ namespace VK4 {
 			_renderFinishedSemaphores({}),
 			_inFlightFences({}),
 			_onResize(false),
-			_rebuildBeforeNextFrame({}),
+			// _rebuildBeforeNextFrame({}),
 			_viewingType(Vk_ViewingType::GLOBAL),
 			_lastSteeredCamera(nullptr),
 			_running(false),
@@ -51,8 +52,8 @@ namespace VK4 {
 			_initHeight(0),
 			_freshPoolSize(0),			
 			_screenshotSavePath(""),
-			_pause(false),
-			_freshlyAttachedOrDetachedObjects(false),
+			// _pause(false),
+			// _freshlyAttachedOrDetachedObjects(false),
 			_name("Viewer")
 		{}
 
@@ -70,7 +71,7 @@ namespace VK4 {
 			_renderFinishedSemaphores({}),
 			_inFlightFences({}),
 			_onResize(false),
-			_rebuildBeforeNextFrame({}),
+			// _rebuildBeforeNextFrame({}),
 			_viewingType(params.viewingType),
 			_lastSteeredCamera(nullptr),
 			_running(false),
@@ -79,8 +80,8 @@ namespace VK4 {
 			_initHeight(params.height),
 			_freshPoolSize(params.freshPoolSize),			
 			_screenshotSavePath(params.screenshotSavePath),
-			_pause(false),
-			_freshlyAttachedOrDetachedObjects(false),
+			// _pause(false),
+			// _freshlyAttachedOrDetachedObjects(false),
 			_name(params.name)
 		{
 			if(!_device->vk_registerViewer(reinterpret_cast<uint64_t>(this))) {
@@ -88,6 +89,13 @@ namespace VK4 {
 			}
 			
 			Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create Viewer"));
+
+			// {
+			// 	auto lock = TryAcquireGlobalWriteLock("no reason");
+			// 	if(lock.successful()){
+			// 		std::cout << "lol" << std::endl;
+			// 	}
+			// }
 
 			_threadPool.start(
 #ifdef PYVK
@@ -169,18 +177,19 @@ namespace VK4 {
 			return _cameras.at(camId)->vk_cameraCoords();
 		}
 
-		bool vk_attachToAll(std::shared_ptr<Vk_Renderable> object) {
+		bool vk_attachToAll(std::shared_ptr<Vk_Renderable> object, Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly) {
 			for (auto& cam : _cameras) {
-				if(!vk_attachTo(cam.first, object)) {
+				if(!vk_attachTo(cam.first, object, Vk_ObjUpdate::Deferred)) {
 					return false;
 				}
 			}
+			if(updateMode == Vk_ObjUpdate::Promptly) { _device->bridge.rebuildFrames(); }
 			return true;
 
 		}
 
-		bool vk_attachTo(int camId, std::shared_ptr<Vk_Renderable> object) {
-			if(!vk_running()){
+		bool vk_attachTo(int camId, std::shared_ptr<Vk_Renderable> object, Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly) {
+			if(!_isRunning()){
 				Vk_Logger::RuntimeError(typeid(this), "Can't attach object to Viewer if it's not running. Did you forget to call vk_run() or vk_runThread()?");
 			}
 			if(_cameras.find(camId) == _cameras.end()){
@@ -205,8 +214,9 @@ namespace VK4 {
 				return false;
 			}
 			if(_cameras.at(camId)->vk_renderer()->vk_attach(object)){
-				_freshlyAttachedOrDetachedObjects = true;
+				// _freshlyAttachedOrDetachedObjects = true;
 				// Vk_Logger::Warn(typeid(this), "Attached new object to camera {0}. Remember to call vk_rebuildAndRedraw later!", camId);
+				if(updateMode == Vk_ObjUpdate::Promptly) { _device->bridge.rebuildFrames(); }
 				return true;
 			}
 			return false;
@@ -214,36 +224,38 @@ namespace VK4 {
 
 private: /* TODO: move this one */
 		// this one should be private
-		void vk_build() {
-			Vk_ThreadSafe::Vk_ThreadSafe_DeviceWaitIdle(_device->vk_lDev());
-			auto lock = AcquireGlobalLock("vk_viewer[vk_build]");
-			_recordCommandBuffers();
-			_freshlyAttachedOrDetachedObjects = false;
-		}
+		// void vk_build() {
+		// 	Vk_ThreadSafe::Vk_ThreadSafe_DeviceWaitIdle(_device->vk_lDev());
+		// 	auto lock = AcquireGlobalWriteLock("vk_viewer[vk_build]");
+		// 	_recordCommandBuffers();
+		// 	// _freshlyAttachedOrDetachedObjects = false;
+		// }
 public:
 
 		void vk_rebuildAndRedraw() {
-			auto lock = AcquireGlobalLock("vk_viewer[vk_rebuildAndRedraw]");
-			_rebuildBeforeNextFrame = std::vector<bool>(_commandBuffer.size(), true);
-			_freshlyAttachedOrDetachedObjects = false;
-			vk_redraw();
+			// auto lock = AcquireGlobalWriteLock("vk_viewer[vk_rebuildAndRedraw]");
+			// _rebuildBeforeNextFrame = std::vector<bool>(_commandBuffer.size(), true);
+			// // _freshlyAttachedOrDetachedObjects = false;
+			// _redraw();
 		}
 
-		void vk_detachFromAll(std::shared_ptr<Vk_Renderable> object) {
+		void vk_detachFromAll(std::shared_ptr<Vk_Renderable> object, Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly) {
 			auto objectName = object->vk_objectName();
 			for (auto& cam : _cameras) {
 				if(cam.second->vk_renderer()->vk_hasRenderable(objectName)){
 					cam.second->vk_renderer()->vk_detach(objectName);
 				}
 			}
+			if(updateMode == Vk_ObjUpdate::Promptly) { _device->bridge.rebuildFrames(); }
 		}
 
-		bool vk_detachFrom(int camId, std::shared_ptr<Vk_Renderable> object) {
+		bool vk_detachFrom(int camId, std::shared_ptr<Vk_Renderable> object, Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly) {
 			auto objectName = object->vk_objectName();
 			if (_cameras.at(camId)->vk_renderer()->vk_hasRenderable(objectName)) {
 				_cameras.at(camId)->vk_renderer()->vk_detach(objectName);
-				_freshlyAttachedOrDetachedObjects = true;
+				// _freshlyAttachedOrDetachedObjects = true;
 				// Vk_Logger::Warn(typeid(this), "Detached old object from camera {0}. Remember to call vk_rebuildAndRedraw later if this is not the last thing you do!", camId);
+				if(updateMode == Vk_ObjUpdate::Promptly) { _device->bridge.rebuildFrames(); }
 				return true;
 			}
 
@@ -261,23 +273,20 @@ public:
 		}
 
 		void vk_redraw() {
-			{
-				auto lock = std::shared_lock<std::shared_mutex>(_runMutex);
-				if(_pause) return;
-			}
-
-			_surface->vk_lwws_window()->emit_windowEvent_Paint();
-		}
-
-		void vk_pauseDraw(){
 			auto lock = std::lock_guard<std::shared_mutex>(_runMutex);
-			_pause = true;
+			// if(_pause) return;
+			_redraw();
 		}
 
-		void vk_unpauseDraw(){
-			auto lock = std::lock_guard<std::shared_mutex>(_runMutex);
-			_pause = false;
-		}
+		// void vk_pauseDraw(){
+		// 	auto lock = std::lock_guard<std::shared_mutex>(_runMutex);
+		// 	_pause = true;
+		// }
+
+		// void vk_unpauseDraw(){
+		// 	auto lock = std::lock_guard<std::shared_mutex>(_runMutex);
+		// 	_pause = false;
+		// }
 
 		// const Vk_Instance* vk_instance() const { return _instance.get(); }
 		Vk_Device* const vk_device() const { 
@@ -415,7 +424,7 @@ public:
 
 		bool vk_running(){
 			auto lock = std::shared_lock<std::shared_mutex>(_runMutex);
-			return _running;
+			return _isRunning();
 		}
 
 
@@ -445,7 +454,7 @@ public:
 		std::vector<VkFence> _inFlightFences;
 		
 		bool _onResize;
-		std::vector<bool> _rebuildBeforeNextFrame;
+		// std::vector<bool> _rebuildBeforeNextFrame;
 
 		// individual or collective steering
 		Vk_ViewingType _viewingType;
@@ -470,8 +479,8 @@ public:
 		std::vector<VkCommandBuffer> _commandBuffer;
 
 		std::string _screenshotSavePath;
-		bool _pause;
-		bool _freshlyAttachedOrDetachedObjects;
+		// bool _pause;
+		// bool _freshlyAttachedOrDetachedObjects;
 
 		std::string _name;
 
@@ -487,6 +496,10 @@ public:
 // ############################################################################################################
 		static void _output(unsigned char byte) {
 			vk_jpegFile << byte;
+		}
+
+		bool _isRunning() {
+			return _running;
 		}
 
 		void _imageToJpegImage(std::string filename, const Screenshot& screenshot) {
@@ -538,6 +551,8 @@ public:
 			_surface->vk_lwws_window()->bind_MouseAction_Callback(this, &Vk_Viewer::_onMouseAction);
 			_surface->vk_lwws_window()->bind_WindowState_Callback(this, &Vk_Viewer::_onWindowAction);
 
+			_device->bridge.assignWindow(_surface->vk_lwws_window());
+
 			auto window = _surface->vk_lwws_window();
 			window->windowEvents_Init();
 
@@ -574,7 +589,7 @@ public:
 				);
 			}
 
-			vk_build();
+			// vk_build();
 			window->emit_windowEvent_Paint();
 
 			{
@@ -605,6 +620,8 @@ public:
 				_programableStop = false;
 			}
 			_threadPool.stop();
+			_device->bridge.clearAllQueues();
+			_device->bridge.assignWindow(nullptr);
 		}
 
 		std::unique_ptr<I_ViewerSteering> _getSteering(const Vk_CameraInit& init){
@@ -620,8 +637,8 @@ public:
 		}
 
 		void _recordCommandBuffers(bool resize=false) {
-			// auto lock = AcquireGlobalLock("vk_viewer[_recordCommandBuffers]");
-			_rebuildBeforeNextFrame = std::vector<bool>(_commandBuffer.size(), false);
+			// auto lock = AcquireGlobalWriteLock("vk_viewer[_recordCommandBuffers]");
+			// _rebuildBeforeNextFrame = std::vector<bool>(_commandBuffer.size(), false);
 			for(size_t i=0; i<_commandBuffer.size(); ++i){
 				_recordCommandBuffer(static_cast<int>(i), resize);
 			}
@@ -631,7 +648,7 @@ public:
 
 			VkExtent2D extent = _device->vk_swapchainSupportActiveDevice(_surface.get()).capabilities.currentExtent;
 			auto& scFrameBuffers = *_framebuffer->vk_frameBuffers();
-			_rebuildBeforeNextFrame.at(index) = false;
+			// _rebuildBeforeNextFrame.at(index) = false;
 
 			VkClearColorValue _clearValue;
 			_clearValue.float32[0] = 0.1f;
@@ -706,29 +723,37 @@ public:
 		}
 
 		void _redraw() {
-			// glfwPostEmptyEvent();
+			_surface->vk_lwws_window()->emit_windowEvent_Paint();
 		}
 
-		VkResult _drawFrame() {
+		void _drawFrame() {
+			{
+				auto lock = std::shared_lock<std::shared_mutex>(_runMutex);
+				if(_running == false) return;
+			}
+
 			auto lDev = _device->vk_lDev();
 			int nFramesInFlight = static_cast<int>(_renderFinishedSemaphores.size()); // doesn't matter which one...
 
 			{
-				auto lock = AcquireGlobalLock("vk_viewer[_drawFrame]");
+				auto lock = TryAcquireGlobalWriteLock("vk_viewer[_drawFrame]");
+				if(!lock.successful()) {
+					return;
+				}
+
 				int currentFrame = _device->bridge.currentFrame();
 
 				// We have to wait for the current fence to be signaled to make sure that
 				VkResult res = vkWaitForFences(lDev, 1, &_inFlightFences[currentFrame], VK_TRUE, GLOBAL_FENCE_TIMEOUT);
 				if(res == VK_TIMEOUT){
 					Vk_Logger::RuntimeError(typeid(this), "drawFrame timeout for frame index [{0}]", currentFrame);
-					return res;
+					return;
 				}
 				else if (res != VK_SUCCESS) {
 					Vk_Logger::RuntimeError(typeid(this), "Waiting for fences had catastrphic result!");
 				}
 
-				if(_rebuildBeforeNextFrame.at(currentFrame)){
-					_device->bridge.runCurrentFrameUpdates();
+				if(_device->bridge.runCurrentFrameUpdates()){
 					_recordCommandBuffer(currentFrame);
 				}
 
@@ -747,11 +772,11 @@ public:
 						case VK_ERROR_OUT_OF_DATE_KHR:
 							Vk_Logger::Log(typeid(this), "vkAcquireNextImageKHR result out of date, reset viewer [VK_SUBOPTIMAL_KHR]!");
 							_resetViewer();
-							return result;
+							return;
 						case VK_SUBOPTIMAL_KHR:
 							Vk_Logger::Log(typeid(this), "vkAcquireNextImageKHR result suboptimal, reset viewer [VK_SUBOPTIMAL_KHR]!");
 							_resetViewer();
-							return result;
+							return;
 						default:
 							Vk_Logger::RuntimeError(typeid(this), "vkAcquireNextImageKHR unknown error [{0}]!", static_cast<int>(result));
 					}
@@ -819,12 +844,12 @@ public:
 						case VK_SUBOPTIMAL_KHR:
 							Vk_Logger::Log(typeid(this), "vkQueuePresentKHR subission suboptimal, reset viewer [VK_SUBOPTIMAL_KHR]!");
 							_resetViewer();
-							return result;
+							return;
 						break;
 						case VK_ERROR_OUT_OF_DATE_KHR:
 							Vk_Logger::Log(typeid(this), "vkQueuePresentKHR subission out of date, reset viewer [VK_ERROR_OUT_OF_DATE_KHR]!");
 							_resetViewer();
-							return result;
+							return;
 						break;
 							case VK_ERROR_OUT_OF_HOST_MEMORY:
 							Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR subission failed [VK_ERROR_OUT_OF_HOST_MEMORY]!");
@@ -849,7 +874,7 @@ public:
 				_device->bridge.incrFrameNr();
 			}
 
-			return VK_SUCCESS;
+			return;
 		}
 
 		inline void _attachRenderer(Vk_Camera* cam, I_Renderer::Vk_PipelineAuxilliaries auxilliaries) {
@@ -911,6 +936,7 @@ public:
 		}
 
 		void _resetViewer() {
+			auto lock = AcquireGlobalWriteLock("vk_viewer[_onWindowAction(resetViewer)]");
 			_onResize = true;
 			Vk_ThreadSafe::Vk_ThreadSafe_DeviceWaitIdle(_device->vk_lDev());
 
@@ -943,7 +969,6 @@ public:
 // ############################################################################################################
 		void _onWindowAction(int w, int h, int px, int py, const std::set<int>& pressedKeys, LWWS::WindowAction windowAction, void* aptr){
 			if(windowAction == LWWS::WindowAction::Resized){
-				auto lock = AcquireGlobalLock("vk_viewer[_onWindowAction(resetViewer)]");
 				_resetViewer();
 			}
 			else if(windowAction == LWWS::WindowAction::Paint){
@@ -977,13 +1002,13 @@ public:
 					for(const auto& c : cameras){
 						c.second->onMouseAction(px, py, dx, dy, dz, pressedKeys, mouseButton, op, mouseAction, aptr);
 					}
-					vk_redraw();
+					_redraw();
 				}
 				else {
 					for(const auto& c : cameras){
 						if(c.second->vk_contains(c.second->vk_lastMousePosX(), c.second->vk_lastMousePosY())){
 							c.second->onMouseAction(px, py, dx, dy, dz, pressedKeys, mouseButton, op, mouseAction, aptr);
-							vk_redraw();
+							_redraw();
 							break;
 						}
 					}
@@ -1006,11 +1031,11 @@ public:
 					for(const auto& c : cameras){
 						c.second->onMouseAction(px, py, dx, dy, dz, pressedKeys, mouseButton, op, mouseAction, aptr);
 					}
-					vk_redraw();
+					_redraw();
 				}
 				else {
 					_lastSteeredCamera->onMouseAction(px, py, dx, dy, dz, pressedKeys, mouseButton, op, mouseAction, aptr);
-					vk_redraw();
+					_redraw();
 				}
 			}
 			else if(mouseAction == LWWS::MouseAction::MouseButton && mouseButton == LWWS::MouseButton::Left && op == LWWS::ButtonOp::Up){

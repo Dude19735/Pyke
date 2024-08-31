@@ -114,50 +114,61 @@ namespace VK4 {
 // ############################################################################################################
 		void vk_updatePoints(
 			const std::vector<point_type>& points,
-			size_t newFrom
+			size_t newFrom,
+			size_t newTo,
+			Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly
 		){
-			if(!(points.size()%Vk_Vertex_P::innerDimensionLen() == 0)){
-				Vk_Logger::RuntimeError(typeid(NoneObj), "Vertices size must be a multiple of {0} but is {1}", Vk_Vertex_P::innerDimensionLen(), points.size());
-			}
+			Vk_ObjectLib::vk_updateBuffer(_device, updateMode, _vBuffer.get(), points.data(), points.size(), newFrom, newTo);
 
-			size_t pLen = static_cast<size_t>(points.size() / Vk_Vertex_P::innerDimensionLen());
-			const Vk_Vertex_P* p = reinterpret_cast<const Vk_Vertex_P*>(points.data());
-			if(newFrom >= pLen){
-				Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, pLen);
-			}
+			// if(!(points.size()%Vk_Vertex_P::innerDimensionLen() == 0)){
+			// 	Vk_Logger::RuntimeError(typeid(NoneObj), "Vertices size must be a multiple of {0} but is {1}", Vk_Vertex_P::innerDimensionLen(), points.size());
+			// }
+
+			// size_t pLen = static_cast<size_t>(points.size() / Vk_Vertex_P::innerDimensionLen());
+			// const Vk_Vertex_P* p = reinterpret_cast<const Vk_Vertex_P*>(points.data());
+			// if(newFrom >= pLen){
+			// 	Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, pLen);
+			// }
 			
-			_vBuffer->vk_update(p, pLen, newFrom);
+			// _vBuffer->vk_update(p, pLen, newFrom);
 		}
 
 #ifndef PYVK // need to avoid methods with the same name and we want to export the one with the regular vector
 		void vk_updatePoints(
 			const std::vector<Vk_Vertex_P>& points,
-			size_t newFrom
+			size_t newFrom,
+			size_t newTo,
+			Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly
 		){
-			size_t pLen = points.size();
-			const Vk_Vertex_P* p = points.data();
+			Vk_ObjectLib::vk_updateBuffer(_device, updateMode, _vBuffer.get(), points.data(), points.size(), newFrom, newTo);
 
-			if(newFrom >= pLen){
-				Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, pLen);
-			}
+			// size_t pLen = points.size();
+			// const Vk_Vertex_P* p = points.data();
+
+			// if(newFrom >= pLen){
+			// 	Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, pLen);
+			// }
 			
-			_vBuffer->vk_update(p, pLen, newFrom);
+			// _vBuffer->vk_update(p, pLen, newFrom);
 		}
 #endif
 
 #ifdef PYVK
 		void vk_update_points(
 			const py::array_t<VK4::point_type, py::array::c_style>& points,
-			size_t newFrom
+			size_t newFrom,
+			size_t newTo,
+			Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly
 		){
 			size_t pLen;
 			Vk_Vertex_P* p = Vk_NumpyTransformers::structArrayToCpp<Vk_Vertex_P>(points, pLen);
+			Vk_ObjectLib::vk_updateBuffer(_device, updateMode, _vBuffer.get(), p, pLen, newFrom, newTo);
 
-			if(newFrom >= pLen){
-				Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, pLen);
-			}
-			// this update is techincally asynchronous => make sure the data is still there when the copy process finishes!
-			_vBuffer->vk_update(p, pLen, newFrom);
+			// if(newFrom >= pLen){
+			// 	Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, pLen);
+			// }
+			// // this update is techincally asynchronous => make sure the data is still there when the copy process finishes!
+			// _vBuffer->vk_update(p, pLen, newFrom);
 		}
 #endif
 
@@ -166,53 +177,64 @@ namespace VK4 {
 
 		void vk_updateColors(
 			const std::vector<point_type>& colors,
-			size_t newFrom
+			size_t newFrom,
+			size_t newTo,
+			Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly
 		){
-			if(!(colors.size()%Vk_Vertex_C::innerDimensionLen() == 0)){
-				Vk_Logger::RuntimeError(typeid(NoneObj), "Colors size must be a multiple of {0} but is {1}", Vk_Vertex_C::innerDimensionLen(), colors.size());
+			Vk_ObjectLib::vk_updateBuffer(_device, updateMode, _cBuffer.get(), colors.data(), colors.size(), newFrom, newTo);
 
-			}
+			// if(!(colors.size()%Vk_Vertex_C::innerDimensionLen() == 0)){
+			// 	Vk_Logger::RuntimeError(typeid(NoneObj), "Colors size must be a multiple of {0} but is {1}", Vk_Vertex_C::innerDimensionLen(), colors.size());
 
-			size_t cLen = static_cast<size_t>(colors.size() / Vk_Vertex_C::innerDimensionLen());
-			const Vk_Vertex_C* c = reinterpret_cast<const Vk_Vertex_C*>(colors.data());
+			// }
 
-			if(newFrom >= cLen){
-				Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, cLen);
-			}
+			// size_t cLen = static_cast<size_t>(colors.size() / Vk_Vertex_C::innerDimensionLen());
+			// const Vk_Vertex_C* c = reinterpret_cast<const Vk_Vertex_C*>(colors.data());
+
+			// if(newFrom >= cLen){
+			// 	Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, cLen);
+			// }
 			
-			_cBuffer->vk_update(c, cLen, newFrom);
+			// _cBuffer->vk_update(c, cLen, newFrom);
 		}
 
 #ifndef PYVK // need to avoid methods with the same name and we want to export the one with the regular vector
 		void vk_updateColors(
 			const std::vector<Vk_Vertex_C>& colors,
-			size_t newFrom
+			size_t newFrom,
+			size_t newTo,
+			Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly
 		){
-			size_t cLen = colors.size();
-			const Vk_Vertex_C* c = colors.data();
+			Vk_ObjectLib::vk_updateBuffer(_device, updateMode, _cBuffer.get(), colors.data(), colors.size(), newFrom, newTo);
+			// size_t cLen = colors.size();
+			// const Vk_Vertex_C* c = colors.data();
 
-			if(newFrom >= cLen){
-				Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, cLen);
-			}
+			// if(newFrom >= cLen){
+			// 	Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, cLen);
+			// }
 			
-			_cBuffer->vk_update(c, cLen, newFrom);
+			// _cBuffer->vk_update(c, cLen, newFrom);
 		}
 #endif
 
 #ifdef PYVK
 		void vk_update_colors(
 			const py::array_t<VK4::point_type, py::array::c_style>& colors,
-			size_t newFrom
+			size_t newFrom,
+			size_t newTo,
+			Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly
 		){
 			size_t cLen;
 			Vk_Vertex_C* c = Vk_NumpyTransformers::structArrayToCpp<Vk_Vertex_C>(colors, cLen);
 
-			if(newFrom >= cLen){
-				Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, cLen);
-			}
+			Vk_ObjectLib::vk_updateBuffer(_device, updateMode, _cBuffer.get(), c, cLen, newFrom, newTo);
+
+			// if(newFrom >= cLen){
+			// 	Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, cLen);
+			// }
 			
-			// this update is techincally asynchronous => make sure the data is still there when the copy process finishes!
-			_cBuffer->vk_update(c, cLen, newFrom);
+			// // this update is techincally asynchronous => make sure the data is still there when the copy process finishes!
+			// _cBuffer->vk_update(c, cLen, newFrom);
 		}
 #endif
 
@@ -221,30 +243,37 @@ namespace VK4 {
 
 		void vk_updateIndces(
 			const std::vector<index_type>& indices,
-			size_t newFrom
+			size_t newFrom,
+			size_t newTo,
+			Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly
 		){
-			size_t iLen = indices.size();
-			const index_type* i = indices.data();
-			if(newFrom >= iLen){
-				Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, iLen);
-			}
+			Vk_ObjectLib::vk_updateBuffer(_device, updateMode, _iBuffer.get(), indices.data(), indices.size(), newFrom, newTo);
+
+			// size_t iLen = indices.size();
+			// const index_type* i = indices.data();
+			// if(newFrom >= iLen){
+			// 	Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, iLen);
+			// }
 			
-			_iBuffer->vk_update(i, iLen, newFrom);
+			// _iBuffer->vk_update(i, iLen, newFrom);
 		}
 
 #ifdef PYVK
 		void vk_update_indices(
 			const py::array_t<VK4::index_type, py::array::c_style>& indices,
-			size_t newFrom
+			size_t newFrom,
+			size_t newTo,
+			Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly
 		){
 			size_t iLen;
 			index_type* i = Vk_NumpyTransformers::indexArrayToCpp(indices, iLen);
-			if(newFrom >= iLen){
-				Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, iLen);
-			}
+			Vk_ObjectLib::vk_updateBuffer(_device, updateMode, _iBuffer.get(), i, iLen, newFrom, newTo);
+			// if(newFrom >= iLen){
+			// 	Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, iLen);
+			// }
 			
-			// this update is techincally asynchronous => make sure the data is still there when the copy process finishes!
-			_iBuffer->vk_update(i, iLen, newFrom);
+			// // this update is techincally asynchronous => make sure the data is still there when the copy process finishes!
+			// _iBuffer->vk_update(i, iLen, newFrom);
 		}
 #endif
 

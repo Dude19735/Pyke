@@ -82,6 +82,13 @@ namespace VK4 {
 			}
 
 			_pool.clear();
+			#ifdef PYVK
+			std::queue<std::pair<py::function*, std::function<void()>>> empty;
+#else
+			std::queue<std::pair<std::shared_ptr<VK4::Vk_Func>, std::function<void()>>> empty;
+#endif
+			std::swap(_jobs, empty);
+			
 			Vk_Logger::Log(typeid(this), "[Threadpool] all workers terminated");
 			_stopped = true;
 		}

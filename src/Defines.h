@@ -141,11 +141,32 @@ namespace VK4 {
 // 		}
 // 	};
 
-	class AcquireGlobalLock {
+	class AcquireGlobalReadLock {
 	public:
-		AcquireGlobalLock(const char* info) {
+		AcquireGlobalReadLock(const char* info) {
 #ifdef THREAD_DEBUGGING_GLOBAL
-			std::cout << "[AcquireGlobalLock] ===> waiting: " << info << " === for ===> " << who_has_global_mutex_info << std::endl;
+			std::cout << "[AcquireGlobalReadLock] ===> waiting: " << info << " === for ===> " << who_has_global_mutex_info << std::endl;
+#endif
+			global_mutex.lock_shared();
+#ifdef THREAD_DEBUGGING_GLOBAL
+			who_has_global_mutex_info = std::string(info);
+			std::cout << who_has_global_mutex_info << std::endl;
+#endif
+		}
+		~AcquireGlobalReadLock() {
+			global_mutex.unlock_shared();
+#ifdef THREAD_DEBUGGING_GLOBAL
+			std::cout << "[AcquireGlobalReadLock] " << who_has_global_mutex_info << " ===> released" << std::endl;
+			who_has_global_mutex_info = std::string("no one");
+#endif
+		}
+	};
+
+	class AcquireGlobalWriteLock {
+	public:
+		AcquireGlobalWriteLock(const char* info) {
+#ifdef THREAD_DEBUGGING_GLOBAL
+			std::cout << "[AcquireGlobalWriteLock] ===> waiting: " << info << " === for ===> " << who_has_global_mutex_info << std::endl;
 #endif
 			global_mutex.lock();
 #ifdef THREAD_DEBUGGING_GLOBAL
@@ -153,32 +174,87 @@ namespace VK4 {
 			std::cout << who_has_global_mutex_info << std::endl;
 #endif
 		}
-		~AcquireGlobalLock() {
+		~AcquireGlobalWriteLock() {
 			global_mutex.unlock();
 #ifdef THREAD_DEBUGGING_GLOBAL
-			std::cout << "[AcquireGlobalLock] " << who_has_global_mutex_info << " ===> released" << std::endl;
+			std::cout << "[AcquireGlobalWriteLock] " << who_has_global_mutex_info << " ===> released" << std::endl;
 			who_has_global_mutex_info = std::string("no one");
 #endif
+		}
+	};
+
+	class TryAcquireGlobalWriteLock {
+	private:
+		bool _successful;
+	public:
+		TryAcquireGlobalWriteLock(const char* info) : _successful(false) {
+#ifdef THREAD_DEBUGGING_GLOBAL
+			std::cout << "[TryAcquireGlobalWriteLock] ===> waiting: " << info << " === for ===> " << who_has_global_mutex_info << std::endl;
+#endif
+			if(global_mutex.try_lock()){
+				_successful = true;
+#ifdef THREAD_DEBUGGING_GLOBAL
+				who_has_global_mutex_info = std::string(info);
+				std::cout << who_has_global_mutex_info << std::endl;
+#endif
+			}
+			else {
+#ifdef THREAD_DEBUGGING_GLOBAL
+				std::cout << "    XXX Failed XXX" << std::endl;
+#endif
+			}
+		}
+
+		bool successful() { return _successful; }
+
+		~TryAcquireGlobalWriteLock() {
+			if(_successful) {
+				global_mutex.unlock();
+#ifdef THREAD_DEBUGGING_GLOBAL
+				std::cout << "[TryAcquireGlobalWriteLock] " << who_has_global_mutex_info << " ===> released" << std::endl;
+				who_has_global_mutex_info = std::string("no one");
+#endif
+			}
 		}
 	};
 
 	class Vk_ThreadSafe {
 	public:
 		static VkResult Vk_ThreadSafe_QueueSubmit(VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence){
-			// std::cout << "wait for queue submit" << std::endl;
-			auto lock = std::lock_guard<std::mutex>(queue_submit_mutex);
-			// std::cout << "got queue submit" << std::endl;
-			return vkQueueSubmit(queue, submitCount, pSubmits, fence);
+			VkResult res;
+			{
+				/*
+				TODO: this one really needs a VkFence: vkQueueSubmit must finish before a new one can
+				be called 
+					=> only possible with a fence.
+					=> use mutex to do CPU sided mutual exclusion and a fence for GPU sided mutual exclusion
+					=> maybe there is a more secure way... => find some book?
+				*/
+				std::cout << "wait for queue submit: " << std::this_thread::get_id() << std::endl;
+				auto lock = std::lock_guard<std::mutex>(queue_submit_mutex);
+				std::cout << "got queue submit: " << std::this_thread::get_id() << std::endl;
+				res = vkQueueSubmit(queue, submitCount, pSubmits, fence);
+			}
+			std::cout << "left queue submit: " << std::this_thread::get_id() << std::endl;
+			return res;
 		}
 
 		static VkResult Vk_ThreadSafe_QueueWaitIdle(VkQueue queue){
-			auto lock = std::lock_guard<std::mutex>(queue_wait_idle_mutex);
-			return vkQueueWaitIdle(queue);
+			VkResult res;
+			{
+				auto lock = std::lock_guard<std::mutex>(queue_wait_idle_mutex);
+				res = vkQueueWaitIdle(queue);
+			}
+			return res;
 		}
 
 		static VkResult Vk_ThreadSafe_DeviceWaitIdle(VkDevice device){
-			auto lock = std::lock_guard<std::mutex>(device_wait_idle_mutex);
-			return vkDeviceWaitIdle(device);
+			VkResult res;
+			{
+				auto lock = std::lock_guard<std::mutex>(device_wait_idle_mutex);
+				res = vkDeviceWaitIdle(device);
+			}
+			return res;
 		}
 	};
 
@@ -352,6 +428,20 @@ namespace VK4 {
 		: name(name), width(width), height(height), freshPoolSize(100), viewingType(viewingType), screenshotSavePath(screenshotSavePath)
 		{}
 #endif
+	};
+
+	enum class Vk_ObjUpdate {
+		/*
+		* Update registers a render commands rebuild and causes window to emit a PANT event
+		*/
+		Promptly,
+		/* 
+		* Only the async part of the update takes place. To finalize the update, at least one update
+		* with 'Promptly' must take place. The idea is to allow for badges of updates and rebuild
+		* the rendering commands only once and emit only one PAINT event instead of doing it for all
+		* updates.
+		*/
+		Deferred	
 	};
 
 	enum class Vk_BufferUpdateBehaviour {
