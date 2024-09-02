@@ -388,16 +388,16 @@ namespace VK4 {
 				_buffer.push_back(lBuffer);
 				_bufferMemory.push_back(lBufferMemory);
 			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering){
-				// create one buffer and leave the other one empty
-				VkBuffer lBuffer;
-				VkDeviceMemory lBufferMemory;
-				Vk_DataBufferLib::createDeviceLocalBuffer(_device, _type, lBuffer, lBufferMemory, maxSize, Vk_DataBufferLib::Usage::Both);
-				_buffer.push_back(lBuffer);
-				_bufferMemory.push_back(lBufferMemory);
-				_buffer.push_back(nullptr);
-				_bufferMemory.push_back(nullptr);
-			}
+			// else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering){
+			// 	// create one buffer and leave the other one empty
+			// 	VkBuffer lBuffer;
+			// 	VkDeviceMemory lBufferMemory;
+			// 	Vk_DataBufferLib::createDeviceLocalBuffer(_device, _type, lBuffer, lBufferMemory, maxSize, Vk_DataBufferLib::Usage::Both);
+			// 	_buffer.push_back(lBuffer);
+			// 	_bufferMemory.push_back(lBufferMemory);
+			// 	_buffer.push_back(nullptr);
+			// 	_bufferMemory.push_back(nullptr);
+			// }
 			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_DoubleBuffering){
 				// create two real _buffers in non-cpu accessible memory
 				for(int i=0; i<2; ++i){
@@ -416,15 +416,15 @@ namespace VK4 {
 				_buffer.push_back(lBuffer);
 				_bufferMemory.push_back(lBufferMemory);
 			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Direct_DoubleBuffering){
-				for(int i=0; i<2; ++i){
-					VkBuffer lBuffer;
-					VkDeviceMemory lBufferMemory;
-					Vk_DataBufferLib::createDeviceLocalCPUAccessibleBuffer(_device, _type, lBuffer, lBufferMemory, maxSize, Vk_DataBufferLib::Usage::Both);
-					_buffer.push_back(lBuffer);
-					_bufferMemory.push_back(lBufferMemory);
-				}
-			}
+			// else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Direct_DoubleBuffering){
+			// 	for(int i=0; i<2; ++i){
+			// 		VkBuffer lBuffer;
+			// 		VkDeviceMemory lBufferMemory;
+			// 		Vk_DataBufferLib::createDeviceLocalCPUAccessibleBuffer(_device, _type, lBuffer, lBufferMemory, maxSize, Vk_DataBufferLib::Usage::Both);
+			// 		_buffer.push_back(lBuffer);
+			// 		_bufferMemory.push_back(lBufferMemory);
+			// 	}
+			// }
 			else {
 				Vk_Logger::RuntimeError(typeid(this), "Unsupported update behaviour: {0}", Vk_BufferUpdateBehaviourToString(_updateBehaviour));
 			}
@@ -460,12 +460,16 @@ namespace VK4 {
 		}
 
 		void flipIndexAndErase(){
+			if(_bufferIndex == 1){
+				std::cout << "lol" << std::endl;
+			}
 			int oldInd = _bufferIndex;
 			// Note: this can take some time...
 			Vk_DataBufferLib::destroyGpuBuffer(this->_device, _buffer.at(oldInd), _bufferMemory.at(oldInd));
 			_buffer.at(oldInd) = nullptr;
 			_bufferMemory.at(oldInd) = nullptr;
 			_bufferIndex = (_bufferIndex+1)%2; 
+			std::cout << "######################################## " << _associatedObject << " | " << _objName << " | " << _bufferIndex << std::endl;
 		}
 
 		// void flipAndErase(int attempts){
@@ -516,25 +520,28 @@ namespace VK4 {
 				Vk_DataBufferLib::copyDataToBufferWithStaging(_device, _type, _buffer.at((_bufferIndex+1)%2), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
 				_device->bridge.addUpdateForNextFrame( [this](){ this->flipIndex(); });
 			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Direct_DoubleBuffering){
-				// copy to not used buffer and then flip them inside a synchronized bridge update
-				Vk_DataBufferLib::copyDataToBufferDirect(_device, _type, _bufferMemory.at((_bufferIndex+1)%2), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
-				_device->bridge.addUpdateForNextFrame( [this](){ this->flipIndex(); } );
-			}
-			else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering){
-				// first allocate new buffer
-				std::uint64_t maxSize = static_cast<std::uint64_t>(maxBufferSize());
-				VkBuffer lBuffer;
-				VkDeviceMemory lBufferMemory;
-				Vk_DataBufferLib::createDeviceLocalBuffer(_device, _type, lBuffer, lBufferMemory, maxSize, Vk_DataBufferLib::Usage::Both);
-				int ind = (_bufferIndex+1)%2;
-				_buffer.at(ind) = lBuffer;
-				_bufferMemory.at(ind) = lBufferMemory;
-				// then copy data into it
-				Vk_DataBufferLib::copyDataToBufferWithStaging(_device, _type, _buffer.at(ind), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
-				// then schedule index switch and deletion of old data (this will be executed in sync, so no need for mutexes)
-				_device->bridge.addUpdateForNextFrame( [this](){ this->flipIndexAndErase(); } );
-			}
+			// else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Direct_DoubleBuffering){
+			// 	// copy to not used buffer and then flip them inside a synchronized bridge update
+			// 	Vk_DataBufferLib::copyDataToBufferDirect(_device, _type, _bufferMemory.at((_bufferIndex+1)%2), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
+			// 	_device->bridge.addUpdateForNextFrame( [this](){ this->flipIndex(); } );
+			// }
+			// else if(_updateBehaviour == Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering){
+			// 	// first allocate new buffer
+			// 	std::uint64_t maxSize = static_cast<std::uint64_t>(maxBufferSize());
+			// 	VkBuffer lBuffer;
+			// 	VkDeviceMemory lBufferMemory;
+			// 	Vk_DataBufferLib::createDeviceLocalBuffer(_device, _type, lBuffer, lBufferMemory, maxSize, Vk_DataBufferLib::Usage::Both);
+			// 	int ind = (_bufferIndex+1)%2;
+			// 	if(_buffer.at(ind) != nullptr){
+			// 		Vk_Logger::RuntimeError(typeid(NoneObj), "Lazy allocated buffer at index {0} should be nullptr but isn't", ind);
+			// 	}
+			// 	_buffer.at(ind) = lBuffer;
+			// 	_bufferMemory.at(ind) = lBufferMemory;
+			// 	// then copy data into it
+			// 	Vk_DataBufferLib::copyDataToBufferWithStaging(_device, _type, _buffer.at(ind), maxBufferSize(), structuredData, from, to, _objName, _associatedObject);
+			// 	// then schedule index switch and deletion of old data (this will be executed in sync, so no need for mutexes)
+			// 	_device->bridge.addUpdateForNextFrame( [this](){ this->flipIndexAndErase(); } );
+			// }
 			else {
 				Vk_Logger::RuntimeError(typeid(this), "Unknown update behaviour strategy {0}", Vk_BufferUpdateBehaviourToString(_updateBehaviour));
 			}

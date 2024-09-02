@@ -413,9 +413,9 @@ BOOST_AUTO_TEST_CASE(Test_Buffers, *all_tests) {
 	auto outStream = std::fstream("testBuffer1Batch_output.txt", std::ios::out);
 	testBuffer1Batch<VK4::Vk_Vertex_PC>(outStream, trials, device.get(), "Testbuffer", VK4::Vk_BufferUpdateBehaviour::Staged_GlobalLock);
 	testBuffer1Batch<VK4::Vk_Vertex_PC>(outStream, trials, device.get(), "Testbuffer", VK4::Vk_BufferUpdateBehaviour::Staged_DoubleBuffering);
-	testBuffer1Batch<VK4::Vk_Vertex_PC>(outStream, trials, device.get(), "Testbuffer", VK4::Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering);
+	// testBuffer1Batch<VK4::Vk_Vertex_PC>(outStream, trials, device.get(), "Testbuffer", VK4::Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering);
 	testBuffer1Batch<VK4::Vk_Vertex_PC>(outStream, trials, device.get(), "Testbuffer", VK4::Vk_BufferUpdateBehaviour::Direct_GlobalLock);
-	testBuffer1Batch<VK4::Vk_Vertex_PC>(outStream, trials, device.get(), "Testbuffer", VK4::Vk_BufferUpdateBehaviour::Direct_DoubleBuffering);
+	// testBuffer1Batch<VK4::Vk_Vertex_PC>(outStream, trials, device.get(), "Testbuffer", VK4::Vk_BufferUpdateBehaviour::Direct_DoubleBuffering);
 	outStream.close();
 }
 

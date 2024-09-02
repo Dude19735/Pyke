@@ -115,7 +115,7 @@ namespace VK4 {
 // #endif
 	// static std::hash<std::string> global_hasher;
 
-	constexpr uint64_t GLOBAL_FENCE_TIMEOUT = static_cast<uint64_t>(100e6); // in nanosecons => 100e6 = 100ms
+	constexpr uint64_t GLOBAL_FENCE_TIMEOUT = static_cast<uint64_t>(100e8); // in nanosecons => 100e6 = 100ms
 
 	constexpr int MINIMAL_WIDTH = 512;
 	constexpr int MINIMAL_HEIGHT = 512;
@@ -444,22 +444,29 @@ namespace VK4 {
 		Deferred	
 	};
 
+	/*
+	* TODO: reinvestigate Staged_LazyDoubleBuffering. Currently there is trouble with the vkQueueSubmit
+	* NOTE: Direct_DoubleBuffering probably will never work if the program is supposed to be interactive
+	*       because it seems that UniformBuffer updates no longer work properly due to update contention
+	* NOTE: Direct_GlobalLock works and is an improvement over Staged_GlobalLock but will probably also
+	*       cause problems if too many objects are updated in this way each frame
+	*/
 	enum class Vk_BufferUpdateBehaviour {
 		Staged_GlobalLock, 		   			/* one buffer but global lock at data transfer */
 		Staged_DoubleBuffering,    			/* two buffers on GPU at all times */
-		Staged_LazyDoubleBuffering,			/* create a new buffer on update and switch at update time */
+		// Staged_LazyDoubleBuffering,			/* create a new buffer on update and switch at update time */
 		/* TODO: add pinned staging for the three versions above where the staging buffer is preallocated */
 		Direct_GlobalLock,	   				/* use CPU accessible memory on GPU with global lock at data transfer */
-		Direct_DoubleBuffering 				/* use CPU accessible memory on GPU with double buffering */
+		// Direct_DoubleBuffering 				/* use CPU accessible memory on GPU with double buffering */
 	};
 
 	static std::string Vk_BufferUpdateBehaviourToString(Vk_BufferUpdateBehaviour behaviour) {
 		switch (behaviour) {
 			case Vk_BufferUpdateBehaviour::Staged_GlobalLock: return "Staged_GlobalLock";
 			case Vk_BufferUpdateBehaviour::Staged_DoubleBuffering: return "Staged_DoubleBuffering";
-			case Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering: return "Staged_LazyDoubleBuffering";
+			// case Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering: return "Staged_LazyDoubleBuffering";
 			case Vk_BufferUpdateBehaviour::Direct_GlobalLock: return "Direct_GlobalLock";
-			case Vk_BufferUpdateBehaviour::Direct_DoubleBuffering: return "Direct_DoubleBuffering";
+			// case Vk_BufferUpdateBehaviour::Direct_DoubleBuffering: return "Direct_DoubleBuffering";
 			default: return "Unknown";
 		}
 	}

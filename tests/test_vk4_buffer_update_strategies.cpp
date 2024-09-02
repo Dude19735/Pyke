@@ -52,7 +52,7 @@ class TestViewer {
 		size_t size, 
 		VK4::Vk_BufferUpdateBehaviour updateBehaviour
 	) 
-	: _size(size), _minVal(minVal), _maxVal(maxVal), _on(false)
+	: _size(size), _minVal(minVal), _maxVal(maxVal), _on(false), _fc(0)
 	{
 		std::string name = "TestViewer";
 		uint32_t width = 1024;
@@ -81,9 +81,18 @@ class TestViewer {
 		auto cp = VK4::Vk_SampleObjects::UniformRandom_PointObjData<VK4::Vk_Vertex_P>(_size, _minVal, _maxVal);
 		auto cc = VK4::Vk_SampleObjects::UniformRandom_PointObjData<VK4::Vk_Vertex_C>(_size, 0, 0);
 		auto ci = VK4::Vk_SampleObjects::UniformRandom_PointObjData<VK4::index_type>(_size, 0, 0);
-		_dot = VK4::S_Dot_P_C::create(
-			_device.get(), "test_object", glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
+		_dot1 = VK4::S_Dot_P_C::create(
+			_device.get(), "d1", glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
 			cp, cc, ci, pointSize, alpha, updateBehaviour
+		);
+
+		int size2 = static_cast<int>(_size/2);
+		auto cp2 = VK4::Vk_SampleObjects::UniformRandom_PointObjData<VK4::Vk_Vertex_P>(size2, _minVal, 2*_maxVal);
+		auto cc2 = VK4::Vk_SampleObjects::UniformRandom_PointObjData<VK4::Vk_Vertex_C>(size2, 0, 0);
+		auto ci2 = VK4::Vk_SampleObjects::UniformRandom_PointObjData<VK4::index_type>(size2, 0, 0);
+		_dot2 = VK4::S_Dot_P_C::create(
+			_device.get(), "d2", glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
+			cp2, cc2, ci2, pointSize, alpha, updateBehaviour
 		);
 
 		float f=-4.0f;
@@ -101,12 +110,9 @@ class TestViewer {
 		_cam->vk_registerAction('u', this, &TestViewer::update);
 		_cam->vk_runThread();
 
-		_cam->vk_attachToAll(_dot);
+		_cam->vk_attachToAll(_dot1);
+		_cam->vk_attachToAll(_dot2);
 		_cam->vk_attachToAll(_coords);
-		// _cam->vk_rebuildAndRedraw();
-
-		// defered
-		// immediate
 
 		/* empty space to do stuff */
 		if(manual){
@@ -114,6 +120,15 @@ class TestViewer {
 			while(_cam->vk_running()){
 				std::this_thread::sleep_for(std::chrono::milliseconds(500));
 				std::cout << "hello world: " << counter++ << std::endl;
+				// if(_fc % 200 == 0){
+				// 	auto cp = VK4::Vk_SampleObjects::UniformRandom_PointObjData<VK4::Vk_Vertex_P>(_size, _minVal, _maxVal);
+				// 	_dot1->vk_updatePoints(cp, 0, 0, VK4::Vk_ObjUpdate::Promptly);
+				// }
+
+				// auto cp2 = VK4::Vk_SampleObjects::UniformRandom_PointObjData<VK4::Vk_Vertex_P>(static_cast<int>(_size/2), _minVal, 2*_maxVal);
+				// _dot2->vk_updatePoints(cp2, 0, 0, VK4::Vk_ObjUpdate::Promptly);
+
+				// _fc++;
 			}
 
 			std::cout << "terminate at:" << counter << std::endl;
@@ -122,20 +137,23 @@ class TestViewer {
 			_cam->vk_stopThread();
 		}
 
-		_cam->vk_detachFromAll(_dot);
+		_cam->vk_detachFromAll(_dot1);
+		_cam->vk_detachFromAll(_dot2);
 		_cam->vk_detachFromAll(_coords);
 	}
 
 private:
 	std::unique_ptr<VK4::Vk_Device> _device;
 	std::unique_ptr<VK4::Vk_Viewer> _cam;
-	std::shared_ptr<VK4::Vk_Dot<VK4::ObjectType_P_C>> _dot;
+	std::shared_ptr<VK4::Vk_Dot<VK4::ObjectType_P_C>> _dot1;
+	std::shared_ptr<VK4::Vk_Dot<VK4::ObjectType_P_C>> _dot2;
 	std::shared_ptr<VK4::Vk_Line<VK4::ObjectType_P_C>> _coords;
 
 	size_t _size;
 	VK4::point_type _minVal;
 	VK4::point_type _maxVal;
 	bool _on;
+	uint64_t _fc;
 
 	void onoff(std::function<void()> repeat) {
 		_on = !_on;
@@ -143,8 +161,16 @@ private:
 	}
 
 	void update(std::function<void()> repeat){
-		auto cp = VK4::Vk_SampleObjects::UniformRandom_PointObjData<VK4::Vk_Vertex_P>(_size, _minVal, _maxVal);
-		_dot->vk_updatePoints(cp, 0, 0, VK4::Vk_ObjUpdate::Promptly);
+		if(_fc % 200 == 0){
+			auto cp = VK4::Vk_SampleObjects::UniformRandom_PointObjData<VK4::Vk_Vertex_P>(_size, _minVal, _maxVal);
+			_dot1->vk_updatePoints(cp, 0, 0, VK4::Vk_ObjUpdate::Promptly);
+		}
+
+		auto cp2 = VK4::Vk_SampleObjects::UniformRandom_PointObjData<VK4::Vk_Vertex_P>(static_cast<int>(_size/2), _minVal, 2*_maxVal);
+		_dot2->vk_updatePoints(cp2, 0, 0, VK4::Vk_ObjUpdate::Promptly);
+
+		_fc++;
+
 		// _cam->vk_rebuildAndRedraw();
 		std::cout << "update..." << std::endl;
 		if(_on) repeat();
@@ -153,7 +179,7 @@ private:
 
 BOOST_AUTO_TEST_CASE(Test_X, *new_test) {
 	// deadlock somewhere
-	TestViewer v(true, -1.0f, 1.0f, 1000, VK4::Vk_BufferUpdateBehaviour::Staged_DoubleBuffering);
+	TestViewer v(true, -1.0f, 1.0f, 200, VK4::Vk_BufferUpdateBehaviour::Staged_DoubleBuffering);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
