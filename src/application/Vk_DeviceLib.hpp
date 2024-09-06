@@ -190,6 +190,7 @@ namespace VK4 {
 		* Doesn't deserve an own class though
 		*/
 		struct PhysicalDevice {
+			int physicalDeviceIndex;
 			VkPhysicalDevice physicalDevice;
 			VkPhysicalDeviceProperties deviceProperties;
 			VkPhysicalDeviceFeatures deviceFeatures;
@@ -603,6 +604,7 @@ namespace VK4 {
 
 				// assign current physical device
 				physicalDevices[i].physicalDevice = physicalDevice;
+				physicalDevices[i].physicalDeviceIndex = i;
 
 				// query basic physical device stuff like type and supported vulkan version
 				vkGetPhysicalDeviceProperties(

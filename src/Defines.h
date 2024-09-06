@@ -454,10 +454,10 @@ namespace VK4 {
 	enum class Vk_BufferUpdateBehaviour {
 		Staged_GlobalLock, 		   			/* one buffer but global lock at data transfer */
 		Staged_DoubleBuffering,    			/* two buffers on GPU at all times */
-		// Staged_LazyDoubleBuffering,			/* create a new buffer on update and switch at update time */
+		// Staged_LazyDoubleBuffering,		/* create a new buffer on update and switch at update time */
 		/* TODO: add pinned staging for the three versions above where the staging buffer is preallocated */
 		Direct_GlobalLock,	   				/* use CPU accessible memory on GPU with global lock at data transfer */
-		// Direct_DoubleBuffering 				/* use CPU accessible memory on GPU with double buffering */
+		// Direct_DoubleBuffering 			/* use CPU accessible memory on GPU with double buffering */
 	};
 
 	static std::string Vk_BufferUpdateBehaviourToString(Vk_BufferUpdateBehaviour behaviour) {
@@ -621,6 +621,21 @@ namespace VK4 {
 			default: return "VK_NON_REGISTERED_ERROR_CODE";
 		}
 	}
+
+	static std::string Vk_VkQueueFlagBits2String(VkQueueFlagBits bits) {
+		switch(bits) {
+			case VK_QUEUE_GRAPHICS_BIT: return "VK_QUEUE_GRAPHICS_BIT";
+			case VK_QUEUE_COMPUTE_BIT: return "VK_QUEUE_COMPUTE_BIT";
+			case VK_QUEUE_TRANSFER_BIT: return "VK_QUEUE_TRANSFER_BIT";
+			case VK_QUEUE_SPARSE_BINDING_BIT: return "VK_QUEUE_SPARSE_BINDING_BIT";
+			case VK_QUEUE_PROTECTED_BIT: return "VK_QUEUE_PROTECTED_BIT";
+			case VK_QUEUE_VIDEO_DECODE_BIT_KHR: return "VK_QUEUE_VIDEO_DECODE_BIT_KHR";
+			case VK_QUEUE_VIDEO_ENCODE_BIT_KHR: return "VK_QUEUE_VIDEO_ENCODE_BIT_KHR";
+			case VK_QUEUE_OPTICAL_FLOW_BIT_NV: return "VK_QUEUE_OPTICAL_FLOW_BIT_NV";
+			case VK_QUEUE_FLAG_BITS_MAX_ENUM: return "VK_QUEUE_FLAG_BITS_MAX_ENU";
+			default: return "UNKNOWN_VK_QUEUE";
+		}
+	};
 
 	static void Vk_CheckVkResult(const std::type_info& info, VkResult res, const std::string& msg){
 		if(res != VK_SUCCESS){

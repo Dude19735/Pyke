@@ -52,7 +52,7 @@ namespace VK4 {
 			vk_invalidateSwapchainSupport();
 
 			auto surface = Vk_Surface(_instance.get(), "temp", 1, 1, false, false);
-			vk_configDeviceForSurface(&surface);
+			configDeviceForSurface(&surface);
 			vk_invalidateSwapchainSupport(); // we still need to ask for support because we just created a 1x1 surface here
 			_setGpuMemoryConfig();
 		}
@@ -68,11 +68,15 @@ namespace VK4 {
 			_instance.reset();
 		}
 
-		VkPhysicalDevice vk_pDev() {
+		VkPhysicalDevice vk_pDev() const {
 			return _activePhysicalDevice->physicalDevice;
 		}
 
-		VkSampleCountFlagBits vk_maxUsableSampleCount() {
+		const std::vector<Vk_DeviceLib::PhysicalDevice>& vk_allPhysicalDevices() const {
+			return _physicalDevices;
+		}
+
+		VkSampleCountFlagBits vk_maxUsableSampleCount() const {
 			return _activePhysicalDevice->maxUsableSampleCount;
 		}
 
@@ -125,90 +129,6 @@ namespace VK4 {
 
 		void printActiveDeviceMemoryProperties(std::ostream& stream = std::cout) {
 			Vk_DeviceLib::printActiveDeviceMemoryProperties(_physicalDevices, _gpuHeapConfig, stream);
-		}
-
-		void vk_configDeviceForSurface(Vk_Surface* surface) {
-			bool res = _setPhysicalDevice(surface);
-			if (!res) Vk_Logger::RuntimeError(typeid(this), "Suitable physical device (GPU) not found");
-
-			if (_physicalDeviceIndex < 0) {
-				Vk_Logger::RuntimeError(typeid(this), "No suitable physical device assigned!");
-			}
-
-			std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-			std::set<int> uniqueQueueFamilies = {
-				_activePhysicalDevice->queueFamilyIndices.graphicsFamilyIndex,
-				_activePhysicalDevice->queueFamilyIndices.presentFamilyIndex,
-				_activePhysicalDevice->queueFamilyIndices.transferFamilyIndex,
-			};
-
-			// create the two queues (graphics and presentation). For now, we stick
-			// with one each, but we may try to extend this in the future
-			float queuePriority = 1.0f;
-			for (int queueFamily : uniqueQueueFamilies) {
-				VkDeviceQueueCreateInfo queueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
-				queueCreateInfo.queueFamilyIndex = queueFamily;
-				queueCreateInfo.queueCount = 1;
-				queueCreateInfo.pQueuePriorities = &queuePriority;
-				queueCreateInfos.push_back(queueCreateInfo);
-			}	
-
-			VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-			deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
-			deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-			deviceCreateInfo.pEnabledFeatures = &_activePhysicalDevice->deviceFeatures;
-
-			// read the device extension names into a vector and pass it to the device creation struct
-			// perform all required support tests here
-			if (!_activePhysicalDevice->supportsSwapchainExtension()) {
-				Vk_Logger::RuntimeError(typeid(this), "Swapchain is not suported by current physical device (GPU)");
-			}
-
-			std::vector<const char*> devExtensions = _activePhysicalDevice->getMinimumRequiredExtensions();
-			deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(devExtensions.size());
-			deviceCreateInfo.ppEnabledExtensionNames = devExtensions.data();
-
-			Vk_CheckVkResult(typeid(this), 
-				vkCreateDevice(_activePhysicalDevice->physicalDevice, &deviceCreateInfo, nullptr, &_device),
-				"Failed to create logical device"
-			);
-
-			_graphicsQueues.resize(1);
-			_presentationQueues.resize(1);
-			_transferQueues.resize(1);
-			vkGetDeviceQueue(_device, _activePhysicalDevice->queueFamilyIndices.graphicsFamilyIndex, 0, &_graphicsQueues[0]);
-			vkGetDeviceQueue(_device, _activePhysicalDevice->queueFamilyIndices.presentFamilyIndex, 0, &_presentationQueues[0]);
-			vkGetDeviceQueue(_device, _activePhysicalDevice->queueFamilyIndices.transferFamilyIndex, 0, &_transferQueues[0]);
-
-			// create command pool for the device graphics queue
-			VkCommandPoolCreateInfo cmdPoolInfo = {};
-			cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-			cmdPoolInfo.queueFamilyIndex = _activePhysicalDevice->queueFamilyIndices.graphicsFamilyIndex;
-			cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-			Vk_CheckVkResult(typeid(this), 
-				vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_renderingCommandPool),
-				"Unable to create command pool"
-			);
-
-			// create command pool for the device transfer queue
-			cmdPoolInfo = {};
-			cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-			cmdPoolInfo.queueFamilyIndex = _activePhysicalDevice->queueFamilyIndices.transferFamilyIndex;
-			cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-			Vk_CheckVkResult(typeid(this), 
-				vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_copyCommandPool),
-				"Unable to create command pool"
-			);
-
-			// create command pool for the device initialization queue
-			cmdPoolInfo = {};
-			cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-			cmdPoolInfo.queueFamilyIndex = _activePhysicalDevice->queueFamilyIndices.graphicsFamilyIndex;
-			cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-			Vk_CheckVkResult(typeid(this), 
-				vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_initializationCommandPool),
-				"Unable to create command pool"
-			);
 		}
 
 		void vk_invalidateSwapchainSupport() {
@@ -270,7 +190,7 @@ namespace VK4 {
 			);
 		}
 
-		inline void vk_createSwapchainResource(
+		void vk_createSwapchainResource(
 			const VkImageTiling tiling,
 			const VkImageUsageFlags imageUsageFlags,
 			const VkMemoryPropertyFlags usageFlags,
@@ -397,6 +317,90 @@ namespace VK4 {
 		Vk_DeviceLib::TGpuHeapConfig _gpuHeapConfig;
 
 		Vk_DevicePreference _devicePreference; 
+
+		void configDeviceForSurface(Vk_Surface* surface) {
+			bool res = _setPhysicalDevice(surface);
+			if (!res) Vk_Logger::RuntimeError(typeid(this), "Suitable physical device (GPU) not found");
+
+			if (_physicalDeviceIndex < 0) {
+				Vk_Logger::RuntimeError(typeid(this), "No suitable physical device assigned!");
+			}
+
+			std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+			std::set<int> uniqueQueueFamilies = {
+				_activePhysicalDevice->queueFamilyIndices.graphicsFamilyIndex,
+				_activePhysicalDevice->queueFamilyIndices.presentFamilyIndex,
+				_activePhysicalDevice->queueFamilyIndices.transferFamilyIndex,
+			};
+
+			// create the two queues (graphics and presentation). For now, we stick
+			// with one each, but we may try to extend this in the future
+			float queuePriority = 1.0f;
+			for (int queueFamily : uniqueQueueFamilies) {
+				VkDeviceQueueCreateInfo queueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+				queueCreateInfo.queueFamilyIndex = queueFamily;
+				queueCreateInfo.queueCount = 1;
+				queueCreateInfo.pQueuePriorities = &queuePriority;
+				queueCreateInfos.push_back(queueCreateInfo);
+			}	
+
+			VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+			deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
+			deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+			deviceCreateInfo.pEnabledFeatures = &_activePhysicalDevice->deviceFeatures;
+
+			// read the device extension names into a vector and pass it to the device creation struct
+			// perform all required support tests here
+			if (!_activePhysicalDevice->supportsSwapchainExtension()) {
+				Vk_Logger::RuntimeError(typeid(this), "Swapchain is not suported by current physical device (GPU)");
+			}
+
+			std::vector<const char*> devExtensions = _activePhysicalDevice->getMinimumRequiredExtensions();
+			deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(devExtensions.size());
+			deviceCreateInfo.ppEnabledExtensionNames = devExtensions.data();
+
+			Vk_CheckVkResult(typeid(this), 
+				vkCreateDevice(_activePhysicalDevice->physicalDevice, &deviceCreateInfo, nullptr, &_device),
+				"Failed to create logical device"
+			);
+
+			_graphicsQueues.resize(1);
+			_presentationQueues.resize(1);
+			_transferQueues.resize(1);
+			vkGetDeviceQueue(_device, _activePhysicalDevice->queueFamilyIndices.graphicsFamilyIndex, 0, &_graphicsQueues[0]);
+			vkGetDeviceQueue(_device, _activePhysicalDevice->queueFamilyIndices.presentFamilyIndex, 0, &_presentationQueues[0]);
+			vkGetDeviceQueue(_device, _activePhysicalDevice->queueFamilyIndices.transferFamilyIndex, 0, &_transferQueues[0]);
+
+			// create command pool for the device graphics queue
+			VkCommandPoolCreateInfo cmdPoolInfo = {};
+			cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+			cmdPoolInfo.queueFamilyIndex = _activePhysicalDevice->queueFamilyIndices.graphicsFamilyIndex;
+			cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+			Vk_CheckVkResult(typeid(this), 
+				vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_renderingCommandPool),
+				"Unable to create command pool"
+			);
+
+			// create command pool for the device transfer queue
+			cmdPoolInfo = {};
+			cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+			cmdPoolInfo.queueFamilyIndex = _activePhysicalDevice->queueFamilyIndices.transferFamilyIndex;
+			cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+			Vk_CheckVkResult(typeid(this), 
+				vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_copyCommandPool),
+				"Unable to create command pool"
+			);
+
+			// create command pool for the device initialization queue
+			cmdPoolInfo = {};
+			cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+			cmdPoolInfo.queueFamilyIndex = _activePhysicalDevice->queueFamilyIndices.graphicsFamilyIndex;
+			cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+			Vk_CheckVkResult(typeid(this), 
+				vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_initializationCommandPool),
+				"Unable to create command pool"
+			);
+		}
 
 		inline VkCommandPool selectCommandPool(CommandCapabilities command) {
 			switch (command) {
