@@ -43,6 +43,12 @@ VSCode is a good 'works everywhere' platform. Thus the build process is describe
 
 Install a C++ compiler first.
 
+#### X11/Wayland
+Currently only X11 is supporte (subject to change).
+```bash
+sudo apt-get install libx11-dev libxpm-dev libxft-dev libxext-dev mesa-common-dev
+```
+
 #### Download Visual Studio Code
 1. Goto https://visualstudio.microsoft.com/downloads/ (provided the link is still the same) and download and install the Linux version of VSCode.
 2. Do the same as in point 2,3 of the Windows description below.
