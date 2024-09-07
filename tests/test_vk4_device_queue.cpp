@@ -45,10 +45,22 @@ BOOST_AUTO_TEST_SUITE(RunTestVk4DeviceQueue)
 auto new_test = boost::unit_test::enabled();
 auto all_tests = boost::unit_test::disabled();
 
-BOOST_AUTO_TEST_CASE(Test_DeviceQueue1, *new_test) {
+BOOST_AUTO_TEST_CASE(Test_DeviceQueue1, *all_tests) {
 	std::string name = "device_queue_test";
-	VK4::Vk_Device device(name, VK4::Vk_DevicePreference::USE_DISCRETE_GPU);
+	VK4::Vk_Device device(name);
 	VK4::Vk_DeviceQueue queue(&device);
+
+	queue.vk_printAvailableQueueTypes();
+}
+
+BOOST_AUTO_TEST_CASE(Test_DeviceQueue2, *new_test) {
+	std::string name = "device_queue_test";
+	VK4::Vk_Device device(name);
+	VK4::Vk_DeviceQueue queue(&device);
+
+	VK4::Vk_Surface surface(device.vk_instance(), name, 1, 1, false);
+	queue.vk_determineQueueFamiliesPresentCapability(&surface);
+	queue.vk_printAvailableQueueTypes();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
