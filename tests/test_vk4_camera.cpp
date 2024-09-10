@@ -55,10 +55,10 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Init, *all_tests) {
 		VK4::Vk_Device device(name);
 		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams("name", 1200, 1024));
 
-		cam.vk_addCamera(
+		cam.vk_addCameras(
 			std::vector<VK4::Vk_CameraInit> {
 			VK4::Vk_CameraInit{
-				.camId = 0,
+				.viewportId = 0,
 				.viewport = VK4::Vk_Viewport{
 					.x = 0, 
 					.y = 0, 
@@ -114,10 +114,10 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Run, *all_tests) {
 		VK4::Vk_Device device(name);
 		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams("name", width, height));
 
-		cam.vk_addCamera(
+		cam.vk_addCameras(
 			std::vector<VK4::Vk_CameraInit> {
 			VK4::Vk_CameraInit{
-				.camId = 0,
+				.viewportId = 0,
 				.viewport = VK4::Vk_Viewport{
 					.x = 0,
 					.y = 0,
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Run, *all_tests) {
 				}
 			},
 			VK4::Vk_CameraInit{
-				.camId = 1,
+				.viewportId = 1,
 				.viewport = VK4::Vk_Viewport{
 					.x = 900, 
 					.y = 0, 
@@ -188,10 +188,10 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Scale, *new_test) {
 		VK4::Vk_Device device(name);
 		VK4::Vk_Viewer cam(&device, VK4::Vk_ViewerParams("name", width, height));
 
-		cam.vk_addCamera(
+		cam.vk_addCameras(
 			std::vector<VK4::Vk_CameraInit> {
 			VK4::Vk_CameraInit{
-				.camId = 0,
+				.viewportId = 0,
 				.viewport = VK4::Vk_Viewport{
 					.x = 100,
 					.y = 25,
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Scale, *new_test) {
 				}
 			},
 			VK4::Vk_CameraInit{
-				.camId = 1,
+				.viewportId = 1,
 				.viewport = VK4::Vk_Viewport{
 					.x = 650,
 					.y = 50,
@@ -848,7 +848,7 @@ BOOST_AUTO_TEST_CASE(Test_GridLayout_Global, *all_tests) {
 			{specs, VK4::Vk_ColorOp::rgb_lerp(1.0f, from, to)}
 		});
 
-		cam.vk_addCamera(layout.vk_layoutList(width, height));
+		cam.vk_addCameras(layout.vk_layoutList(width, height));
 
 		auto cp = UT::Vk4TestData::Point_P();
 		auto cc = UT::Vk4TestData::Point_C();
@@ -901,7 +901,7 @@ BOOST_AUTO_TEST_CASE(Test_GridLayout_Local, *all_tests) {
 			{specs, VK4::Vk_ColorOp::rgb_lerp(1.0f, from, to)}
 		});
 
-		cam.vk_addCamera(layout.vk_layoutList(width, height));
+		cam.vk_addCameras(layout.vk_layoutList(width, height));
 
 		auto cp = UT::Vk4TestData::Point_P();
 		auto cc = UT::Vk4TestData::Point_C();
@@ -949,7 +949,7 @@ BOOST_AUTO_TEST_CASE(Test_GridLayout_Local_Irregular, *all_tests) {
 		layout.vk_addCamera(2,0, {specs, VK4::Vk_ColorOp::rgb_lerp(0.375f, from, to)});
 		layout.vk_addCamera(0,2, {specs, VK4::Vk_ColorOp::rgb_lerp(0.750f, from, to)});
 
-		cam.vk_addCamera(layout.vk_layoutList(width, height));
+		cam.vk_addCameras(layout.vk_layoutList(width, height));
 
 		auto cp = UT::Vk4TestData::Point_P();
 		auto cc = UT::Vk4TestData::Point_C();
@@ -1013,7 +1013,7 @@ BOOST_AUTO_TEST_CASE(Test_GridLayout_Local_ObjectCentric, *all_tests) {
 		layout.vk_addCamera(2,1, {specs_CameraCentric, VK4::Vk_ColorOp::rgb_lerp(0.875f, from, to)});
 		layout.vk_addCamera(2,2, {specs_ObjectCentric, VK4::Vk_ColorOp::rgb_lerp(1.000f, from, to)});
 
-		cam.vk_addCamera(layout.vk_layoutList(width, height));
+		cam.vk_addCameras(layout.vk_layoutList(width, height));
 
 		auto cp = UT::Vk4TestData::Point_P();
 		auto cc = UT::Vk4TestData::Point_C();

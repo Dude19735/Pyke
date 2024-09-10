@@ -142,18 +142,18 @@ namespace VK4 {
 			return "4.01";
 		}
 
-		int vk_cameraId(int x, int y){
+		LWWS::TViewportId vk_viewportId(int x, int y){
 			for(const auto& c : _cameras){
 				if(c.second->vk_gridX() == x && c.second->vk_gridY() == y){
-					return c.second->vk_camId();
+					return c.second->vk_viewportId();
 				}
 			}
 			return -1;
 		}
 
-		bool vk_layoutCoords(int camId, int& x, int& y){
+		bool vk_layoutCoords(LWWS::TViewportId viewportId, int& /*out*/ x, int& /*out*/ y){
 			for(const auto& c : _cameras){
-				if(c.second->vk_camId() == camId){
+				if(c.second->vk_viewportId() == viewportId){
 					x = c.second->vk_gridX();
 					y = c.second->vk_gridY();
 					return true;
@@ -162,19 +162,19 @@ namespace VK4 {
 			return false;
 		}
 
-		void vk_addCamera(std::vector<Vk_CameraInit> cameras) {
+		void vk_addCameras(std::vector<Vk_CameraInit> cameras) {
 			for (auto& c : cameras) {
 				auto cam = std::make_unique<Vk_Camera>(c, _getSteering(c), _initWidth, _initHeight);
 
-				_cameras.insert({ cam->vk_camId(), std::move(cam) });
+				_cameras.insert({ cam->vk_viewportId(), std::move(cam) });
 			}
 		}
 
-		const Vk_CameraCoords vk_cameraCoords(int camId) const {
-			if(_cameras.find(camId) == _cameras.end()){
-				Vk_Logger::RuntimeError(typeid(this), "Camera with id {0} doesn't exist", camId);
+		const Vk_CameraCoords vk_cameraCoords(LWWS::TViewportId viewportId) const {
+			if(_cameras.find(viewportId) == _cameras.end()){
+				Vk_Logger::RuntimeError(typeid(this), "Camera with id {0} doesn't exist", viewportId);
 			}
-			return _cameras.at(camId)->vk_cameraCoords();
+			return _cameras.at(viewportId)->vk_cameraCoords();
 		}
 
 		bool vk_attachToAll(std::shared_ptr<Vk_Renderable> object, Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly) {
@@ -188,11 +188,11 @@ namespace VK4 {
 
 		}
 
-		bool vk_attachTo(int camId, std::shared_ptr<Vk_Renderable> object, Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly) {
+		bool vk_attachTo(LWWS::TViewportId viewportId, std::shared_ptr<Vk_Renderable> object, Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly) {
 			if(!_isRunning()){
 				Vk_Logger::RuntimeError(typeid(this), "Can't attach object to Viewer if it's not running. Did you forget to call vk_run() or vk_runThread()?");
 			}
-			if(_cameras.find(camId) == _cameras.end()){
+			if(_cameras.find(viewportId) == _cameras.end()){
 				std::string possible = "";
 				for(auto& cid : _cameras){
 					possible += std::to_string(cid.first) + ",";
@@ -200,7 +200,7 @@ namespace VK4 {
 				if(possible.ends_with(',')){
 					possible = possible.substr(0, possible.size()-1);
 				}
-				Vk_Logger::RuntimeError(typeid(this), "Camera with id {0} does't exist. Possible are [{1}].", camId, possible);
+				Vk_Logger::RuntimeError(typeid(this), "Camera with id {0} does't exist. Possible are [{1}].", viewportId, possible);
 			}
 
 			if(_device != object->vk_device()){
@@ -213,9 +213,9 @@ namespace VK4 {
 				);
 				return false;
 			}
-			if(_cameras.at(camId)->vk_renderer()->vk_attach(object)){
+			if(_cameras.at(viewportId)->vk_renderer()->vk_attach(object)){
 				// _freshlyAttachedOrDetachedObjects = true;
-				// Vk_Logger::Warn(typeid(this), "Attached new object to camera {0}. Remember to call vk_rebuildAndRedraw later!", camId);
+				// Vk_Logger::Warn(typeid(this), "Attached new object to camera {0}. Remember to call vk_rebuildAndRedraw later!", viewportId);
 				if(updateMode == Vk_ObjUpdate::Promptly) { _device->bridge.rebuildFrames(); }
 				return true;
 			}
@@ -249,12 +249,12 @@ public:
 			if(updateMode == Vk_ObjUpdate::Promptly) { _device->bridge.rebuildFrames(); }
 		}
 
-		bool vk_detachFrom(int camId, std::shared_ptr<Vk_Renderable> object, Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly) {
+		bool vk_detachFrom(LWWS::TViewportId viewportId, std::shared_ptr<Vk_Renderable> object, Vk_ObjUpdate updateMode = Vk_ObjUpdate::Promptly) {
 			auto objectName = object->vk_objectName();
-			if (_cameras.at(camId)->vk_renderer()->vk_hasRenderable(objectName)) {
-				_cameras.at(camId)->vk_renderer()->vk_detach(objectName);
+			if (_cameras.at(viewportId)->vk_renderer()->vk_hasRenderable(objectName)) {
+				_cameras.at(viewportId)->vk_renderer()->vk_detach(objectName);
 				// _freshlyAttachedOrDetachedObjects = true;
-				// Vk_Logger::Warn(typeid(this), "Detached old object from camera {0}. Remember to call vk_rebuildAndRedraw later if this is not the last thing you do!", camId);
+				// Vk_Logger::Warn(typeid(this), "Detached old object from camera {0}. Remember to call vk_rebuildAndRedraw later if this is not the last thing you do!", viewportId);
 				if(updateMode == Vk_ObjUpdate::Promptly) { _device->bridge.rebuildFrames(); }
 				return true;
 			}
@@ -301,12 +301,12 @@ public:
 			return _cameras; 
 		}
 
-		const Vk_Camera* vk_camera(int camId) const {
-			if (_cameras.find(camId) == _cameras.end()) {
+		const Vk_Camera* vk_camera(LWWS::TViewportId viewportId) const {
+			if (_cameras.find(viewportId) == _cameras.end()) {
 				return nullptr;
 			}
 
-			return _cameras.at(camId).get();
+			return _cameras.at(viewportId).get();
 		}
 
 #ifdef PYVK
@@ -475,7 +475,7 @@ public:
 #endif
 
 		int _freshPoolSize;
-		std::unordered_map<int, std::unique_ptr<Vk_Camera>> _cameras;
+		std::unordered_map<LWWS::TViewportId, std::unique_ptr<Vk_Camera>> _cameras;
 		std::vector<VkCommandBuffer> _commandBuffer;
 
 		std::string _screenshotSavePath;
@@ -546,7 +546,23 @@ public:
 //         █       █     █ ███    █            █     █ ███████    █    █     █ ███████ ██████   █████          
 // ############################################################################################################
 		void _run() {
-			_surface = std::make_unique<Vk_Surface>(_device->vk_instance(), _name, _initWidth, _initHeight, true, true);
+			// create lwws viewports
+			std::unordered_map<LWWS::TViewportId, LWWS::LWWS_Viewport> viewports;
+			for(const auto& c : _cameras){
+				viewports.insert({c.first, LWWS::LWWS_Viewport(
+					c.first,
+					c.second.get()->vk_viewport().y,
+					c.second.get()->vk_viewport().x,
+					c.second.get()->vk_viewport().width,
+					c.second.get()->vk_viewport().height,
+					1, "#000000", "#FFFFFF"
+				)});
+			}
+			_surface = std::make_unique<Vk_Surface>(
+				_device->vk_instance(), _name, 
+				_initWidth, _initHeight, "#999999", 
+				viewports, true, true
+			);
 			_surface->vk_lwws_window()->bind_IntKey_Callback(this, &Vk_Viewer::_onKey);
 			_surface->vk_lwws_window()->bind_MouseAction_Callback(this, &Vk_Viewer::_onMouseAction);
 			_surface->vk_lwws_window()->bind_WindowState_Callback(this, &Vk_Viewer::_onWindowAction);
@@ -881,7 +897,7 @@ public:
 			switch (cam->vk_type()) {
 			case Vk_CameraType::Rasterizer_IM:
 				cam->vk_renderer(std::make_unique<Vk_Rasterizer_IM>(
-					cam->vk_camId(),
+					cam->vk_viewportId(),
 					_device,
 					auxilliaries,
 					_freshPoolSize,

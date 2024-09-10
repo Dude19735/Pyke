@@ -51,7 +51,8 @@ namespace VK4 {
 			Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create Device"));
 			vk_invalidateSwapchainSupport();
 
-			auto surface = Vk_Surface(_instance.get(), "temp", 1, 1, false, false);
+			// std::unordered_map<LWWS::TViewportId, LWWS::LWWS_Viewport> vp = {{0, LWWS::LWWS_Viewport(0, 0, 0, 1, 1)}};
+			auto surface = Vk_Surface(_instance.get(), "temp", 1, 1, "#000000", {{0, LWWS::LWWS_Viewport(0, 0, 0, 1, 1)}}, false, false);
 			configDeviceForSurface(&surface);
 			vk_invalidateSwapchainSupport(); // we still need to ask for support because we just created a 1x1 surface here
 			_setGpuMemoryConfig();
@@ -430,23 +431,23 @@ namespace VK4 {
 			return nullptr;
 		}
 
-		const SwapchainSupportDetails& vk_swapchainSupport(Vk_DeviceLib::PhysicalDevice* pDev, const Vk_Surface* surface) {
+		const SwapchainSupportDetails& vk_swapchainSupport(Vk_DeviceLib::PhysicalDevice* pDev, const Vk_Surface* surface, LWWS::TViewportId id) {
 			// if we added a new camera, we need to reaquire all subsequent details because they may have moved
 			// such that the address is no longer valid
-			// int camId = 0;
-			// if (camId >= 0) {
-			// 	if (_swapchainSupportDetailsUpToDate.find(camId) == _swapchainSupportDetailsUpToDate.end()) {
-			// 		_swapchainSupportDetailsUpToDate[camId] = false;
+			// LWWS::TViewportId viewportId = 0;
+			// if (viewportId >= 0) {
+			// 	if (_swapchainSupportDetailsUpToDate.find(viewportId) == _swapchainSupportDetailsUpToDate.end()) {
+			// 		_swapchainSupportDetailsUpToDate[viewportId] = false;
 			// 	}
-			// 	else if (_swapchainSupportDetailsUpToDate.at(camId))
-			// 		return swapchainSupportDetails.at(camId);
+			// 	else if (_swapchainSupportDetailsUpToDate.at(viewportId))
+			// 		return swapchainSupportDetails.at(viewportId);
 			// }
 
 			if(_swapchainSupportDetailsUpToDate){
 				return _swapchainSupportDetails;
 			}
 
-			_swapchainSupportDetails = Vk_DeviceLib::swapchainSupport(pDev, surface, _multiImageBuffering, bridge);
+			_swapchainSupportDetails = Vk_DeviceLib::swapchainSupport(pDev, surface, id, _multiImageBuffering, bridge);
 
 			if(surface != nullptr){
 				// only set this to updated state if the query was made including a surface

@@ -4,7 +4,9 @@
 #include <iostream>
 #include <shared_mutex>
 #include <set>
+#include <random>
 
+#include "lwws_viewport.hpp"
 #include "lwws_func.hpp"
 #ifdef PLATFORM_WINDOWS
     #include "lwws_key_win.hpp"
@@ -40,7 +42,11 @@ namespace LWWS {
         bool _windowShouldClose = false;
         MouseButton _currentMouseButtonPressed = MouseButton::NoButton;
         std::set<int> _currentIntPressed = {};
-
+        std::unordered_map<TViewportId, LWWS_Viewport> _viewports;
+        std::string _bgColor;
+        std::random_device _randomDevice;
+        std::uniform_int_distribution<std::mt19937::result_type> _dist01;
+        std::mt19937 _randomGenerator;
 
     private:
         std::shared_mutex _sizeMutex;
@@ -56,6 +62,8 @@ namespace LWWS {
         LWWS_Window(
             int width, 
             int height, 
+            const std::string bgColor,
+            const std::unordered_map<TViewportId, LWWS_Viewport>& viewports,
             bool disableMousePointerOnHover, 
             int hoverTimeoutMS,
             bool bindSamples
@@ -80,8 +88,16 @@ namespace LWWS {
         _windowInitialized(false),
         _windowShouldClose(false),
         _currentMouseButtonPressed(MouseButton::NoButton),
-        _currentIntPressed({})
+        _currentIntPressed({}),
+        _viewports(viewports),
+        _bgColor(bgColor),
+        _dist01(std::uniform_int_distribution<std::mt19937::result_type>(0,1)),
+        _randomGenerator(std::mt19937(_randomDevice()))
         {
+            if(_viewports.size() < 1){
+                std::runtime_error("LWWS window requires at least one viewport!");
+            }
+
             if(bindSamples){
                 bind_Destructor_Callback(this, &LWWS_Window::sample_onDestructorCallback);
                 bind_IntKey_Callback(this, &LWWS_Window::sample_onIntKeyCallback);
@@ -98,7 +114,14 @@ namespace LWWS {
         virtual inline void windowEvents_Init() = 0;
         virtual inline bool windowEvents_Exist() = 0;
         virtual inline void windowEvents_Pump() = 0;
+        /*
+        * Paint events semantics
+        *  - emit_windowEvent_Paint() will initiate a Paint event for all viewports
+        *  - emit_windowEvent_Paint(id) will initiate a Paint event for viewport with the passed id 
+        *  - the viewport id has to be the same as the viewportId of the associated viewport
+        */
         virtual inline void emit_windowEvent_Paint() = 0;
+        virtual inline void emit_windowEvent_Paint(int id) = 0;
         inline bool windowShouldClose() {
             return _windowShouldClose;
         }
@@ -121,7 +144,13 @@ namespace LWWS {
             return initWidth*initHeight*4;
         }
 
+        const std::unordered_map<TViewportId, LWWS_Viewport>& viewports() {
+            return _viewports;
+        }
+
         virtual bool frameSize(/*out*/int& width, /*out*/int& height) = 0;
+        // virtual void addViewport(int posx, int posy, int width, int height) = 0;
+        // virtual void addLayout() = 0;
 
         /**
          * Binder
@@ -160,6 +189,14 @@ namespace LWWS {
         template<class ObjType>
         void bind_MouseAction_Callback(ObjType* obj, t_mouseaction_func<ObjType> f){
             _on_MouseAction_Callback = std::static_pointer_cast<LWWS_Func>(std::make_shared<LWWS_MouseActionFunc<ObjType>>(obj, f));
+        }
+
+        std::string genViewportErrMsg(TViewportId id){
+            std::stringstream errmsg;
+            errmsg << "X11 viewport with id " << id << " does not exist! Candidates are [";
+            for(const auto& vp : _viewports) errmsg << vp.first << ",";
+            errmsg << "]";
+            return errmsg.str();
         }
 
     private:
@@ -202,6 +239,10 @@ namespace LWWS {
         }
 
     protected:
+        int choose01(){
+            return static_cast<int>(_dist01(_randomGenerator));
+        }
+
         /**
          * State methods
          */
@@ -349,6 +390,12 @@ namespace LWWS {
                     window->_windowHeight = height;
                     action = WindowAction::Resized;
                 }
+            }
+
+            // int c = window->choose01();
+            for(auto& v : window->_viewports){
+                v.second.resize(width, height);
+                window->emit_windowEvent_Paint(v.first);
             }
 
             if(action != WindowAction::SteadyPress && window->_on_WindowState_Callback) (*window->_on_WindowState_Callback)(

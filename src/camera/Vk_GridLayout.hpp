@@ -54,11 +54,11 @@ namespace VK4 {
             uint32_t viewportHeight = static_cast<uint32_t>(std::floor(static_cast<float>(height - 2*_yCount*_ySpacing) / static_cast<float>(_yCount)));
 
             std::vector<Vk_CameraInit> res;
-            int camId = 0;
+            LWWS::TViewportId viewportId = 0;
             for(const auto& c : cameras){
                 res.push_back({
                     VK4::Vk_CameraInit{
-                        .camId = camId,
+                        .viewportId = viewportId,
                         .gridX = c.x,
                         .gridY = c.y,
                         .viewport = VK4::Vk_Viewport{
@@ -71,7 +71,7 @@ namespace VK4 {
                         .specs = c.lp.specs
                     }
                 });
-                camId++;
+                viewportId++;
             }
 
             return res;

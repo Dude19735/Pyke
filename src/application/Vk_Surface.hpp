@@ -14,6 +14,8 @@ namespace VK4 {
 			std::string title, 
 			int width, 
 			int height,
+			const std::string& bgColor,
+			const std::unordered_map<LWWS::TViewportId, LWWS::LWWS_Viewport>& viewports,
 			bool resizable,
             bool disableMousePointerOnHover=false,
             int hoverTimeoutMS=500
@@ -28,15 +30,18 @@ namespace VK4 {
 			_resizable(resizable),
 			_disableMousePointerOnHover(disableMousePointerOnHover),
 			_hoverTimeoutMS(hoverTimeoutMS),
-			_surface(nullptr)
+			_surface({})
 			{
 			Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create Surface"));
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-			_window = std::make_unique<LWWS::LWWS_Window_Win>(_title, _windowWidth, _windowHeight, _resizable, _disableMousePointerOnHover, _hoverTimeoutMS, "DesktopApp2", false);
-#elif defined(VK_USE_PLATFORM_XCB_KHR) || defined(VK_USE_PLATFORM_XLIB_KHR)
-			_window = std::make_unique<LWWS::LWWS_Window_X11>(_title, _windowWidth, _windowHeight, _resizable, _disableMousePointerOnHover, _hoverTimeoutMS, false);
+			Vk_Logger::RuntimeError(typeid(this), "Surface type VK_USE_PLATFORM_WIN32_KHR is not implemented yet!");
+			// _window = std::make_unique<LWWS::LWWS_Window_Win>(_title, _windowWidth, _windowHeight, _resizable, _disableMousePointerOnHover, _hoverTimeoutMS, "DesktopApp2", false);
+#elif defined(VK_USE_PLATFORM_XCB_KHR)
+			Vk_Logger::RuntimeError(typeid(this), "Surface type VK_USE_PLATFORM_XCB_KHR is not implemented yet!");
+#elif defined(VK_USE_PLATFORM_XLIB_KHR)
+			_window = std::make_unique<LWWS::LWWS_Window_X11>(_title, _windowWidth, _windowHeight, bgColor, viewports, _resizable, _disableMousePointerOnHover, _hoverTimeoutMS, false);
 #endif
-			Vk_CheckVkResult(typeid(this), createVulkanWindowSurface(_instance->vk_instance(), nullptr, &_surface), "Failed to create Vulkan surface!");
+			Vk_CheckVkResult(typeid(this), createVulkanWindowSurface(_instance->vk_instance(), nullptr), "Failed to create Vulkan surface!");
 		}
 
 		~Vk_Surface()
@@ -44,11 +49,17 @@ namespace VK4 {
 			Vk_Logger::Log(typeid(this), GlobalCasters::castDestructorTitle(
 				std::string("Destroy Surface") + (_reason.compare("") == 0 ? "" : std::string(" (") + _reason + std::string(")"))
 			));
-			vkDestroySurfaceKHR(_instance->vk_instance(), _surface, nullptr);
+			for(auto& s : _surface){
+				vkDestroySurfaceKHR(_instance->vk_instance(), s.second, nullptr);
+			}
 		}
 
-		const VkSurfaceKHR vk_surface() const {
-			return _surface;
+		const VkSurfaceKHR vk_surface(LWWS::TViewportId id) const {
+			if(!_surface.contains(id)){
+				Vk_Logger::RuntimeError(typeid(this), _window->genViewportErrMsg(id));
+			}
+
+			return _surface.at(id);
 		}
 
 		const VkExtent2D vk_canvasSize() const {
@@ -95,65 +106,72 @@ namespace VK4 {
 		bool _disableMousePointerOnHover;
 		int _hoverTimeoutMS;
 
-		VkSurfaceKHR _surface;
+		std::unordered_map<LWWS::TViewportId, VkSurfaceKHR> _surface;
 
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-		VkResult createVulkanWindowSurface(VkInstance instance, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface)
-        {
-            VkResult err;
-            VkWin32SurfaceCreateInfoKHR sci;
-            PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR;
+		/**
+		 * TODO: include multi-viewport support here.
+		 */
+		// VkResult createVulkanWindowSurface(VkInstance instance, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface)
+        // {
+        //     VkResult err;
+        //     VkWin32SurfaceCreateInfoKHR sci;
+        //     PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR;
 
-            vkCreateWin32SurfaceKHR = reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>(vkGetInstanceProcAddr(instance, "vkCreateWin32SurfaceKHR"));
-            if (!vkCreateWin32SurfaceKHR) return VK_ERROR_EXTENSION_NOT_PRESENT;
+        //     vkCreateWin32SurfaceKHR = reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>(vkGetInstanceProcAddr(instance, "vkCreateWin32SurfaceKHR"));
+        //     if (!vkCreateWin32SurfaceKHR) return VK_ERROR_EXTENSION_NOT_PRESENT;
 
-			LWWS::LWWS_Window_Win* window = reinterpret_cast<LWWS::LWWS_Window_Win*>(_window.get());
-			HWND hWnd;
-			HINSTANCE hInstance;
-			window->getWin32WindowDescriptors(hWnd, hInstance);
+		// 	LWWS::LWWS_Window_Win* window = reinterpret_cast<LWWS::LWWS_Window_Win*>(_window.get());
+		// 	HWND hWnd;
+		// 	HINSTANCE hInstance;
+		// 	window->getWin32WindowDescriptors(hWnd, hInstance);
 
-            memset(&sci, 0, sizeof(sci));
-            sci.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-            sci.hinstance = hInstance;
-            sci.hwnd = hWnd;
+        //     memset(&sci, 0, sizeof(sci));
+        //     sci.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+        //     sci.hinstance = hInstance;
+        //     sci.hwnd = hWnd;
 
-            err = vkCreateWin32SurfaceKHR(instance, &sci, allocator, surface);
+        //     err = vkCreateWin32SurfaceKHR(instance, &sci, allocator, surface);
 
-            return err;
-        }
+        //     return err;
+        // }
 #elif defined(VK_USE_PLATFORM_XCB_KHR)
-		VkResult createVulkanWindowSurface(VkInstance instance, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface){
-			VkResult err;
-			VkXcbSurfaceCreateInfoKHR sci;
-			PFN_vkCreateXcbSurfaceKHR vkCreateXcbSurfaceKHR;
+		/**
+		 * TODO: include multi-viewport support here. Currently it's not clear how the
+		 * XCB screenId can be used for this.
+		 */
+		// VkResult createVulkanWindowSurface(VkInstance instance, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface){
+			// VkResult err;
+			// VkXcbSurfaceCreateInfoKHR sci;
+			// PFN_vkCreateXcbSurfaceKHR vkCreateXcbSurfaceKHR;
 
-			LWWS::LWWS_Window_X11* window = reinterpret_cast<LWWS::LWWS_Window_X11*>(_window.get());
-			xcb_window_t screenId;
-			Display* display;
-			window->getX11XcbWindowDescriptors(display, screenId);
+			// LWWS::LWWS_Window_X11* window = reinterpret_cast<LWWS::LWWS_Window_X11*>(_window.get());
+			// xcb_window_t screenId;
+			// Display* display;
+			// window->getX11XcbWindowDescriptors(display, screenId);
 
-			xcb_connection_t* connection = XGetXCBConnection(display);
-			if (!connection)
-			{
-				return VK_ERROR_EXTENSION_NOT_PRESENT;
-			}
+			// xcb_connection_t* connection = XGetXCBConnection(display);
+			// if (!connection)
+			// {
+			// 	return VK_ERROR_EXTENSION_NOT_PRESENT;
+			// }
 
-			vkCreateXcbSurfaceKHR = (PFN_vkCreateXcbSurfaceKHR)vkGetInstanceProcAddr(instance, "vkCreateXcbSurfaceKHR");
-			if (!vkCreateXcbSurfaceKHR)
-			{
-				return VK_ERROR_EXTENSION_NOT_PRESENT;
-			}
+			// vkCreateXcbSurfaceKHR = (PFN_vkCreateXcbSurfaceKHR)vkGetInstanceProcAddr(instance, "vkCreateXcbSurfaceKHR");
+			// if (!vkCreateXcbSurfaceKHR)
+			// {
+			// 	return VK_ERROR_EXTENSION_NOT_PRESENT;
+			// }
 
-			memset(&sci, 0, sizeof(sci));
-			sci.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-			sci.connection = connection;
-			sci.window = screenId;
+			// memset(&sci, 0, sizeof(sci));
+			// sci.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+			// sci.connection = connection;
+			// sci.window = screenId;
 
-			err = vkCreateXcbSurfaceKHR(instance, &sci, allocator, surface);
-			return err;
-		}
+			// err = vkCreateXcbSurfaceKHR(instance, &sci, allocator, surface);
+			// return err;
+		// }
 #elif defined(VK_USE_PLATFORM_XLIB_KHR)
-		VkResult createVulkanWindowSurface(VkInstance instance, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface){
+		VkResult createVulkanWindowSurface(VkInstance instance, const VkAllocationCallbacks* allocator){
 			VkResult err;
 			VkXlibSurfaceCreateInfoKHR sci;
 			PFN_vkCreateXlibSurfaceKHR vkCreateXlibSurfaceKHR;
@@ -165,16 +183,24 @@ namespace VK4 {
 			}
 
 			LWWS::LWWS_Window_X11* lwwsWindow = reinterpret_cast<LWWS::LWWS_Window_X11*>(_window.get());
-			Window window;
-			Display* display;
-			lwwsWindow->getX11XlibWindowDescriptors(display, window);
 
-			memset(&sci, 0, sizeof(sci));
-			sci.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-			sci.dpy = display;
-			sci.window = window;
+			const auto& viewports = lwwsWindow->viewports();
 
-			err = vkCreateXlibSurfaceKHR(instance, &sci, allocator, surface);
+			for(const auto vp : viewports){
+				Window window;
+				Display* display;
+				lwwsWindow->getX11XlibWindowDescriptors(display, 0, window);
+
+				memset(&sci, 0, sizeof(sci));
+				sci.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+				sci.dpy = display;
+				sci.window = window;
+
+				_surface.insert({vp.first, nullptr});
+				err = vkCreateXlibSurfaceKHR(instance, &sci, allocator, &_surface.at(vp.first));
+
+				if(err != VK_SUCCESS) return err;
+			}
 			return err;
 		}
 #else

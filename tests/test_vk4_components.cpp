@@ -50,7 +50,7 @@ auto all_tests = boost::unit_test::disabled();
 BOOST_AUTO_TEST_CASE(Test_Swapchain, *new_test) {
 	std::string name = "test_app";
 
-	int camId = 0;
+	LWWS::TViewportId viewportId = 0;
 	{
 		std::unique_ptr<VK4::Vk_Device> device = std::make_unique<VK4::Vk_Device>(name);
         std::unique_ptr<VK4::Vk_Surface> surface = std::make_unique<VK4::Vk_Surface>(device->vk_instance(), name, 500, 300, true);
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(Test_Swapchain, *new_test) {
 BOOST_AUTO_TEST_CASE(Test_Renderpass, *new_test) {
 	std::string name = "test_app";
 
-	int camId = 0;
+	LWWS::TViewportId viewportId = 0;
 	{
 		std::unique_ptr<VK4::Vk_Device> device = std::make_unique<VK4::Vk_Device>(name);
         std::unique_ptr<VK4::Vk_Surface> surface = std::make_unique<VK4::Vk_Surface>(device->vk_instance(), name, 500, 300, true);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(Test_Framebuffer, *new_test) {
 	std::string name = "test_app";
 
 	{
-		int camId = 0;
+		LWWS::TViewportId viewportId = 0;
 		std::unique_ptr<VK4::Vk_Device> device = std::make_unique<VK4::Vk_Device>(name);
 		std::unique_ptr<VK4::Vk_Surface> surface = std::make_unique<VK4::Vk_Surface>(device->vk_instance(), name, 500, 300, true);
 		std::unique_ptr<VK4::Vk_RenderPass_IM> renderpass = std::make_unique<VK4::Vk_RenderPass_IM>(device.get(), surface.get());
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(Test_Framebuffer, *new_test) {
 BOOST_AUTO_TEST_CASE(Test_Graphicspipeline, *new_test) {
 	std::string name = "test_app";
 
-	int camId = 0;
+	LWWS::TViewportId viewportId = 0;
 	{
 		std::unique_ptr<VK4::Vk_Device> device = std::make_unique<VK4::Vk_Device>(name);
 		std::unique_ptr<VK4::Vk_Surface> surface = std::make_unique<VK4::Vk_Surface>(device->vk_instance(), name, 500, 300, true);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(Test_Graphicspipeline, *new_test) {
 
 		std::unique_ptr<VK4::Vk_Rasterizer_IM> rasterizer = 
 			std::make_unique<VK4::Vk_Rasterizer_IM>(
-				camId,
+				viewportId,
 				device.get(),
 				VK4::I_Renderer::Vk_PipelineAuxilliaries{
 					.surface = surface.get(),
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(Test_Graphicspipeline, *new_test) {
 			};
 
 			std::unique_ptr<VK4::Vk_GraphicsPipeline_IM> pipeline = std::make_unique<VK4::Vk_GraphicsPipeline_IM>(
-				camId,
+				viewportId,
 				device.get(), 
 				surface.get(),
 				config
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(Test_Graphicspipeline, *new_test) {
 			};
 
 			std::unique_ptr<VK4::Vk_GraphicsPipeline_IM> pipeline = std::make_unique<VK4::Vk_GraphicsPipeline_IM>(
-				camId,
+				viewportId,
 				device.get(),
 				surface.get(),
 				config
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(Test_Graphicspipeline, *new_test) {
 			};
 
 			std::unique_ptr<VK4::Vk_GraphicsPipeline_IM> pipeline = std::make_unique<VK4::Vk_GraphicsPipeline_IM>(
-				camId,
+				viewportId,
 				device.get(),
 				surface.get(),
 				config
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(Test_Graphicspipeline, *new_test) {
 			};
 
 			std::unique_ptr<VK4::Vk_GraphicsPipeline_IM> pipeline = std::make_unique<VK4::Vk_GraphicsPipeline_IM>(
-				camId,
+				viewportId,
 				device.get(),
 				surface.get(),
 				config
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(Test_Graphicspipeline, *new_test) {
 			};
 
 			std::unique_ptr<VK4::Vk_GraphicsPipeline_IM> pipeline = std::make_unique<VK4::Vk_GraphicsPipeline_IM>(
-				camId,
+				viewportId,
 				device.get(),
 				surface.get(),
 				config
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(Test_Graphicspipeline, *new_test) {
 			};
 
 			std::unique_ptr<VK4::Vk_GraphicsPipeline_IM> pipeline = std::make_unique<VK4::Vk_GraphicsPipeline_IM>(
-				camId,
+				viewportId,
 				device.get(),
 				surface.get(),
 				config
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(Test_Graphicspipeline, *new_test) {
 			};
 
 			std::unique_ptr<VK4::Vk_GraphicsPipeline_IM> pipeline = std::make_unique<VK4::Vk_GraphicsPipeline_IM>(
-				camId,
+				viewportId,
 				device.get(),
 				surface.get(),
 				config
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(Test_Graphicspipeline, *new_test) {
 			};
 
 			std::unique_ptr<VK4::Vk_GraphicsPipeline_IM> pipeline = std::make_unique<VK4::Vk_GraphicsPipeline_IM>(
-				camId,
+				viewportId,
 				device.get(),
 				surface.get(),
 				config
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(Test_Graphicspipeline, *new_test) {
 			};
 
 			std::unique_ptr<VK4::Vk_GraphicsPipeline_IM> pipeline = std::make_unique<VK4::Vk_GraphicsPipeline_IM>(
-				camId,
+				viewportId,
 				device.get(),
 				surface.get(),
 				config

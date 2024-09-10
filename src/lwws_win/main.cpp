@@ -11,7 +11,11 @@
 LWWS::LWWS_Window_X11* window = nullptr;
 
 void run(){
-    auto lwws_window = LWWS::LWWS_Window_X11("hello", 640, 480, true, false, 0, true);
+    std::vector<LWWS::LWWS_Viewport> viewports = {
+        LWWS::LWWS_Viewport(20, 40, 300, 250)
+    };
+
+    auto lwws_window = LWWS::LWWS_Window_X11("hello", 640, 480, "#555555", viewports, true, false, 0, true);
     window = &lwws_window;
 
     window->windowEvents_Init();
@@ -27,21 +31,29 @@ void run(){
 }
 
 int main(int argc, char** argv) {
-    // auto lwws_window = LWWS::LWWS_Window_X11("hello", 640, 480, true, false, 0, true);
-    // auto window = &lwws_window;
+    std::vector<LWWS::LWWS_Viewport> viewports = {
+        LWWS::LWWS_Viewport(0, 0, 320, 100, 1, "#FF0000", "#FFFF00"),
+        LWWS::LWWS_Viewport(180, 140, 150, 100, 1, "#00FF00", "#FF00FF"),
+        LWWS::LWWS_Viewport(350, 260, 150, 100, 1, "#0000FF", "#00FFFF")
+    };
 
-    // window->windowEvents_Init();
-    // window->emit_windowEvent_Paint();
+    auto lwws_window = LWWS::LWWS_Window_X11("hello", 640, 480, "#555555", viewports, true, false, 0, false);
+    auto window = &lwws_window;
 
-    // while(window->windowEvents_Exist()){
-    //     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    //     window->emit_windowEvent_Paint();
-    //     window->windowEvents_Pump();
+    window->windowEvents_Init();
+    window->emit_windowEvent_Paint();
 
-    //     if(window->windowShouldClose()){
-    //         break;
-    //     }
-    // }
+    while(window->windowEvents_Exist()){
+        // _device->vk_cleanSingleTimeCommands();
+        window->windowEvents_Pump();
+
+        if(window->windowShouldClose()){
+            goto terminate;
+        }
+    }
+
+    terminate:
+    std::cout << "terminated" << std::endl;
 
     // std::cout << typeid(5).hash_code() << std::endl;
     // std::cout << typeid(5.0).hash_code() << std::endl;

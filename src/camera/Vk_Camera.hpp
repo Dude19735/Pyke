@@ -13,7 +13,7 @@ namespace VK4 {
 
         Vk_Camera(const Vk_CameraInit& init, std::unique_ptr<I_ViewerSteering> steering, int currentParentWindowWidth, int currentParentWindowHeight)
         : 
-        _camId(init.camId),
+        _viewportId(init.viewportId),
         _gridX(init.gridX),
         _gridY(init.gridY),
         _type(init.specs.type),
@@ -133,7 +133,7 @@ namespace VK4 {
 			return true;
 		}
 
-		bool vk_scaleCamera(int camId, int32_t sxNew, int32_t syNew) {
+		bool vk_scaleCamera(LWWS::TViewportId viewportId, int32_t sxNew, int32_t syNew) {
 			if (sxNew < 0 && syNew < 0) return false;
 			else if (sxNew < 0) {
 				// move xNew proportionally according to the movement of yNew
@@ -223,7 +223,7 @@ namespace VK4 {
         }
 
         /* == Getter == */
-        inline const int vk_camId() const { return _camId; }
+        inline const LWWS::TViewportId vk_viewportId() const { return _viewportId; }
         inline const int vk_gridX() const { return _gridX; }
         inline const int vk_gridY() const { return _gridY; }
         inline const Vk_CameraType vk_type() const { return _type; }
@@ -280,7 +280,7 @@ namespace VK4 {
 
         private:
 
-        int _camId;
+        LWWS::TViewportId _viewportId;
         int _gridX;
         int _gridY;
         Vk_CameraType _type;

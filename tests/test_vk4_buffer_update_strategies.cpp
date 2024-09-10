@@ -72,8 +72,8 @@ class TestViewer {
 		};
 
 		VK4::Vk_GridLayout layout(1, 1, 0, 0);
-		layout.vk_addCamera(0,0, {specs_ObjectCentric, VK4::Vk_RGBColor{ .r=1.0f, .g=1.0f, .b=1.0f }});
-		_cam->vk_addCamera(layout.vk_layoutList(width, height));
+		layout.vk_addCameras(0,0, {specs_ObjectCentric, VK4::Vk_RGBColor{ .r=1.0f, .g=1.0f, .b=1.0f }});
+		_cam->vk_addCameras(layout.vk_layoutList(width, height));
 
 		float pointSize = 5.0f;
 		float alpha = 0.5f;

@@ -15,7 +15,7 @@ namespace VK4 {
 	class Vk_Rasterizer_IM : public I_Renderer {
 	public:
 		Vk_Rasterizer_IM(
-			int camId,
+			LWWS::TViewportId viewportId,
 			Vk_Device* const device,
 			I_Renderer::Vk_PipelineAuxilliaries auxilliaries,
 			int freshPoolSize,
@@ -27,7 +27,7 @@ namespace VK4 {
 				//	.p = std::addressof(*this),
 				//	.cast = [](void* x) { static_cast<Vk_Rasterizer_IM*>(x)->Destroy(); }
 				//},
-				camId, device, auxilliaries,
+				viewportId, device, auxilliaries,
 				freshPoolSize, mvpInit
 			)
 		{
@@ -66,21 +66,21 @@ namespace VK4 {
 				auto pConf = S_Dot_P_C::getPipelineConfig(this, /*topology,*/ cullMode/*, renderType*/);
 				_pipelines.insert({
 						pIdentifier,
-						std::make_unique<Vk_GraphicsPipeline_IM>(_camId, _device, _pipelineAuxilliaries.surface, pConf)
+						std::make_unique<Vk_GraphicsPipeline_IM>(_viewportId, _device, _pipelineAuxilliaries.surface, pConf)
 				});
 			}
 			else if(name.compare(S_Line_P_C::Identifier) == 0){
 				auto pConf = S_Line_P_C::getPipelineConfig(this, /*topology,*/ cullMode/*, renderType*/);
 				_pipelines.insert({
 						pIdentifier,
-						std::make_unique<Vk_GraphicsPipeline_IM>(_camId, _device, _pipelineAuxilliaries.surface, pConf)
+						std::make_unique<Vk_GraphicsPipeline_IM>(_viewportId, _device, _pipelineAuxilliaries.surface, pConf)
 				});
 			}
 			else if(name.compare(S_Mesh_P_C::Identifier) == 0){
 				auto pConf = S_Mesh_P_C::getPipelineConfig(this, /*topology,*/ cullMode, renderType);
 				_pipelines.insert({
 						pIdentifier,
-						std::make_unique<Vk_GraphicsPipeline_IM>(_camId, _device, _pipelineAuxilliaries.surface, pConf)
+						std::make_unique<Vk_GraphicsPipeline_IM>(_viewportId, _device, _pipelineAuxilliaries.surface, pConf)
 				});
 			}
 			else
@@ -166,7 +166,7 @@ namespace VK4 {
 
 			Vk_BindingProperties props{
 				.capabilities = caps,
-				.camId = _camId
+				.viewportId = _viewportId
 			};
 			props.uniformBuffers = std::unordered_map<int, Vk_AbstractUniformBuffer*>{ {0, _pv.get()} };
 

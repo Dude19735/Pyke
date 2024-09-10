@@ -32,10 +32,13 @@ namespace LWWS {
     class LWWS_Window_X11: public LWWS_Window{
         Display* _display;
         Window _window;
+        std::vector<Window> _x11viewports;
+        std::set<Window> _x11viewportsS;
         Screen* _screen;
         int _screenId;
         XEvent _ev;
-        GC _gc;
+        // GC _gc;
+        // GC _subGc;
 
         long unsigned int _cFocused;
         long unsigned int _cMaxhorz;
@@ -45,21 +48,26 @@ namespace LWWS {
 
         KeySym _key;
         char _text[255];
+        bool _flush;
 
     public:
         LWWS_Window_X11(
             std::string windowTitle,
             int width,
             int height,
+            const std::string& bgColor,
+            const std::unordered_map<TViewportId, LWWS_Viewport>& viewports,
             bool resizable,
             bool disableMousePointerOnHover=false,
             int hoverTimeoutMS=500,
             bool bindSamples=false
         ) 
         : 
-        LWWS_Window(width, height, disableMousePointerOnHover, hoverTimeoutMS, bindSamples),
+        LWWS_Window(width, height, bgColor, viewports, disableMousePointerOnHover, hoverTimeoutMS, bindSamples),
         _display(nullptr),
         _window(0),
+        _x11viewports({}),
+        _x11viewportsS({}),
         _screen(nullptr),
         _screenId(0),
         _ev({}),
@@ -68,19 +76,30 @@ namespace LWWS {
         _cMaxvert(0),
         _cHidden(0),
         _winstate(0),
-        _key(0)
+        _key(0),
+        _flush(true)
         {
-            unsigned long white;
-
             /* use the information from the environment variable DISPLAY 
             to create the X connection:
             */	
             _display = XOpenDisplay((char *)0);
             _screenId = DefaultScreen(_display);
-            white = WhitePixel(_display,_screenId);  /* get color white */
+            unsigned long white = WhitePixel(_display,_screenId);  /* get color white */
+            unsigned long black = BlackPixel(_display,_screenId);  /* get color white */
 
-            _window = XCreateSimpleWindow(_display,DefaultRootWindow(_display),0,0,	_windowWidth, _windowHeight, 5, white, white);
+            _window = XCreateSimpleWindow(_display,DefaultRootWindow(_display),0,0,_windowWidth, _windowHeight, 0, white, createX11Color(_bgColor));
             XSetStandardProperties(_display, _window, windowTitle.c_str(), "", None, NULL, 0, NULL);
+            // std::cout << "Parent window: " << _window << std::endl;
+            for(auto& v : _viewports){
+                auto& vp = v.second;
+                vp.setParentSize(width, height);
+                /* Display, Window, x, y, width, height, border_width, border_color, bg_color */
+                auto newWin = XCreateSimpleWindow(_display, _window, vp.posW(), vp.posH(), vp.width(), vp.height(), vp.borderWidth(), createX11Color(vp.borderColor()), createX11Color(vp.bgColor()));
+                // std::cout << "Child window: " << newWin << std::endl;
+                XRaiseWindow(_display, newWin);
+                _x11viewports.push_back(newWin);
+                _x11viewportsS.insert(newWin);
+            }
 
             Atom wm_delete = XInternAtom(_display, "WM_DELETE_WINDOW", 1);	
             XSetWMProtocols(_display, _window, &wm_delete, 1 );
@@ -96,7 +115,8 @@ namespace LWWS {
             );
 
             // create the Graphics Context
-            _gc=XCreateGC(_display, _window, 0,0);
+            // _gc=XCreateGC(_display, _window, 0,0);
+            // _subGc=XCreateGC(_display, _subWindow, 0, 0);
 
             if(!resizable){
                 auto sh = XAllocSizeHints();
@@ -107,20 +127,25 @@ namespace LWWS {
                 XSetWMSizeHints(_display, _window, sh, XA_WM_NORMAL_HINTS);
                 XFree(sh);
             }
+
+            // Window stackPosition[2] = {_window, _subWindow};
+            // XRestackWindows(_display, stackPosition, 2);
         }
 
         ~LWWS_Window_X11(){
-            XFreeGC(_display, _gc);
+            // XFreeGC(_display, _gc);
+            // XFreeGC(_display, _subGc);
+            // XDestroyWindow(_display, _subWindow);
             XDestroyWindow(_display, _window);
 	        XCloseDisplay(_display);
         }
 
-        void getX11XcbWindowDescriptors(Display*& display, uint32_t& screenId){
-            display = _display;
-            screenId = static_cast<uint32_t>(_screenId);
-        }
+        // void getX11XcbWindowDescriptors(Display*& display, LWWS::TViewportId viewportId, uint32_t& screenId){
+        //     display = _display;
+        //     screenId = static_cast<uint32_t>(_screenId);
+        // }
 
-        void getX11XlibWindowDescriptors(Display*& display, Window& window){
+        void getX11XlibWindowDescriptors(Display*& display, LWWS::TViewportId viewportId, Window& window){
             display = _display;
             window = _window;
         }
@@ -128,6 +153,11 @@ namespace LWWS {
         inline void windowEvents_Init() {
             XClearWindow(_display, _window);
 	        XMapRaised(_display, _window);
+            for(const auto& w : _x11viewports){
+                XClearWindow(_display, w);
+	            XMapRaised(_display, w);
+            }
+
         }
 
         inline bool windowEvents_Exist() {
@@ -149,17 +179,7 @@ namespace LWWS {
             windowEventPump();
         }
 
-        inline void emit_windowEvent_Paint(){
-            // {
-            //     std::unique_lock<std::mutex> lock(_mutex);
-            //     _redraw = true;
-            // }
-            // _condition.notify_one();
-            // _redrawQueue.pushRedrawEvent();
-            // Leave this for reference. It is NOT thread safe, though
-            // =======================================================
-            // auto lock = std::lock_guard<std::mutex>(_mutex);
-
+        XExposeEvent createXExposeEvent(Window window, int posx, int posy, int width, int height){
             XExposeEvent pEv;
             memset(&pEv, 0, sizeof(pEv));
             pEv = {
@@ -167,17 +187,44 @@ namespace LWWS {
                 .serial = 0,
                 .send_event = false,
                 .display = _display,
-                .window = _window,
-                .x = _windowPosX,
-                .y = _windowPosY,
-                .width = _windowWidth,
-                .height = _windowHeight,
+                .window = window,
+                .x = posx,
+                .y = posy,
+                .width = width,
+                .height = height,
                 .count = 0
             };
 
-            XSendEvent(_display, _window, true, ExposureMask, reinterpret_cast<XEvent*>(&pEv));
+            return pEv;
+        }
+
+        inline void emit_windowEvent_Paint(){
+            // auto pEv = createXExposeEvent(_window, _windowPosX, _windowPosY, _windowWidth, _windowHeight);
+            // XSendEvent(_display, _window, true, ExposureMask, reinterpret_cast<XEvent*>(&pEv));
+
+            int s = static_cast<int>(_x11viewports.size());
+            _flush = false; // make sure, individual emit_windowEvent_Paint(i) don't flush the display every time
+            for(int i=0; i<s; ++i){
+                emit_windowEvent_Paint(i);
+            }
             XFlush(_display);
+            _flush = true;
             // std::cout << "send paint event " << ret << std::endl;
+        }
+
+        inline void emit_windowEvent_Paint(TViewportId id){
+            if(!_viewports.contains(id)) {
+                throw std::runtime_error(genViewportErrMsg(id));
+            }
+
+            const auto& vp = _viewports.at(id);
+            const auto& x11vp = _x11viewports.at(id);
+            // std::cout << vp.width() << std::endl;
+            XResizeWindow(_display, x11vp, static_cast<unsigned int>(vp.width()), static_cast<unsigned int>(vp.height()));
+            XMoveWindow(_display, x11vp, vp.posW(), vp.posH());
+            auto pEv = createXExposeEvent(x11vp, vp.posW(), vp.posH(), vp.width(), vp.height());
+            XSendEvent(_display, x11vp, true, ExposureMask, reinterpret_cast<XEvent*>(&pEv));
+            if(_flush) XFlush(_display);
         }
 
         bool frameSize(int& width, int& height){
@@ -192,12 +239,30 @@ namespace LWWS {
         }
 
     private:
+        unsigned long createX11Color(const std::string& pattern){
+            if(pattern.size() != 7 || pattern.at(0) != '#'){
+                return 0;
+            }
+
+            XColor color;
+            Colormap colormap;
+
+            colormap = DefaultColormap(_display, 0);
+            XParseColor(_display, colormap, pattern.c_str(), &color);
+            XAllocColor(_display, colormap, &color);
+
+            return color.pixel;
+        }
+
         void windowEventPump(){
             // if(_redrawQueue.hasRedrawEvent()) wndPaint(this);
             XNextEvent(_display, &_ev);
             switch(_ev.type){
                 case Expose:{
-                    // std::cout << "paint event" << std::endl;
+                    if(!_x11viewportsS.contains(_ev.xexpose.window)) break;
+                    // std::cout << "paint event: " << _ev.xexpose.window << " " << _ev.xexpose.x << " " << _ev.xexpose.y << " " << _ev.xexpose.width << " " << _ev.xexpose.height << std::endl;
+
+                    // std::cout << " ======================> " << std::endl;
                     if(_ev.xexpose.count==0) {
                         // std::cout << "..... paint event" << std::endl;
                         wndPaint(this);
@@ -205,6 +270,8 @@ namespace LWWS {
                     break;
                 } 
                 case ClientMessage:{
+                    if(_x11viewportsS.contains(_ev.xclient.window)) break;
+
                     std::string xx = XGetAtomName(_display, _ev.xclient.message_type);
                     if (xx.compare("WM_PROTOCOLS") == 0) {
                         wndCloseOperations(this);
@@ -212,6 +279,8 @@ namespace LWWS {
                     break;
                 }
                 case KeyPress:{
+                    if(_x11viewportsS.contains(_ev.xkey.window)) break;
+
                     unsigned int kk = _ev.xkey.keycode;
                     if(LWWS_Key_X11::KeyFilter(kk)) break;
 
@@ -234,6 +303,8 @@ namespace LWWS {
                     break;
                 }
                 case KeyRelease:{
+                    if(_x11viewportsS.contains(_ev.xkey.window)) break;
+
                     unsigned int kk = _ev.xkey.keycode;
                     if(LWWS_Key_X11::KeyFilter(kk)) break;
 
@@ -260,15 +331,22 @@ namespace LWWS {
                     break;
                 }
                 case ConfigureNotify:{
+                    if(_x11viewportsS.contains(_ev.xconfigure.window)) break;
+
                     auto x = _ev.xconfigure.x;
                     auto y = _ev.xconfigure.y;
                     auto width = _ev.xconfigure.width;
                     auto height = _ev.xconfigure.height;
                     if(x != _windowPosX || y != _windowPosY) wndMoved(this, x, y);
-                    if(width != _windowWidth || height != _windowHeight) wndResize(this, width, height, false);
+                    if(width != _windowWidth || height != _windowHeight) {
+                        wndResize(this, width, height, false);
+                        // emit_windowEvent_Paint();
+                    }
                     break;
                 }
                 case ButtonPress:{
+                    if(_x11viewportsS.contains(_ev.xbutton.window)) break;
+
                     if(_ev.xbutton.button == 1) wndMousePressed(this, MouseButton::Left, ButtonOp::Down);
                     else if(_ev.xbutton.button == 2) wndMousePressed(this, MouseButton::Middle, ButtonOp::Down);
                     else if(_ev.xbutton.button == 3) wndMousePressed(this, MouseButton::Right, ButtonOp::Down);
@@ -277,6 +355,8 @@ namespace LWWS {
                     break;
                 }
                 case ButtonRelease:{
+                    if(_x11viewportsS.contains(_ev.xbutton.window)) break;
+
                     if(_ev.xbutton.button == 1) wndMousePressed(this, MouseButton::Left, ButtonOp::Up);
                     else if(_ev.xbutton.button == 2) wndMousePressed(this, MouseButton::Middle, ButtonOp::Up);
                     else if(_ev.xbutton.button == 3) wndMousePressed(this, MouseButton::Right, ButtonOp::Up);
@@ -288,18 +368,26 @@ namespace LWWS {
                     break;
                 }
                 case MotionNotify:{
+                    if(_x11viewportsS.contains(_ev.xmotion.window)) break;
+
                     wndMouseMoved(this, _ev.xbutton.x, _ev.xbutton.y);
                     break;
                 }
                 case FocusIn:{
+                    if(_x11viewportsS.contains(_ev.xfocus.window)) break;
+
                     wndSetActive(this, true);
                     break;
                 }
                 case FocusOut:{
+                    if(_x11viewportsS.contains(_ev.xfocus.window)) break;
+
                     wndSetActive(this, false);
                     break;
                 }
                 case PropertyNotify:{
+                    if(_x11viewportsS.contains(_ev.xproperty.window)) break;
+
                     /**
                      * Needs to be after focus in and out
                      */
@@ -311,9 +399,15 @@ namespace LWWS {
                         height = _windowHeight;
                     }
 
-                    if(event == WindowAction::Minimized) wndResize(this, width, height, true);
+                    if(event == WindowAction::Minimized) {
+                        wndResize(this, width, height, true);
+                        // emit_windowEvent_Paint();
+                    }
                     // the other return value here is 'Maximized'
-                    else if(event == WindowAction::Maximized) wndResize(this, width, height, false);
+                    else if(event == WindowAction::Maximized) {
+                        wndResize(this, width, height, false);
+                        // emit_windowEvent_Paint();
+                    }
 
                     break;
                 }

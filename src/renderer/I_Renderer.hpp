@@ -32,7 +32,7 @@ namespace VK4 {
 		//};
 
 		I_Renderer(
-			/*Caster cast, */int camId, 
+			/*Caster cast, */LWWS::TViewportId viewportId, 
 			Vk_Device* const device, 
 			Vk_PipelineAuxilliaries auxilliaries,
 			const int freshPoolSize,
@@ -49,7 +49,7 @@ namespace VK4 {
 			_descriptorPools({}),
 			_descriptorSets({}),
 			_pv(nullptr),
-			_camId(camId)
+			_viewportId(viewportId)
 		{
 			VK4::Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create I_Rasterizer (Baseclass)"));
 
@@ -111,14 +111,14 @@ namespace VK4 {
 				std::string("Detach object [") +
 				name +
 				std::string("] to Renderer [") +
-				std::to_string(_camId) +
+				std::to_string(_viewportId) +
 				std::string("]")
 			));
 
 			auto obj = _renderables.at(name);
-			vk_reclaim_DescriptorSets(obj->_shaderName, obj->_sets.at(_camId));
-			obj->_sets.erase(_camId);
-			obj->_pipeline.erase(_camId);
+			vk_reclaim_DescriptorSets(obj->_shaderName, obj->_sets.at(_viewportId));
+			obj->_sets.erase(_viewportId);
+			obj->_pipeline.erase(_viewportId);
 			_renderables.erase(name);
 			return true;
 		}
@@ -133,13 +133,13 @@ namespace VK4 {
 				std::string("Attach object [") +
 				object->vk_objectName() +
 				std::string("] to Renderer [") +
-				std::to_string(_camId) +
+				std::to_string(_viewportId) +
 				std::string("]")
 			));
 
 			const auto& caps = _device->vk_swapchainSupportActiveDevice(_pipelineAuxilliaries.surface);
-			object->_sets[_camId] = vk_getOrCreate_DescriptorSets(object->_shaderName, caps.nFramesInFlight);
-			object->_pipeline[_camId] = vk_getOrCreate_GraphicsPipeline(object->_shaderName, object->_topology, object->_cullMode, object->_renderType);
+			object->_sets[_viewportId] = vk_getOrCreate_DescriptorSets(object->_shaderName, caps.nFramesInFlight);
+			object->_pipeline[_viewportId] = vk_getOrCreate_GraphicsPipeline(object->_shaderName, object->_topology, object->_cullMode, object->_renderType);
 			_renderables[object->vk_objectName()] = object;
 
 			return true;
@@ -148,7 +148,7 @@ namespace VK4 {
 		void vk_build(const Vk_Viewport& viewport, int index, const std::vector<VkCommandBuffer>& commandBuffers) {
 			Vk_Logger::Log(typeid(this), GlobalCasters::castVkBuild(
 				std::string("Build Renderer[") +
-				std::to_string(_camId) +
+				std::to_string(_viewportId) +
 				std::string("]")
 			));
 
@@ -158,7 +158,7 @@ namespace VK4 {
 		virtual void vk_resize(const Vk_Viewport& viewport, const Vk_PipelineAuxilliaries&& auxilliaries, int index, const std::vector<VkCommandBuffer>& commandBuffers) {
 			Vk_Logger::Log(typeid(this), GlobalCasters::castVkBuild(
 				std::string("Resize Renderer[") +
-				std::to_string(_camId) +
+				std::to_string(_viewportId) +
 				std::string("]")
 			));
 
@@ -348,7 +348,7 @@ namespace VK4 {
 		// view and perspective matrices for the current renderer (i.e. rasterizer etc)
 		std::unique_ptr<Vk_AbstractUniformBuffer> _pv;
 
-		const int _camId;
+		const LWWS::TViewportId _viewportId;
 
 	private:
 		virtual void createGraphicsPipeline(const std::string& name, const std::string& pIdentifier, const Topology topology, const CullMode cullMode, const RenderType renderType) = 0;

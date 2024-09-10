@@ -20,7 +20,7 @@ namespace VK4 {
 	public:
 
 		Vk_GraphicsPipeline_IM(
-			int camId,
+			LWWS::TViewportId viewportId,
 			Vk_Device* const device,
 			const Vk_Surface* surface,
 			const Vk_Config_GraphicsPipeline_IM& config

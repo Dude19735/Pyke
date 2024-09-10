@@ -53,7 +53,7 @@ class Viewer {
 		layout.vk_addCamera(2,1, {specs_CameraCentric, VK4::Vk_ColorOp::rgb_lerp(0.875f, from, to)});
 		layout.vk_addCamera(2,2, {specs_ObjectCentric, VK4::Vk_ColorOp::rgb_lerp(1.000f, from, to)});
 
-		_cam->vk_addCamera(layout.vk_layoutList(width, height));
+		_cam->vk_addCameras(layout.vk_layoutList(width, height));
 
 		_pointSize = 10.0f;
 		_lineWidth = 5.0f;

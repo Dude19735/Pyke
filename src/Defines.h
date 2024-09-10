@@ -373,7 +373,7 @@ namespace VK4 {
 	};
 
 	struct Vk_CameraInit {
-		int camId;
+		LWWS::TViewportId viewportId;
 		int gridX;
 		int gridY;
 		Vk_Viewport viewport;

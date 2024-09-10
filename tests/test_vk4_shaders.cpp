@@ -72,10 +72,10 @@ BOOST_AUTO_TEST_CASE(Test_Shader, *new_test) {
 	std::unique_ptr<VK4::Vk_Swapchain_IM> swapchain = std::make_unique<VK4::Vk_Swapchain_IM>(device.get(), surface.get());
 	std::unique_ptr<VK4::Vk_Framebuffer_IM> framebuffer = std::make_unique<VK4::Vk_Framebuffer_IM>(device.get(), surface.get(), swapchain.get(), renderpass.get());
 
-	int camId = 0;
+	LWWS::TViewportId viewportId = 0;
 	std::unique_ptr<VK4::Vk_Rasterizer_IM> rasterizer = 
 		std::make_unique<VK4::Vk_Rasterizer_IM>(
-			camId,
+			viewportId,
 			device.get(), 
 			VK4::I_Renderer::Vk_PipelineAuxilliaries{
 					.surface = surface.get(),

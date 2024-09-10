@@ -10,7 +10,7 @@ namespace VK4 {
 
 	struct Vk_BindingProperties {
 		const SwapchainSupportDetails& capabilities;
-		int camId;
+		LWWS::TViewportId viewportId;
 		int frameInFlightIndex;
 		VkCommandBuffer commandBuffer;
 		std::unordered_map<int, Vk_AbstractUniformBuffer*> uniformBuffers;
@@ -140,8 +140,8 @@ namespace VK4 {
 			}
 		}
 
-		bool vk_isAttachedTo(int camId) {
-			if (_pipeline.find(camId) == _pipeline.end()) return false;
+		bool vk_isAttachedTo(LWWS::TViewportId viewportId) {
+			if (_pipeline.find(viewportId) == _pipeline.end()) return false;
 			return true;
 		}
 

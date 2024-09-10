@@ -299,18 +299,18 @@ namespace VK4 {
 //                             ██████  ███ █     █ ██████  ███████ █     █  █████                              
 // ############################################################################################################
 		void vk_00_bindPipeline(const Vk_BindingProperties& props) override {
-			checkAttached(props.camId);
-			vkCmdBindPipeline(props.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline.at(props.camId)->vk_pipeline());
+			checkAttached(props.viewportId);
+			vkCmdBindPipeline(props.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline.at(props.viewportId)->vk_pipeline());
 		}
 
 		void vk_10_bindLineWidth(const Vk_BindingProperties& props) override {
-			checkAttached(props.camId);
+			checkAttached(props.viewportId);
 
 			vkCmdSetLineWidth(props.commandBuffer, 1.0f);
 		}
 
 		void vk_20_bindDataBuffer(const Vk_BindingProperties& props) override {
-			checkAttached(props.camId);
+			checkAttached(props.viewportId);
 
 			VkBuffer vertexBuffers[] = { _vBuffer->vk_buffer() };
 			std::uint32_t vertexBindingPoint = _bindingPoints.at("P_BindingPoint");
@@ -344,7 +344,7 @@ namespace VK4 {
 		}
 
 		void vk_30_bindPushConstants(const Vk_BindingProperties& props) override {
-			checkAttached(props.camId);
+			checkAttached(props.viewportId);
 
 			Vk_Dot_Structures::Vk_PushConstants constants = {};
 			// if we draw points, we use this as point size, otherwise it doesn't matter
@@ -354,7 +354,7 @@ namespace VK4 {
 
 			vkCmdPushConstants(
 				props.commandBuffer,
-				_pipeline.at(props.camId)->vk_pipelineLayout(),
+				_pipeline.at(props.viewportId)->vk_pipelineLayout(),
 				VK_SHADER_STAGE_VERTEX_BIT,
 				0,
 				sizeof(Vk_Dot_Structures::Vk_PushConstants),
@@ -373,7 +373,7 @@ namespace VK4 {
 			}
 
 			// iterate all uniform buffers
-			auto& sets = _sets[props.camId];
+			auto& sets = _sets[props.viewportId];
 			for (auto ub : props.uniformBuffers) {
 				// assign each uniform buffer to a descriptor set
 
@@ -427,15 +427,15 @@ namespace VK4 {
 		}
 
 		void vk_50_bindDescriptorSets(const Vk_BindingProperties& props) override {
-			checkAttached(props.camId);
+			checkAttached(props.viewportId);
 
 			vkCmdBindDescriptorSets(
 				props.commandBuffer,
 				VK_PIPELINE_BIND_POINT_GRAPHICS,
-				_pipeline.at(props.camId)->vk_pipelineLayout(),
+				_pipeline.at(props.viewportId)->vk_pipelineLayout(),
 				0,
 				1,
-				&(_sets[props.camId][props.frameInFlightIndex]),
+				&(_sets[props.viewportId][props.frameInFlightIndex]),
 				0,
 				nullptr
 			);
@@ -467,8 +467,8 @@ namespace VK4 {
 		float _alpha;
 		std::unordered_map<std::string, int> _bindingPoints;
 
-		void checkAttached(int camId) {
-			if (_pipeline.find(camId) == _pipeline.end()) Vk_Logger::RuntimeError(typeid(this), "Trying to bind unattached " + type());
+		void checkAttached(LWWS::TViewportId viewportId) {
+			if (_pipeline.find(viewportId) == _pipeline.end()) Vk_Logger::RuntimeError(typeid(this), "Trying to bind unattached " + type());
 		}
 	};
 }

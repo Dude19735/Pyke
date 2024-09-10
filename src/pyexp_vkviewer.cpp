@@ -187,7 +187,7 @@ PYBIND11_MODULE(_vkviewer, m) {
 		.def(py::init<int, int, int, Vk_Viewport, Vk_CameraSpecs>(),
 			py::arg("cam_id"), py::arg("grid_x"), py::arg("grid_y"), py::arg("viewport"), py::arg("specs"),
 			py::call_guard<py::gil_scoped_release>())
-		.def_readwrite("cam_id", &Vk_CameraInit::camId)
+		.def_readwrite("cam_id", &Vk_CameraInit::viewportId)
 		.def_readwrite("grid_x", &Vk_CameraInit::gridX)
 		.def_readwrite("grid_y", &Vk_CameraInit::gridY)
 		.def_readwrite("viewport", &Vk_CameraInit::viewport)
@@ -355,7 +355,7 @@ PYBIND11_MODULE(_vkviewer, m) {
 			 "Get version of viewer", 
 			 py::call_guard<py::gil_scoped_release>())
 		.def("vk_add_camera",
-			 &Vk_Viewer::vk_addCamera,
+			 &Vk_Viewer::vk_addCameras,
 			 py::arg("cameras"),
 			 "Add camera to viewer",
 			 py::call_guard<py::gil_scoped_release>())
@@ -448,7 +448,7 @@ PYBIND11_MODULE(_vkviewer, m) {
 			 &Vk_GridLayout::vk_count,
 			 py::call_guard<py::gil_scoped_release>())
 		.def("vk_add_camera", 
-			 &Vk_GridLayout::vk_addCamera, 
+			 &Vk_GridLayout::vk_addCameras, 
 			 py::arg("x"), py::arg("y"), py::arg("pack"), py::arg("override")=false,
 			 py::call_guard<py::gil_scoped_release>());
 }
