@@ -115,9 +115,6 @@ namespace VK4 {
                 }
             }
 
-            //  - compute
-            //  - graphics
-
         }
 
         void queryAvailableQueueTypes(){

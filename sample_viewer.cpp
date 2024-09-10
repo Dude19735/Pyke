@@ -103,7 +103,7 @@ class Viewer {
 			VK4::CullMode::Back,
 			VK4::RenderType::Solid,
 			1.0f, 1.0f,
-			VK4::Vk_BufferUpdateBehaviour::Staged_DoubleBuffering
+			VK4::Vk_BufferUpdateBehaviour::Staged_GlobalLock
 		);
 
 		_mesh2 = VK4::S_Mesh_P_C::create(
@@ -117,7 +117,7 @@ class Viewer {
 			VK4::CullMode::Back,
 			VK4::RenderType::Wireframe,
 			1.0f, 1.0f,
-			VK4::Vk_BufferUpdateBehaviour::Direct_DoubleBuffering
+			VK4::Vk_BufferUpdateBehaviour::Staged_GlobalLock
 		);
 
 		_mesh2Normals = VK4::S_Line_P_C::create(
@@ -126,7 +126,7 @@ class Viewer {
 			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 1.5,-1.5,0,1},
 			VK4::Vk_SampleObjects::Cube2_NormalLines_P(0.5f, _angle), VK4::Vk_SampleObjects::Cube2_NormalLines_C(), VK4::Vk_SampleObjects::Cube2_NormalLines_Indices(),
 			_lineWidth, 1.0f,
-			VK4::Vk_BufferUpdateBehaviour::Staged_LazyDoubleBuffering
+			VK4::Vk_BufferUpdateBehaviour::Staged_GlobalLock
 		);
 
 		_cam->vk_registerAction('r', this, &Viewer::rotate);
@@ -229,7 +229,7 @@ private:
 			_angle = _angle - 360.0f;
 		}
 
-		_dot->vk_updatePoints(VK4::Vk_SampleObjects::Point_P(_angle / 180.0f * M_PI), 0);
+		_dot->vk_updatePoints(VK4::Vk_SampleObjects::Point_P(_angle / 180.0f * M_PI), 0, 0, VK4::Vk_ObjUpdate::Promptly);
 		_cam->vk_rebuildAndRedraw();
 		std::this_thread::sleep_for(std::chrono::microseconds(5000));
 		
