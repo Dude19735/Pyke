@@ -149,8 +149,15 @@ namespace LWWS {
         }
 
         virtual bool frameSize(/*out*/int& width, /*out*/int& height) = 0;
-        // virtual void addViewport(int posx, int posy, int width, int height) = 0;
-        // virtual void addLayout() = 0;
+
+        virtual void viewportSize(TViewportId viewportId, /*out*/int& width, /*out*/int& height) {
+            if(!_viewports.contains(viewportId)){
+                throw std::runtime_error(genViewportErrMsg(viewportId));
+            }
+
+            width = _viewports.at(viewportId).width();
+            height = _viewports.at(viewportId).height();
+        }
 
         /**
          * Binder
@@ -193,7 +200,7 @@ namespace LWWS {
 
         std::string genViewportErrMsg(TViewportId id){
             std::stringstream errmsg;
-            errmsg << "X11 viewport with id " << id << " does not exist! Candidates are [";
+            errmsg << "Viewport with id " << id << " does not exist! Candidates are [";
             for(const auto& vp : _viewports) errmsg << vp.first << ",";
             errmsg << "]";
             return errmsg.str();
