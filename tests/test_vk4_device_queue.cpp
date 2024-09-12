@@ -58,8 +58,11 @@ BOOST_AUTO_TEST_CASE(Test_DeviceQueue2, *new_test) {
 	VK4::Vk_Device device(name);
 	VK4::Vk_DeviceQueue queue(&device);
 
-	VK4::Vk_Surface surface(device.vk_instance(), name, 1, 1, false);
-	queue.vk_determineQueueFamiliesPresentCapability(&surface);
+	std::unordered_map<LWWS::TViewportId, LWWS::LWWS_Viewport> viewports;
+	viewports.insert({0, LWWS::LWWS_Viewport(0, 0,0, 1,1, 0,"#000000", "#FFFFFF")});
+	VK4::Vk_Surface surface(device.vk_instance(), name, 1, 1, "#999999", viewports, false);
+
+	queue.vk_determineQueueFamiliesPresentCapability({ .surface=&surface, .viewportId=0 });
 	queue.vk_printAvailableQueueTypes();
 }
 
