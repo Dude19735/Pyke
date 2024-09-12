@@ -309,6 +309,16 @@ namespace VK4 {
     };
 #endif
 
+	struct Vk_SurfaceConfig {
+		Vk_Surface* surface;
+		LWWS::TViewportId viewportId;
+
+		void operator=(const Vk_SurfaceConfig& other){
+			surface = other.surface;
+			viewportId = other.viewportId;
+		}
+	};
+
 	struct Vk_ViewportMargins {
 		int32_t left;
 		int32_t right;

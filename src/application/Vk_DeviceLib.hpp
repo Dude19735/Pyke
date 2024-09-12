@@ -392,41 +392,41 @@ namespace VK4 {
 			return false;
 		}
 
-        static SwapchainSupportDetails swapchainSupport(PhysicalDevice* pDev, const Vk_Surface* surface, LWWS::TViewportId id, bool multiImageBuffering, Bridge& bridge) {
+        static SwapchainSupportDetails swapchainSupport(PhysicalDevice* pDev, VkSurfaceKHR surface, bool multiImageBuffering, Bridge& bridge) {
             SwapchainSupportDetails swapchainSupportDetails;
 			if(surface == nullptr){
 				Vk_Logger::RuntimeError(typeid(NoneObj), "No surface passed to vk_swapchainSupport query!");
 			}
 
 			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-				pDev->physicalDevice, surface->vk_surface(id), &swapchainSupportDetails.capabilities
+				pDev->physicalDevice, surface, &swapchainSupportDetails.capabilities
 			);
 
 			// query supported surface formats
 			uint32_t formatCount;
 			vkGetPhysicalDeviceSurfaceFormatsKHR(
-				pDev->physicalDevice, surface->vk_surface(id), &formatCount, nullptr
+				pDev->physicalDevice, surface, &formatCount, nullptr
 			);
 
 			// list all supported surface formats
 			if (formatCount != 0) {
 				swapchainSupportDetails.formats.resize(formatCount);
 				vkGetPhysicalDeviceSurfaceFormatsKHR(
-					pDev->physicalDevice, surface->vk_surface(id), &formatCount, swapchainSupportDetails.formats.data()
+					pDev->physicalDevice, surface, &formatCount, swapchainSupportDetails.formats.data()
 				);
 			}
 
 			// query all available surface presentation modes
 			uint32_t presentModeCount;
 			vkGetPhysicalDeviceSurfacePresentModesKHR(
-				pDev->physicalDevice, surface->vk_surface(id), &presentModeCount, nullptr
+				pDev->physicalDevice, surface, &presentModeCount, nullptr
 			);
 
 			// list all supported surface presentation modes
 			if (presentModeCount != 0) {
 				swapchainSupportDetails.presentModes.resize(presentModeCount);
 				vkGetPhysicalDeviceSurfacePresentModesKHR(
-					pDev->physicalDevice, surface->vk_surface(id), &presentModeCount, swapchainSupportDetails.presentModes.data()
+					pDev->physicalDevice, surface, &presentModeCount, swapchainSupportDetails.presentModes.data()
 				);
 			}
 
@@ -570,7 +570,7 @@ namespace VK4 {
 
         static bool setPhysicalDevice(
             Vk_Instance* instance, 
-            Vk_Surface* surface,
+            VkSurfaceKHR surface,
             std::vector<PhysicalDevice>& physicalDevices,
             bool multiImageBuffering,
             Vk_DevicePreference devicePreference,
@@ -658,7 +658,7 @@ namespace VK4 {
 					}
 
 					// check if given device supports presentation to a particular given surface
-					vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevices[i].physicalDevice, index, surface->vk_surface(id), &presentSupport);
+					vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevices[i].physicalDevice, index, surface, &presentSupport);
 					if (queueFamily.queueCount > 0 && presentSupport && physicalDevices[i].queueFamilyIndices.presentFamilyIndex < 0) {
 						physicalDevices[i].queueFamilyIndices.presentFamilyIndex = index;
 					}

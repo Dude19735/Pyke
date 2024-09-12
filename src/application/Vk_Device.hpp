@@ -33,7 +33,7 @@ namespace VK4 {
 			_copyCommandPool(nullptr),
 			_initializationCommandPool(nullptr),
 			_swapchainSupportDetails({}),
-			_swapchainSupportDetailsUpToDate(false),
+			_swapchainSupportDetailsUpToDate({}),
 			_multiImageBuffering(true),
 			_physicalDevices({}),
 			_activePhysicalDevice(nullptr),
@@ -53,7 +53,7 @@ namespace VK4 {
 
 			// std::unordered_map<LWWS::TViewportId, LWWS::LWWS_Viewport> vp = {{0, LWWS::LWWS_Viewport(0, 0, 0, 1, 1)}};
 			auto surface = Vk_Surface(_instance.get(), "temp", 1, 1, "#000000", {{0, LWWS::LWWS_Viewport(0, 0, 0, 1, 1)}}, false, false);
-			configDeviceForSurface(&surface);
+			configDeviceForSurface({ .surface=&surface, .viewportId=0 });
 			vk_invalidateSwapchainSupport(); // we still need to ask for support because we just created a 1x1 surface here
 			_setGpuMemoryConfig();
 		}
@@ -132,24 +132,28 @@ namespace VK4 {
 			Vk_DeviceLib::printActiveDeviceMemoryProperties(_physicalDevices, _gpuHeapConfig, stream);
 		}
 
-		void vk_invalidateSwapchainSupport() {
-			_swapchainSupportDetailsUpToDate = false;
+		void vk_invalidateSwapchainSupport(const Vk_SurfaceConfig& surfaceConfig) {
+			// update or insert
+			_swapchainSupportDetailsUpToDate[surfaceConfig.viewportId] = false;
 		}
 
-		const SwapchainSupportDetails& vk_swapchainSupportActiveDevice(const Vk_Surface* surface) {
-			return vk_swapchainSupport(_activePhysicalDevice, surface);
+		const SwapchainSupportDetails& vk_swapchainSupportActiveDevice(const Vk_SurfaceConfig& surfaceConfig) {
+			return vk_swapchainSupport(_activePhysicalDevice, surfaceConfig);
 		}
 
-		bool vk_testAndUpdateNFramesInFlight(uint32_t swapchainImageCount){
-			if(_swapchainSupportDetailsUpToDate){
-				if(swapchainImageCount != _swapchainSupportDetails.nFramesInFlight){
-					Vk_Logger::Log(typeid(this), "nFramesInFlight changed to " + std::to_string(swapchainImageCount) + " from " + std::to_string(_swapchainSupportDetails.nFramesInFlight) + " due to swapchain initialization requirements!");
-					_swapchainSupportDetails.nFramesInFlight = swapchainImageCount;
+		bool vk_testAndUpdateNFramesInFlight(const Vk_SurfaceConfig& surfaceConfig, uint32_t swapchainImageCount){
+			auto viewportId = surfaceConfig.viewportId;
+			if(_swapchainSupportDetailsUpToDate.at(viewportId)){
+				auto& swapchainSupportDetailsVP = _swapchainSupportDetails.at(viewportId);
+
+				if(swapchainImageCount != swapchainSupportDetailsVP.nFramesInFlight){
+					Vk_Logger::Log(typeid(this), "nFramesInFlight changed to " + std::to_string(swapchainImageCount) + " from " + std::to_string(swapchainSupportDetailsVP.nFramesInFlight) + " due to swapchain initialization requirements!");
+					swapchainSupportDetailsVP.nFramesInFlight = swapchainImageCount;
 					
-					bridge = Vk_DeviceLib::Bridge(_swapchainSupportDetails.nFramesInFlight);
+					bridge = Vk_DeviceLib::Bridge(swapchainSupportDetailsVP.nFramesInFlight);
 				}
 			}
-			return _swapchainSupportDetailsUpToDate;
+			return _swapchainSupportDetailsUpToDate.at(viewportId);
 		}
 
 		const Vk_DeviceLib::QueueFamilyIndex* vk_queueFamilyIndices() const {
@@ -292,8 +296,11 @@ namespace VK4 {
 		void vk_unregisterViewer(){
 			_viewer = 0;
 		}
-		
-		Vk_DeviceLib::Bridge bridge;
+
+		Vk_DeviceLib::Bridge& bridge(LWWS::TViewportId viewportId) {
+			if(!_bridge.contains(viewportId)) Vk_Logger::RuntimeError(typeid(this), "Bridge for viewport {0} does not exist.", viewportId);
+			return _bridge.at(viewportId);
+		}
 
 	private:
 		uint64_t _viewer;
@@ -306,8 +313,8 @@ namespace VK4 {
 		VkCommandPool _copyCommandPool;
 		VkCommandPool _initializationCommandPool;
 
-		SwapchainSupportDetails _swapchainSupportDetails;
-		bool _swapchainSupportDetailsUpToDate;
+		std::unordered_map<LWWS::TViewportId, SwapchainSupportDetails> _swapchainSupportDetails;
+		std::unordered_map<LWWS::TViewportId, bool> _swapchainSupportDetailsUpToDate;
 		bool _multiImageBuffering;
 
 		std::vector<Vk_DeviceLib::PhysicalDevice> _physicalDevices;
@@ -319,8 +326,10 @@ namespace VK4 {
 
 		Vk_DevicePreference _devicePreference; 
 
-		void configDeviceForSurface(Vk_Surface* surface) {
-			bool res = _setPhysicalDevice(surface);
+		std::unordered_map<LWWS::TViewportId, Vk_DeviceLib::Bridge> _bridge;
+
+		void configDeviceForSurface(const Vk_SurfaceConfig& surfaceConfig) {
+			bool res = _setPhysicalDevice(surfaceConfig);
 			if (!res) Vk_Logger::RuntimeError(typeid(this), "Suitable physical device (GPU) not found");
 
 			if (_physicalDeviceIndex < 0) {
@@ -431,7 +440,7 @@ namespace VK4 {
 			return nullptr;
 		}
 
-		const SwapchainSupportDetails& vk_swapchainSupport(Vk_DeviceLib::PhysicalDevice* pDev, const Vk_Surface* surface, LWWS::TViewportId id) {
+		const SwapchainSupportDetails& vk_swapchainSupport(Vk_DeviceLib::PhysicalDevice* pDev, const Vk_SurfaceConfig& surfaceConfig) {
 			// if we added a new camera, we need to reaquire all subsequent details because they may have moved
 			// such that the address is no longer valid
 			// LWWS::TViewportId viewportId = 0;
@@ -443,25 +452,25 @@ namespace VK4 {
 			// 		return swapchainSupportDetails.at(viewportId);
 			// }
 
-			if(_swapchainSupportDetailsUpToDate){
-				return _swapchainSupportDetails;
+			auto viewportId = surfaceConfig.viewportId;
+			if(_swapchainSupportDetailsUpToDate.contains(viewportId) && _swapchainSupportDetailsUpToDate.at(viewportId)){
+				return _swapchainSupportDetails.at(viewportId);
 			}
 
-			_swapchainSupportDetails = Vk_DeviceLib::swapchainSupport(pDev, surface, id, _multiImageBuffering, bridge);
+			// update or insert
+			_swapchainSupportDetails[viewportId] = Vk_DeviceLib::swapchainSupport(pDev, surfaceConfig.surface->vk_surface(viewportId), _multiImageBuffering, bridge(viewportId));
+			_swapchainSupportDetailsUpToDate[viewportId] = true;
 
-			if(surface != nullptr){
-				// only set this to updated state if the query was made including a surface
-				// if this wasn't the case, the query will not retrieve the completed set of infos
-				// but also will not crash the program
-				_swapchainSupportDetailsUpToDate = true;
-			}
-			return _swapchainSupportDetails;
+			return _swapchainSupportDetails.at(viewportId);
 		}
 
 		// choose the best graphics supporting device out of all devices
-		bool _setPhysicalDevice(Vk_Surface* surface)
+		bool _setPhysicalDevice(const Vk_SurfaceConfig& surfaceConfig)
 		{
-			return Vk_DeviceLib::setPhysicalDevice(_instance.get(), surface, _physicalDevices, _multiImageBuffering, _devicePreference, bridge, _physicalDeviceIndex, _activePhysicalDevice);
+			return Vk_DeviceLib::setPhysicalDevice(
+				_instance.get(), surfaceConfig.surface->vk_surface(surfaceConfig.viewportId), 
+				_physicalDevices, _multiImageBuffering, _devicePreference, bridge(surfaceConfig.viewportId), 
+				_physicalDeviceIndex, _activePhysicalDevice);
 		}
 
 		void _setGpuMemoryConfig() {

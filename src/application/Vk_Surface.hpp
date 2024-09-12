@@ -62,6 +62,9 @@ namespace VK4 {
 			return _surface.at(id);
 		}
 
+		/**
+		 * TODO: is this one needed?
+		 */
 		const VkExtent2D vk_canvasSize() const {
 			int w,h;
 			_window->canvasSize(w, h);
@@ -71,6 +74,9 @@ namespace VK4 {
 			};
 		}
 
+		/**
+		 * TODO: is this one needed?
+		 */
 		const VkExtent2D vk_canvasOriginalSize() const {
 			int w,h;
 			_window->canvasInitSize(w, h);
@@ -80,9 +86,25 @@ namespace VK4 {
 			};
 		}
 
+		/**
+		 * TODO: is this one needed?
+		 */
 		const VkExtent2D vk_frameSize() const {
 			int w,h;
 			_window->frameSize(w, h);
+			return  VkExtent2D{
+				.width=static_cast<uint32_t>(w),
+				.height=static_cast<uint32_t>(h)
+			};
+		}
+
+		/**
+		 * TODO: is this one needed?
+		 * => Vulkan may get this from device support struct directly
+		 */
+		const VkExtent2D vk_viewportSize(LWWS::TViewportId viewportId) const {
+			int w,h;
+			_window->viewportSize(viewportId, w, h);
 			return  VkExtent2D{
 				.width=static_cast<uint32_t>(w),
 				.height=static_cast<uint32_t>(h)

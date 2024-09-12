@@ -31,8 +31,8 @@ namespace VK4 {
             stream << std::endl;
         }
 
-        void vk_determineQueueFamiliesPresentCapability(Vk_Surface* surface){
-            determineQueueFamiliesPresentCapability(surface);
+        void vk_determineQueueFamiliesPresentCapability(const Vk_SurfaceConfig& surfaceConfig){
+            determineQueueFamiliesPresentCapability(surfaceConfig);
         }
 
     private:
@@ -62,8 +62,8 @@ namespace VK4 {
         // {PhysicalDeviceIndex : {QueueFamilyIndex : QueueFamilyProps}}
         std::unordered_map<int, std::unordered_map<int, QueueFamilyProps>> _availableQueuesProps;
 
-        void determineQueueFamiliesPresentCapability(Vk_Surface* surface) {
-            VkSurfaceKHR surf = surface->vk_surface();
+        void determineQueueFamiliesPresentCapability(const Vk_SurfaceConfig& surfaceConfig) {
+            VkSurfaceKHR surf = surfaceConfig.surface->vk_surface(surfaceConfig.viewportId);
             const auto& physicalDevices = _device->vk_allPhysicalDevices();
             VkBool32 presentSupport = false;
             for(auto& qfp : _availableQueuesProps){
