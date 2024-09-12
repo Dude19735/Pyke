@@ -6,9 +6,6 @@
 #include "../application/Vk_Device.hpp"
 #include "../objects/Vk_Renderable.hpp"
 #include "../objects/Vk_Shader.hpp"
-#include "I_RenderPass.hpp"
-#include "I_Swapchain.hpp"
-#include "I_FrameBuffer.hpp"
 #include "I_GraphicsPipeline.hpp"
 #include "I_GraphicsPipelineConfig.hpp"
 
@@ -18,12 +15,12 @@ namespace VK4 {
 
 	public:
 		
-		struct Vk_PipelineAuxilliaries {
-			const Vk_Surface* surface;
-			const I_RenderPass* renderpass;
-			const I_Swapchain* swapchain;
-			const I_FrameBuffer* framebuffer;
-		};
+		// struct Vk_PipelineAuxilliaries {
+		// 	const Vk_Surface* surface;
+		// 	const I_RenderPass* renderpass;
+		// 	const I_Swapchain* swapchain;
+		// 	const I_FrameBuffer* framebuffer;
+		// };
 
 		// https://herbsutter.com/2016/09/25/to-store-a-destructor/
 		//struct Caster {
@@ -32,9 +29,10 @@ namespace VK4 {
 		//};
 
 		I_Renderer(
-			/*Caster cast, */LWWS::TViewportId viewportId, 
+			// LWWS::TViewportId viewportId, 
 			Vk_Device* const device, 
-			Vk_PipelineAuxilliaries auxilliaries,
+			// Vk_PipelineAuxilliaries auxilliaries,
+			const Vk_SurfaceConfig& surfaceConfig,
 			const int freshPoolSize,
 			UniformBufferType_RendererMat4 mvpInit)
 			:
@@ -43,13 +41,13 @@ namespace VK4 {
 			_ext_frag_spv(".frag.spv"),
 			_ext_vert_spv(".vert.spv"),
 			_device(device),
-			_pipelineAuxilliaries(auxilliaries),
+			// _pipelineAuxilliaries(auxilliaries),
 			_freshPoolSize(freshPoolSize),
 			_descriptorSetLayout({}),
 			_descriptorPools({}),
 			_descriptorSets({}),
 			_pv(nullptr),
-			_viewportId(viewportId)
+			_surfaceConfig(surfaceConfig)
 		{
 			VK4::Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create I_Rasterizer (Baseclass)"));
 
@@ -95,7 +93,22 @@ namespace VK4 {
 			}
 		}
 
+		/**
+		 * Before drawing a frame, we may have to update some things
+		 */
 		virtual void vk_update(const uint32_t imageIndex, const UniformBufferType_RendererMat4& mvp) = 0;
+
+		// /**
+		//  * A renderer needs a VkSurfaceKHR to render on. The base version of vk_assignSurface enforces
+		//  * this contract. However, a renderer may need additional resources, like a renderpass, swapchain
+		//  * or framebuffer.
+		//  */
+		// virtual void vk_assignSurface(const Vk_SurfaceConfig& config) = 0;
+
+		// /**
+		//  * Remove all the resources created by vk_assignSurface.
+		//  */
+		// virtual void vk_removeSurface() = 0;
 
 		bool vk_hasRenderable(const std::string& name) const {
 			if (_renderables.find(name) == _renderables.end()) return false;
@@ -103,6 +116,10 @@ namespace VK4 {
 		}
 
 		bool vk_detach(const std::string& name) {
+			if(_surfaceConfig.surface == nullptr){
+				Vk_Logger::RuntimeError(typeid(this), "Assign a surface to the renderer before calling vk_detach()!");
+			}
+
 			if (_renderables.find(name) == _renderables.end()) {
 				return false;
 			}
@@ -111,19 +128,23 @@ namespace VK4 {
 				std::string("Detach object [") +
 				name +
 				std::string("] to Renderer [") +
-				std::to_string(_viewportId) +
+				std::to_string(_surfaceConfig.viewportId) +
 				std::string("]")
 			));
 
 			auto obj = _renderables.at(name);
-			vk_reclaim_DescriptorSets(obj->_shaderName, obj->_sets.at(_viewportId));
-			obj->_sets.erase(_viewportId);
-			obj->_pipeline.erase(_viewportId);
+			vk_reclaim_DescriptorSets(obj->_shaderName, obj->_sets.at(_surfaceConfig.viewportId));
+			obj->_sets.erase(_surfaceConfig.viewportId);
+			obj->_pipeline.erase(_surfaceConfig.viewportId);
 			_renderables.erase(name);
 			return true;
 		}
 
 		const bool vk_attach(std::shared_ptr<Vk_Renderable> object, bool warn=false) {
+			if(_surfaceConfig.surface == nullptr){
+				Vk_Logger::RuntimeError(typeid(this), "Assign a surface to the renderer before calling vk_attach()!");
+			}
+
 			if (_renderables.find(object->vk_objectName()) != _renderables.end()) {
 				if(warn) Vk_Logger::Warn(typeid(this), "Object with name [{0}] is already attached to renderer!", object->vk_objectName());
 				return false;
@@ -133,22 +154,26 @@ namespace VK4 {
 				std::string("Attach object [") +
 				object->vk_objectName() +
 				std::string("] to Renderer [") +
-				std::to_string(_viewportId) +
+				std::to_string(_surfaceConfig.viewportId) +
 				std::string("]")
 			));
 
 			const auto& caps = _device->vk_swapchainSupportActiveDevice(_pipelineAuxilliaries.surface);
-			object->_sets[_viewportId] = vk_getOrCreate_DescriptorSets(object->_shaderName, caps.nFramesInFlight);
-			object->_pipeline[_viewportId] = vk_getOrCreate_GraphicsPipeline(object->_shaderName, object->_topology, object->_cullMode, object->_renderType);
+			object->_sets[_surfaceConfig.viewportId] = vk_getOrCreate_DescriptorSets(object->_shaderName, caps.nFramesInFlight);
+			object->_pipeline[_surfaceConfig.viewportId] = vk_getOrCreate_GraphicsPipeline(object->_shaderName, object->_topology, object->_cullMode, object->_renderType);
 			_renderables[object->vk_objectName()] = object;
 
 			return true;
 		}
 
 		void vk_build(const Vk_Viewport& viewport, int index, const std::vector<VkCommandBuffer>& commandBuffers) {
+			if(_surfaceConfig.surface == nullptr){
+				Vk_Logger::RuntimeError(typeid(this), "Assign a surface to the renderer before calling vk_build()!");
+			}
+
 			Vk_Logger::Log(typeid(this), GlobalCasters::castVkBuild(
 				std::string("Build Renderer[") +
-				std::to_string(_viewportId) +
+				std::to_string(_surfaceConfig.viewportId) +
 				std::string("]")
 			));
 
@@ -156,9 +181,13 @@ namespace VK4 {
 		}
 
 		virtual void vk_resize(const Vk_Viewport& viewport, const Vk_PipelineAuxilliaries&& auxilliaries, int index, const std::vector<VkCommandBuffer>& commandBuffers) {
+			if(_surfaceConfig.surface == nullptr){
+				Vk_Logger::RuntimeError(typeid(this), "Assign a surface to the renderer before calling vk_resize()!");
+			}
+
 			Vk_Logger::Log(typeid(this), GlobalCasters::castVkBuild(
 				std::string("Resize Renderer[") +
-				std::to_string(_viewportId) +
+				std::to_string(_surfaceConfig.viewportId) +
 				std::string("]")
 			));
 
@@ -331,7 +360,7 @@ namespace VK4 {
 		const std::string _ext_vert_spv = ".vert.spv";
 
 		Vk_Device* const _device;
-		Vk_PipelineAuxilliaries _pipelineAuxilliaries;
+		// Vk_PipelineAuxilliaries _pipelineAuxilliaries;
 
 		const int _freshPoolSize;
 		std::map<std::string, std::shared_ptr<Vk_Renderable>> _renderables;
@@ -348,7 +377,7 @@ namespace VK4 {
 		// view and perspective matrices for the current renderer (i.e. rasterizer etc)
 		std::unique_ptr<Vk_AbstractUniformBuffer> _pv;
 
-		const LWWS::TViewportId _viewportId;
+		Vk_SurfaceConfig _surfaceConfig;
 
 	private:
 		virtual void createGraphicsPipeline(const std::string& name, const std::string& pIdentifier, const Topology topology, const CullMode cullMode, const RenderType renderType) = 0;

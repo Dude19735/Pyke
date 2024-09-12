@@ -169,7 +169,7 @@ namespace VK4 {
 		CullMode _cullMode;
 		RenderType _renderType;
 
-		std::unordered_map<int, I_GraphicsPipeline*> _pipeline;
-		std::unordered_map<int, std::vector<VkDescriptorSet>> _sets;
+		std::unordered_map<LWWS::TViewportId, I_GraphicsPipeline*> _pipeline;
+		std::unordered_map<LWWS::TViewportId, std::vector<VkDescriptorSet>> _sets;
 	};
 }
