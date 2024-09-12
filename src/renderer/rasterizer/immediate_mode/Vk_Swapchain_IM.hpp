@@ -4,12 +4,11 @@
 #include <vector>
 
 #include "../../../Defines.h"
-#include "../../I_Swapchain.hpp"
 #include "../../../application/Vk_Device.hpp"
 
 namespace VK4 {
 
-	class Vk_Swapchain_IM : public I_Swapchain {
+	class Vk_Swapchain_IM {
 
 		/* 
 		* A swapchain is a queue of images that are waiting to be
@@ -21,16 +20,16 @@ namespace VK4 {
 
 	public:
 		Vk_Swapchain_IM() = delete;
-		Vk_Swapchain_IM(Vk_Device* const device, Vk_Surface* surface)
+		Vk_Swapchain_IM(Vk_Device* const device, const Vk_SurfaceConfig& surfaceConfig)
 			:
 			_device(device),
-			_surface(surface),
-			_swapchain(VK_NULL_HANDLE)
+			_surfaceConfig(surfaceConfig),
+			_swapchain(nullptr)
 
 		{
 			VK4::Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create Swapchain"));
 
-			const SwapchainSupportDetails& details = _device->vk_swapchainSupportActiveDevice(_surface);
+			const SwapchainSupportDetails& details = _device->vk_swapchainSupportActiveDevice(_surfaceConfig);
 
 			auto& caps = details.capabilities;
 			// decide on size of image queue (this one means 2 images)
@@ -41,7 +40,7 @@ namespace VK4 {
 
 			// create swapchain info struct
 			VkSwapchainCreateInfoKHR swapchainCreateInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-			swapchainCreateInfo.surface = _surface->vk_surface();
+			swapchainCreateInfo.surface = _surfaceConfig.surface->vk_surface(_surfaceConfig.viewportId);
 			swapchainCreateInfo.minImageCount = details.nFramesInFlight;
 			swapchainCreateInfo.imageFormat = details.surfaceFormat.format;
 			swapchainCreateInfo.imageColorSpace = details.surfaceFormat.colorSpace;
@@ -210,7 +209,7 @@ namespace VK4 {
 	private:
 		std::uint32_t _swapchainImageCount;
 		Vk_Device* _device;
-		Vk_Surface* _surface;
+		Vk_SurfaceConfig _surfaceConfig;
 		
 		// multisampling color buffer
 		VkImage _colorImage;

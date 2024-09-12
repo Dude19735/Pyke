@@ -6,8 +6,6 @@
 #include "../../../application/Vk_Device.hpp"
 #include "Vk_RenderPass_IM.hpp"
 #include "Vk_Swapchain_IM.hpp"
-#include "../../I_FrameBuffer.hpp"
-#include "../../I_RenderPass.hpp"
 
 namespace VK4 {
 
@@ -17,12 +15,12 @@ namespace VK4 {
 		Vk_Framebuffer_IM() = delete;
 		Vk_Framebuffer_IM(
 			Vk_Device* const device,
-			Vk_Surface* surface,
+			const Vk_SurfaceConfig& surfaceConfig,
 			I_Swapchain* swapchain,
 			I_RenderPass* renderPass
 		) :
 			_device(device),
-			_surface(surface),
+			_surfaceConfig(surfaceConfig),
 			_swapchain(swapchain),
 			_renderPass(renderPass),
 			_framebuffers(std::vector<VkFramebuffer>())
@@ -30,7 +28,7 @@ namespace VK4 {
 			VK4::Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create Framebuffer IM"));
 
 			uint32_t imageViewLayerCount = 1; // this can be used for multilayered images (no need for that now)
-			VkExtent2D extent2d = _device->vk_swapchainSupportActiveDevice(_surface).capabilities.currentExtent;
+			VkExtent2D extent2d = _device->vk_swapchainSupportActiveDevice(_surfaceConfig).capabilities.currentExtent;
 
 			auto swapchainImageViews = _swapchain->vk_imageViews();
 			_framebuffers.resize(swapchainImageViews.size());
@@ -79,9 +77,9 @@ namespace VK4 {
 	private:
 
 		Vk_Device* _device;
-		Vk_Surface* _surface;
-		I_Swapchain* _swapchain;
-		I_RenderPass* _renderPass;
+		Vk_SurfaceConfig _surfaceConfig;
+		Vk_Swapchain_IM* _swapchain;
+		Vk_RenderPass_IM* _renderPass;
 
 		//! frame buffers
 		std::vector<VkFramebuffer> _framebuffers;

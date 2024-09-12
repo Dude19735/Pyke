@@ -18,14 +18,14 @@ namespace VK4 {
 	public:
 		Vk_RenderPass_IM(
 			Vk_Device* const device,
-			Vk_Surface* surface
+			const Vk_SurfaceConfig& surfaceConfig
 		) : 
 			_device(device),
-			_surface(surface)
+			_surfaceConfig(surfaceConfig)
 		{
 			VK4::Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create IM Renderpass"));
 			
-			const SwapchainSupportDetails& details = _device->vk_swapchainSupportActiveDevice(_surface);
+			const SwapchainSupportDetails& details = _device->vk_swapchainSupportActiveDevice(_surfaceConfig);
 			VkFormat swapchainImageFormat = details.surfaceFormat.format;
 			VkFormat swapchainDepthFormat = details.depthFormat;
 			VkSampleCountFlagBits maxUsableSampleCount = _device->vk_sampleCount();
@@ -165,7 +165,7 @@ namespace VK4 {
 
 		private:
 			Vk_Device* _device;
-			Vk_Surface* _surface;
+			Vk_SurfaceConfig _surfaceConfig;
 
 			VkRenderPass _renderPass;
 	};

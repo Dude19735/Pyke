@@ -15,9 +15,10 @@ namespace VK4 {
 	class Vk_Rasterizer_IM : public I_Renderer {
 	public:
 		Vk_Rasterizer_IM(
-			LWWS::TViewportId viewportId,
+			// LWWS::TViewportId viewportId,
 			Vk_Device* const device,
-			I_Renderer::Vk_PipelineAuxilliaries auxilliaries,
+			// I_Renderer::Vk_PipelineAuxilliaries auxilliaries,
+			const Vk_SurfaceConfig& surfaceConfig,
 			int freshPoolSize,
 			UniformBufferType_RendererMat4 mvpInit
 		)
@@ -27,12 +28,29 @@ namespace VK4 {
 				//	.p = std::addressof(*this),
 				//	.cast = [](void* x) { static_cast<Vk_Rasterizer_IM*>(x)->Destroy(); }
 				//},
-				viewportId, device, auxilliaries,
-				freshPoolSize, mvpInit
-			)
+				// viewportId, 
+				device, 
+				// auxilliaries,
+				surfaceConfig,
+				freshPoolSize, 
+				mvpInit
+			),
+			_renderpass(nullptr),
+			_swapchain(nullptr),
+			_framebuffer(nullptr),
+			_commandBuffer({}),
+			_imageAvailableSemaphores({}),
+			_renderFinishedSemaphores({}),
+			_inFlightFences({})
 		{
 			VK4::Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create Vk_Rasterizer_IM"));
+			createSyncResources();
+			allocateCommandBuffers(_device, _surfaceConfig, _device->vk_renderingCommandPool(), _commandBuffer);
 
+			_renderpass = std::make_unique<Vk_RenderPass_IM>(_device, _surfaceConfig);
+			_swapchain = std::make_unique<Vk_Swapchain_IM>(_device, _surfaceConfig);
+			_framebuffer = std::make_unique<Vk_Framebuffer_IM>(_device, _surfaceConfig, _swapchain.get(), _renderpass.get());
+			
 			//dtors.push_back({
 			//	std::addressof(t), // address of object
 			//	[](const void* x) { static_cast<const T*>(x)->~T(); }
@@ -41,14 +59,48 @@ namespace VK4 {
 
 		~Vk_Rasterizer_IM(){
 			VK4::Vk_Logger::Log(typeid(this), GlobalCasters::castDestructorTitle("Destroy Vk_Rasterizer_IM"));
+
+			destroySyncResources();
+			freeCommandBuffers(_device, _device->vk_renderingCommandPool(), _commandBuffer);
+
+			_framebuffer.reset();
+			_swapchain.reset();
+			_renderpass.reset();
+			_surfaceConfig = Vk_SurfaceConfig{ .surface=nullptr, .viewportId=0 };
 		}
 
 		void vk_update(const uint32_t imageIndex, const UniformBufferType_RendererMat4& mvp) {
 			_pv->vk_update(imageIndex, static_cast<const void*>(&mvp));
 		}
 
+		// void vk_assignSurface(const Vk_SurfaceConfig& config) {
+		// 	if(config.surface == nullptr) {
+		// 		Vk_Logger::RuntimeError(typeid(this), "Can't assign nullptr as surface! Use vk_removeSurface() for that!");
+		// 	}
+		// 	if(_surfaceConfig.surface != nullptr) {
+		// 		Vk_Logger::Warn(typeid(this), "Assigning surface to renderer that already has a surface assigned to it!");
+		// 	}
+
+		// 	_surfaceConfig = config;
+
+			
+		// }
+
+		// virtual void vk_removeSurface() {
+			
+		// }
+
 	protected:
 	private:
+		std::unique_ptr<Vk_RenderPass_IM> _renderpass;
+		std::unique_ptr<Vk_Swapchain_IM> _swapchain;
+		std::unique_ptr<Vk_Framebuffer_IM> _framebuffer;
+		std::vector<VkCommandBuffer> _commandBuffer;
+		// synchronization parts
+		// A semaphore is used to add order between queue operations.
+		std::vector<VkSemaphore> _imageAvailableSemaphores;
+		std::vector<VkSemaphore> _renderFinishedSemaphores;
+		std::vector<VkFence> _inFlightFences;
 
 // ############################################################################################################
 //   ███████ ██████        █         ██████  ███████  █████  ███  █████  ███████ ██████  ███ ███████  █████    
@@ -59,6 +111,176 @@ namespace VK4 {
 //   █     █ █     █ █     █         █    █  █       █     █  █  █     █    █    █    █   █  █       █     █   
 //   ███████ ██████   █████          █     █ ███████  █████  ███  █████     █    █     █ ███ ███████  █████    
 // ############################################################################################################
+
+		void recordCommandBuffers(bool resize=false) {
+			// auto lock = AcquireGlobalWriteLock("vk_viewer[_recordCommandBuffers]");
+			// _rebuildBeforeNextFrame = std::vector<bool>(_commandBuffer.size(), false);
+			for(size_t i=0; i<_commandBuffer.size(); ++i){
+				recordCommandBuffer(static_cast<int>(i), resize);
+			}
+		}
+
+		void recordCommandBuffer(int index, bool resize=false) {
+
+			VkExtent2D extent = _device->vk_swapchainSupportActiveDevice(_surfaceConfig).capabilities.currentExtent;
+			auto& scFrameBuffers = *_framebuffer->vk_frameBuffers();
+			// _rebuildBeforeNextFrame.at(index) = false;
+
+			// technically not visible anymore => just set to black
+			VkClearColorValue _clearValue;
+			_clearValue.float32[0] = 0.0f;
+			_clearValue.float32[1] = 0.0f;
+			_clearValue.float32[2] = 0.0f;
+			_clearValue.float32[3] = 1.0f;
+
+			VkCommandBufferBeginInfo beginInfo{};
+			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+			Vk_CheckVkResult(typeid(this), vkBeginCommandBuffer(_commandBuffer[index], &beginInfo), "Failed to begin recording command buffer!");
+
+			VkRenderPassBeginInfo renderPassInfo{};
+			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassInfo.renderPass = _renderpass->vk_renderPass();
+			renderPassInfo.framebuffer = scFrameBuffers[index];
+
+			std::array<VkClearValue, 2> clearValues{};
+			clearValues[0].depthStencil = { 1.0f, 0 };
+			clearValues[1].color = _clearValue;
+			renderPassInfo.clearValueCount = 2;
+			renderPassInfo.pClearValues = clearValues.data();
+			renderPassInfo.renderArea.offset = { 0,0 };
+			renderPassInfo.renderArea.extent = extent;
+
+			vkCmdBeginRenderPass(_commandBuffer[index], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+			Vk_Viewport viewport {
+				.x=0,
+				.y=0,
+				.width=extent.width,
+				.height=extent.height,
+				.clearColor=Vk_RGBColor{}
+			};
+			//
+
+			// if (!resize) {
+			// 	for (auto& c : _cameras) {
+			// 		c.second->vk_renderer()->vk_build(c.second->vk_viewport(), index, _commandBuffer);
+			// 	}
+			// }
+			// else {
+			// 	auto originalExtent = _surface->vk_canvasOriginalSize();
+			// 	for (auto& c : _cameras) {
+			// 		float ow = static_cast<float>(originalExtent.width);
+			// 		float oh = static_cast<float>(originalExtent.height);
+
+			// 		float x = static_cast<float>(c.second->vk_originalX()) / ow;
+			// 		float y = static_cast<float>(c.second->vk_originalY()) / oh;
+
+			// 		float w = static_cast<float>(c.second->vk_originalWidth()) / ow;
+			// 		float h = static_cast<float>(c.second->vk_originalHeight()) / oh;
+
+			// 		c.second->vk_viewport(
+			// 			Vk_Viewport {
+			// 				.x=static_cast<int32_t>(std::roundf(x * extent.width)),
+			// 				.y=static_cast<int32_t>(std::roundf(y * extent.height)),
+			// 				.width=static_cast<uint32_t>(std::roundf(w * extent.width)),
+			// 				.height=static_cast<uint32_t>(std::roundf(h * extent.height))
+			// 			}
+			// 		);
+
+			// 		c.second->vk_calculateTransform();
+					
+			// 		c.second->vk_renderer()->vk_resize(
+			// 			c.second->vk_viewport(),
+			// 			I_Renderer::Vk_PipelineAuxilliaries{
+			// 						.surface = _surface.get(),
+			// 						.renderpass = _renderpass.get(),
+			// 						.swapchain = _swapchain.get(),
+			// 						.framebuffer = _framebuffer.get()
+			// 					},
+			// 			index,
+			// 			_commandBuffer
+			// 		);
+			// 	}
+			// }
+
+			vkCmdEndRenderPass(_commandBuffer[index]);
+			Vk_CheckVkResult(typeid(this), vkEndCommandBuffer(_commandBuffer[index]), "Failed to record command buffer!");
+		}
+
+		void destroySyncResources() {
+			VkDevice lDev = _device->vk_lDev();
+			const auto& caps = _device->vk_swapchainSupportActiveDevice(_surface.get());
+			int nFramesInFlight = caps.nFramesInFlight;
+			
+			for (int i = 0; i < nFramesInFlight; i++) {
+				vkDestroySemaphore(lDev, _renderFinishedSemaphores[i], nullptr);
+				vkDestroySemaphore(lDev, _imageAvailableSemaphores[i], nullptr);
+				vkDestroyFence(lDev, _inFlightFences[i], nullptr);
+			}
+
+			_imageAvailableSemaphores.clear();
+			_renderFinishedSemaphores.clear();
+			_inFlightFences.clear();
+		}
+
+		void createSyncResources() {
+			// create synchronization resources
+			VkDevice lDev = _device->vk_lDev();
+			const auto& caps = _device->vk_swapchainSupportActiveDevice(_surface.get());
+			int nFramesInFlight = caps.nFramesInFlight;
+
+			_imageAvailableSemaphores.resize(nFramesInFlight);
+			_renderFinishedSemaphores.resize(nFramesInFlight);
+			_inFlightFences.resize(nFramesInFlight);
+
+			VkSemaphoreCreateInfo semaphoreInfo{};
+			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+			VkFenceCreateInfo fenceInfo{};
+			fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+			// we must create the fences in the signaled state to ensure that on the first call to drawFrame
+			// vkWaitForFences won't wait indefinitely
+			fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+			for (int i = 0; i < nFramesInFlight; i++) {
+				Vk_CheckVkResult(typeid(this), vkCreateSemaphore(lDev, &semaphoreInfo, nullptr, &_imageAvailableSemaphores[i]), "Failed to create image available semaphore for a frame!");
+				Vk_CheckVkResult(typeid(this), vkCreateSemaphore(lDev, &semaphoreInfo, nullptr, &_renderFinishedSemaphores[i]), "Failed to create render finished semaphore");
+				Vk_CheckVkResult(typeid(this), vkCreateFence(lDev, &fenceInfo, nullptr, &_inFlightFences[i]), "Failed to create in flight fences");
+			}
+		}
+
+		void freeCommandBuffers(const Vk_Device* device, VkCommandPool commandPool, /* InOut */ std::vector<VkCommandBuffer>& commandBuffer){
+			vkFreeCommandBuffers(
+				device->vk_lDev(),
+				commandPool,
+				static_cast<uint32_t>(commandBuffer.size()),
+				commandBuffer.data()
+			);
+		}
+
+		void allocateCommandBuffers(
+			const Vk_Device* device, 
+			const Vk_SurfaceConfig& surfaceConfig, 
+			VkCommandPool commandPool, 
+			/* InOut */ std::vector<VkCommandBuffer>& commandBuffer
+		) {
+			const auto& caps = device->vk_swapchainSupportActiveDevice(surfaceConfig);
+			commandBuffer.resize(caps.nFramesInFlight);
+			VkCommandBufferAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			allocInfo.commandPool = commandPool;
+			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffer.size());
+
+			Vk_CheckVkResult(typeid(this), vkAllocateCommandBuffers(
+				device->vk_lDev(),
+				&allocInfo,
+				commandBuffer.data()),
+				"Failed to allocate command buffers!"
+			);
+		}
+
 		void createGraphicsPipeline(const std::string& name, const std::string& pIdentifier, const Topology topology, const CullMode cullMode, const RenderType renderType) {
 			// VkDevice lDev = _device->vk_lDev();
 
@@ -162,11 +384,11 @@ namespace VK4 {
 //   █     █ ███████ █     █ ██████           █████  ███████ █     █ █     █ █     █ █     █ ██████   █████    
 // ############################################################################################################
 		void recordRenderingCommand(const Vk_Viewport& viewport, int index, VkCommandBuffer commandBuffer){
-			const auto& caps = _device->vk_swapchainSupportActiveDevice(_pipelineAuxilliaries.surface);
+			const auto& caps = _device->vk_swapchainSupportActiveDevice(_surfaceConfig);
 
 			Vk_BindingProperties props{
 				.capabilities = caps,
-				.viewportId = _viewportId
+				.viewportId = _surfaceConfig.viewportId
 			};
 			props.uniformBuffers = std::unordered_map<int, Vk_AbstractUniformBuffer*>{ {0, _pv.get()} };
 

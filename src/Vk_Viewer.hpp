@@ -36,9 +36,6 @@ namespace VK4 {
 			:
 			_surface(nullptr),
 			_device(nullptr),
-			_renderpass(nullptr),
-			_swapchain(nullptr),
-			_framebuffer(nullptr),
 			_imageAvailableSemaphores({}),
 			_renderFinishedSemaphores({}),
 			_inFlightFences({}),
@@ -64,9 +61,6 @@ namespace VK4 {
 			: 
 			_surface(nullptr),
 			_device(device),
-			_renderpass(nullptr),
-			_swapchain(nullptr),
-			_framebuffer(nullptr),
 			_imageAvailableSemaphores({}),
 			_renderFinishedSemaphores({}),
 			_inFlightFences({}),
@@ -124,16 +118,13 @@ namespace VK4 {
 
 			_destroySyncResources();
 
-			vkFreeCommandBuffers(
-				_device->vk_lDev(),
-				_device->vk_renderingCommandPool(),
-				static_cast<uint32_t>(_commandBuffer.size()),
-				_commandBuffer.data()
-			);
+			// vkFreeCommandBuffers(
+			// 	_device->vk_lDev(),
+			// 	_device->vk_renderingCommandPool(),
+			// 	static_cast<uint32_t>(_commandBuffer.size()),
+			// 	_commandBuffer.data()
+			// );
 
-			_framebuffer.reset();
-			_swapchain.reset();
-			_renderpass.reset();
 			_surface.reset();
 			_device->vk_unregisterViewer();
 		}
@@ -443,15 +434,11 @@ public:
 
 		Vk_Device* _device;
 
-		std::unique_ptr<I_RenderPass> _renderpass;
-		std::unique_ptr<I_Swapchain> _swapchain;
-		std::unique_ptr<I_FrameBuffer> _framebuffer;
-
-		// synchronization parts
-		// A semaphore is used to add order between queue operations.
-		std::vector<VkSemaphore> _imageAvailableSemaphores;
-		std::vector<VkSemaphore> _renderFinishedSemaphores;
-		std::vector<VkFence> _inFlightFences;
+		// // synchronization parts
+		// // A semaphore is used to add order between queue operations.
+		// std::vector<VkSemaphore> _imageAvailableSemaphores;
+		// std::vector<VkSemaphore> _renderFinishedSemaphores;
+		// std::vector<VkFence> _inFlightFences;
 		
 		bool _onResize;
 		// std::vector<bool> _rebuildBeforeNextFrame;
@@ -476,7 +463,7 @@ public:
 
 		int _freshPoolSize;
 		std::unordered_map<LWWS::TViewportId, std::unique_ptr<Vk_Camera>> _cameras;
-		std::vector<VkCommandBuffer> _commandBuffer;
+		// std::vector<VkCommandBuffer> _commandBuffer;
 
 		std::string _screenshotSavePath;
 		// bool _pause;
@@ -572,36 +559,33 @@ public:
 			auto window = _surface->vk_lwws_window();
 			window->windowEvents_Init();
 
-			_renderpass = std::make_unique<Vk_RenderPass_IM>(_device, _surface.get());
-			_swapchain = std::make_unique<Vk_Swapchain_IM>(_device, _surface.get());
-			_framebuffer = std::make_unique<Vk_Framebuffer_IM>(_device, _surface.get(), _swapchain.get(), _renderpass.get());
+			// const auto& caps = _device->vk_swapchainSupportActiveDevice(_surface.get());
+			// _commandBuffer.resize(caps.nFramesInFlight);
+			// VkCommandBufferAllocateInfo allocInfo{};
+			// allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			// allocInfo.commandPool = _device->vk_renderingCommandPool();
+			// allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			// allocInfo.commandBufferCount = static_cast<uint32_t>(_commandBuffer.size());
 
-			const auto& caps = _device->vk_swapchainSupportActiveDevice(_surface.get());
-			_commandBuffer.resize(caps.nFramesInFlight);
-			VkCommandBufferAllocateInfo allocInfo{};
-			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			allocInfo.commandPool = _device->vk_renderingCommandPool();
-			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			allocInfo.commandBufferCount = static_cast<uint32_t>(_commandBuffer.size());
+			// Vk_CheckVkResult(typeid(this), vkAllocateCommandBuffers(
+			// 	_device->vk_lDev(),
+			// 	&allocInfo,
+			// 	_commandBuffer.data()),
+			// 	"Failed to allocate command buffers!"
+			// );
 
-			Vk_CheckVkResult(typeid(this), vkAllocateCommandBuffers(
-				_device->vk_lDev(),
-				&allocInfo,
-				_commandBuffer.data()),
-				"Failed to allocate command buffers!"
-			);
-
-			_createSyncResources();
+			// _createSyncResources();
 
 			for(auto& cam : _cameras){
 				_attachRenderer(
 					cam.second.get(), 
-					I_Renderer::Vk_PipelineAuxilliaries {
-						.surface=_surface.get(), 
-						.renderpass=_renderpass.get(),
-						.swapchain=_swapchain.get(),
-						.framebuffer=_framebuffer.get()
-					}
+					Vk_SurfaceConfig{.surface=_surface.get(), .viewportId=cam.first }
+					// I_Renderer::Vk_PipelineAuxilliaries {
+					// 	.surface=_surface.get(), 
+					// 	.renderpass=_renderpass.get(),
+					// 	.swapchain=_swapchain.get(),
+					// 	.framebuffer=_framebuffer.get()
+					// }
 				);
 			}
 
@@ -652,91 +636,91 @@ public:
 			}
 		}
 
-		void _recordCommandBuffers(bool resize=false) {
-			// auto lock = AcquireGlobalWriteLock("vk_viewer[_recordCommandBuffers]");
-			// _rebuildBeforeNextFrame = std::vector<bool>(_commandBuffer.size(), false);
-			for(size_t i=0; i<_commandBuffer.size(); ++i){
-				_recordCommandBuffer(static_cast<int>(i), resize);
-			}
-		}
+		// void _recordCommandBuffers(bool resize=false) {
+		// 	// auto lock = AcquireGlobalWriteLock("vk_viewer[_recordCommandBuffers]");
+		// 	// _rebuildBeforeNextFrame = std::vector<bool>(_commandBuffer.size(), false);
+		// 	for(size_t i=0; i<_commandBuffer.size(); ++i){
+		// 		_recordCommandBuffer(static_cast<int>(i), resize);
+		// 	}
+		// }
 
-		void _recordCommandBuffer(int index, bool resize=false) {
+		// void _recordCommandBuffer(int index, bool resize=false) {
 
-			VkExtent2D extent = _device->vk_swapchainSupportActiveDevice(_surface.get()).capabilities.currentExtent;
-			auto& scFrameBuffers = *_framebuffer->vk_frameBuffers();
-			// _rebuildBeforeNextFrame.at(index) = false;
+		// 	VkExtent2D extent = _device->vk_swapchainSupportActiveDevice(_surface.get()).capabilities.currentExtent;
+		// 	auto& scFrameBuffers = *_framebuffer->vk_frameBuffers();
+		// 	// _rebuildBeforeNextFrame.at(index) = false;
 
-			VkClearColorValue _clearValue;
-			_clearValue.float32[0] = 0.1f;
-			_clearValue.float32[1] = 0.1f;
-			_clearValue.float32[2] = 0.1f;
-			_clearValue.float32[3] = 1.0f;
+		// 	VkClearColorValue _clearValue;
+		// 	_clearValue.float32[0] = 0.1f;
+		// 	_clearValue.float32[1] = 0.1f;
+		// 	_clearValue.float32[2] = 0.1f;
+		// 	_clearValue.float32[3] = 1.0f;
 
-			VkCommandBufferBeginInfo beginInfo{};
-			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		// 	VkCommandBufferBeginInfo beginInfo{};
+		// 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-			Vk_CheckVkResult(typeid(this), vkBeginCommandBuffer(_commandBuffer[index], &beginInfo), "Failed to begin recording command buffer!");
+		// 	Vk_CheckVkResult(typeid(this), vkBeginCommandBuffer(_commandBuffer[index], &beginInfo), "Failed to begin recording command buffer!");
 
-			VkRenderPassBeginInfo renderPassInfo{};
-			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassInfo.renderPass = _renderpass->vk_renderPass();
-			renderPassInfo.framebuffer = scFrameBuffers[index];
+		// 	VkRenderPassBeginInfo renderPassInfo{};
+		// 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		// 	renderPassInfo.renderPass = _renderpass->vk_renderPass();
+		// 	renderPassInfo.framebuffer = scFrameBuffers[index];
 
-			std::array<VkClearValue, 2> clearValues{};
-			clearValues[0].depthStencil = { 1.0f, 0 };
-			clearValues[1].color = _clearValue;
-			renderPassInfo.clearValueCount = 2;
-			renderPassInfo.pClearValues = clearValues.data();
-			renderPassInfo.renderArea.offset = { 0,0 };
-			renderPassInfo.renderArea.extent = extent;
+		// 	std::array<VkClearValue, 2> clearValues{};
+		// 	clearValues[0].depthStencil = { 1.0f, 0 };
+		// 	clearValues[1].color = _clearValue;
+		// 	renderPassInfo.clearValueCount = 2;
+		// 	renderPassInfo.pClearValues = clearValues.data();
+		// 	renderPassInfo.renderArea.offset = { 0,0 };
+		// 	renderPassInfo.renderArea.extent = extent;
 
-			vkCmdBeginRenderPass(_commandBuffer[index], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+		// 	vkCmdBeginRenderPass(_commandBuffer[index], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-			if (!resize) {
-				for (auto& c : _cameras) {
-					c.second->vk_renderer()->vk_build(c.second->vk_viewport(), index, _commandBuffer);
-				}
-			}
-			else {
-				auto originalExtent = _surface->vk_canvasOriginalSize();
-				for (auto& c : _cameras) {
-					float ow = static_cast<float>(originalExtent.width);
-					float oh = static_cast<float>(originalExtent.height);
+		// 	if (!resize) {
+		// 		for (auto& c : _cameras) {
+		// 			c.second->vk_renderer()->vk_build(c.second->vk_viewport(), index, _commandBuffer);
+		// 		}
+		// 	}
+		// 	else {
+		// 		auto originalExtent = _surface->vk_canvasOriginalSize();
+		// 		for (auto& c : _cameras) {
+		// 			float ow = static_cast<float>(originalExtent.width);
+		// 			float oh = static_cast<float>(originalExtent.height);
 
-					float x = static_cast<float>(c.second->vk_originalX()) / ow;
-					float y = static_cast<float>(c.second->vk_originalY()) / oh;
+		// 			float x = static_cast<float>(c.second->vk_originalX()) / ow;
+		// 			float y = static_cast<float>(c.second->vk_originalY()) / oh;
 
-					float w = static_cast<float>(c.second->vk_originalWidth()) / ow;
-					float h = static_cast<float>(c.second->vk_originalHeight()) / oh;
+		// 			float w = static_cast<float>(c.second->vk_originalWidth()) / ow;
+		// 			float h = static_cast<float>(c.second->vk_originalHeight()) / oh;
 
-					c.second->vk_viewport(
-						Vk_Viewport {
-							.x=static_cast<int32_t>(std::roundf(x * extent.width)),
-							.y=static_cast<int32_t>(std::roundf(y * extent.height)),
-							.width=static_cast<uint32_t>(std::roundf(w * extent.width)),
-							.height=static_cast<uint32_t>(std::roundf(h * extent.height))
-						}
-					);
+		// 			c.second->vk_viewport(
+		// 				Vk_Viewport {
+		// 					.x=static_cast<int32_t>(std::roundf(x * extent.width)),
+		// 					.y=static_cast<int32_t>(std::roundf(y * extent.height)),
+		// 					.width=static_cast<uint32_t>(std::roundf(w * extent.width)),
+		// 					.height=static_cast<uint32_t>(std::roundf(h * extent.height))
+		// 				}
+		// 			);
 
-					c.second->vk_calculateTransform();
+		// 			c.second->vk_calculateTransform();
 					
-					c.second->vk_renderer()->vk_resize(
-						c.second->vk_viewport(),
-						I_Renderer::Vk_PipelineAuxilliaries{
-									.surface = _surface.get(),
-									.renderpass = _renderpass.get(),
-									.swapchain = _swapchain.get(),
-									.framebuffer = _framebuffer.get()
-								},
-						index,
-						_commandBuffer
-					);
-				}
-			}
+		// 			c.second->vk_renderer()->vk_resize(
+		// 				c.second->vk_viewport(),
+		// 				I_Renderer::Vk_PipelineAuxilliaries{
+		// 							.surface = _surface.get(),
+		// 							.renderpass = _renderpass.get(),
+		// 							.swapchain = _swapchain.get(),
+		// 							.framebuffer = _framebuffer.get()
+		// 						},
+		// 				index,
+		// 				_commandBuffer
+		// 			);
+		// 		}
+		// 	}
 
-			vkCmdEndRenderPass(_commandBuffer[index]);
-			Vk_CheckVkResult(typeid(this), vkEndCommandBuffer(_commandBuffer[index]), "Failed to record command buffer!");
-		}
+		// 	vkCmdEndRenderPass(_commandBuffer[index]);
+		// 	Vk_CheckVkResult(typeid(this), vkEndCommandBuffer(_commandBuffer[index]), "Failed to record command buffer!");
+		// }
 
 		void _redraw() {
 			_surface->vk_lwws_window()->emit_windowEvent_Paint();
@@ -893,13 +877,18 @@ public:
 			return;
 		}
 
-		inline void _attachRenderer(Vk_Camera* cam, I_Renderer::Vk_PipelineAuxilliaries auxilliaries) {
+		inline void _attachRenderer(
+			Vk_Camera* cam, 
+			// I_Renderer::Vk_PipelineAuxilliaries auxilliaries
+			const Vk_SurfaceConfig& surfaceConfig
+		) {
 			switch (cam->vk_type()) {
 			case Vk_CameraType::Rasterizer_IM:
 				cam->vk_renderer(std::make_unique<Vk_Rasterizer_IM>(
-					cam->vk_viewportId(),
+					// cam->vk_viewportId(),
 					_device,
-					auxilliaries,
+					// auxilliaries,
+					surfaceConfig,
 					_freshPoolSize,
 					VK4::UniformBufferType_RendererMat4{ .mat = cam->vk_perspective() * cam->vk_view() }
 				));
@@ -909,47 +898,47 @@ public:
 			}
 		}
 
-		void _destroySyncResources() {
-			VkDevice lDev = _device->vk_lDev();
-			const auto& caps = _device->vk_swapchainSupportActiveDevice(_surface.get());
-			int nFramesInFlight = caps.nFramesInFlight;
+		// void _destroySyncResources() {
+		// 	VkDevice lDev = _device->vk_lDev();
+		// 	const auto& caps = _device->vk_swapchainSupportActiveDevice(_surface.get());
+		// 	int nFramesInFlight = caps.nFramesInFlight;
 			
-			for (int i = 0; i < nFramesInFlight; i++) {
-				vkDestroySemaphore(lDev, _renderFinishedSemaphores[i], nullptr);
-				vkDestroySemaphore(lDev, _imageAvailableSemaphores[i], nullptr);
-				vkDestroyFence(lDev, _inFlightFences[i], nullptr);
-			}
+		// 	for (int i = 0; i < nFramesInFlight; i++) {
+		// 		vkDestroySemaphore(lDev, _renderFinishedSemaphores[i], nullptr);
+		// 		vkDestroySemaphore(lDev, _imageAvailableSemaphores[i], nullptr);
+		// 		vkDestroyFence(lDev, _inFlightFences[i], nullptr);
+		// 	}
 
-			_imageAvailableSemaphores.clear();
-			_renderFinishedSemaphores.clear();
-			_inFlightFences.clear();
-		}
+		// 	_imageAvailableSemaphores.clear();
+		// 	_renderFinishedSemaphores.clear();
+		// 	_inFlightFences.clear();
+		// }
 
-		void _createSyncResources() {
-			// create synchronization resources
-			VkDevice lDev = _device->vk_lDev();
-			const auto& caps = _device->vk_swapchainSupportActiveDevice(_surface.get());
-			int nFramesInFlight = caps.nFramesInFlight;
+		// void _createSyncResources() {
+		// 	// create synchronization resources
+		// 	VkDevice lDev = _device->vk_lDev();
+		// 	const auto& caps = _device->vk_swapchainSupportActiveDevice(_surface.get());
+		// 	int nFramesInFlight = caps.nFramesInFlight;
 
-			_imageAvailableSemaphores.resize(nFramesInFlight);
-			_renderFinishedSemaphores.resize(nFramesInFlight);
-			_inFlightFences.resize(nFramesInFlight);
+		// 	_imageAvailableSemaphores.resize(nFramesInFlight);
+		// 	_renderFinishedSemaphores.resize(nFramesInFlight);
+		// 	_inFlightFences.resize(nFramesInFlight);
 
-			VkSemaphoreCreateInfo semaphoreInfo{};
-			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		// 	VkSemaphoreCreateInfo semaphoreInfo{};
+		// 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-			VkFenceCreateInfo fenceInfo{};
-			fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-			// we must create the fences in the signaled state to ensure that on the first call to drawFrame
-			// vkWaitForFences won't wait indefinitely
-			fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+		// 	VkFenceCreateInfo fenceInfo{};
+		// 	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		// 	// we must create the fences in the signaled state to ensure that on the first call to drawFrame
+		// 	// vkWaitForFences won't wait indefinitely
+		// 	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-			for (int i = 0; i < nFramesInFlight; i++) {
-				Vk_CheckVkResult(typeid(this), vkCreateSemaphore(lDev, &semaphoreInfo, nullptr, &_imageAvailableSemaphores[i]), "Failed to create image available semaphore for a frame!");
-				Vk_CheckVkResult(typeid(this), vkCreateSemaphore(lDev, &semaphoreInfo, nullptr, &_renderFinishedSemaphores[i]), "Failed to create render finished semaphore");
-				Vk_CheckVkResult(typeid(this), vkCreateFence(lDev, &fenceInfo, nullptr, &_inFlightFences[i]), "Failed to create in flight fences");
-			}
-		}
+		// 	for (int i = 0; i < nFramesInFlight; i++) {
+		// 		Vk_CheckVkResult(typeid(this), vkCreateSemaphore(lDev, &semaphoreInfo, nullptr, &_imageAvailableSemaphores[i]), "Failed to create image available semaphore for a frame!");
+		// 		Vk_CheckVkResult(typeid(this), vkCreateSemaphore(lDev, &semaphoreInfo, nullptr, &_renderFinishedSemaphores[i]), "Failed to create render finished semaphore");
+		// 		Vk_CheckVkResult(typeid(this), vkCreateFence(lDev, &fenceInfo, nullptr, &_inFlightFences[i]), "Failed to create in flight fences");
+		// 	}
+		// }
 
 		void _resetViewer() {
 			auto lock = AcquireGlobalWriteLock("vk_viewer[_onWindowAction(resetViewer)]");

@@ -22,9 +22,9 @@ namespace VK4 {
 		Vk_GraphicsPipeline_IM(
 			LWWS::TViewportId viewportId,
 			Vk_Device* const device,
-			const Vk_Surface* surface,
+			const Vk_SurfaceConfig& surfaceConfig,
 			const Vk_Config_GraphicsPipeline_IM& config
-		) : _surface(surface)
+		) : _surfaceConfig(surfaceConfig)
 		{
 			VK4::Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create IM Graphics Pipeline"));
 
@@ -75,7 +75,7 @@ namespace VK4 {
 			inputAssembly.topology = config.topology;
 			inputAssembly.primitiveRestartEnable = VK_FALSE; // enable or not if vertice can be used for multiple triangles
 
-			VkExtent2D viewp = _device->vk_swapchainSupportActiveDevice(_surface).capabilities.currentExtent;
+			VkExtent2D viewp = _device->vk_swapchainSupportActiveDevice(_surfaceConfig).capabilities.currentExtent;
 
 			// define viewport, usually between 0,0 and with,height
 			VkViewport viewport = {};
@@ -276,6 +276,6 @@ namespace VK4 {
 		}
 
 	private:
-		const Vk_Surface* _surface;
+		Vk_SurfaceConfig _surfaceConfig;
 	};
 }
