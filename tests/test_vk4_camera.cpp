@@ -63,11 +63,10 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Init, *all_tests) {
 					.x = 0, 
 					.y = 0, 
 					.width = 1200, 
-					.height = 1024,
-					.clearColor = VK4::Vk_RGBColor {
-						.r=0.5, .g=0.25, .b=0.25
-					}
+					.height = 1024
 				},
+				.clearColor = VK4::Vk_RGBColor {.r=0.5, .g=0.25, .b=0.25},
+				.clearAlpha = 1.0f,
 				.specs = VK4::Vk_CameraSpecs {
 					.type = VK4::Vk_CameraType::Rasterizer_IM,
 					.wPos = glm::tvec3<VK4::point_type> {5.0f, 5.0f, 5.0f },
@@ -122,11 +121,10 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Run, *all_tests) {
 					.x = 0,
 					.y = 0,
 					.width = 900,
-					.height = 900,
-					.clearColor = VK4::Vk_RGBColor {
-						.r=0.5, .g=0.0, .b=0.0
-					}
+					.height = 900
 				},
+				.clearColor = VK4::Vk_RGBColor {.r=0.5, .g=0.0, .b=0.0},
+				.clearAlpha = 1.0f,
 				.specs = VK4::Vk_CameraSpecs {
 					.type = VK4::Vk_CameraType::Rasterizer_IM,
 					.wPos = glm::tvec3<VK4::point_type> {5.0f, 5.0f, 5.0f },
@@ -143,11 +141,10 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Run, *all_tests) {
 					.x = 900, 
 					.y = 0, 
 					.width = 900, 
-					.height = 900,
-					.clearColor = VK4::Vk_RGBColor {
-						.r=0.0, .g=0.0, .b=1.0
-					}
+					.height = 900
 				},
+				.clearColor = VK4::Vk_RGBColor {.r=0.0, .g=0.0, .b=1.0},
+				.clearAlpha = 1.0f,
 				.specs = VK4::Vk_CameraSpecs {
 					.type = VK4::Vk_CameraType::Rasterizer_IM,
 					.wPos = glm::tvec3<VK4::point_type> {5.0f, 0.0f, 5.0f },
@@ -196,11 +193,10 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Scale, *new_test) {
 					.x = 100,
 					.y = 25,
 					.width = 500,
-					.height = 400,
-					.clearColor = VK4::Vk_RGBColor {
-						.r=0.5, .g=0.25, .b=0.25
-					}
+					.height = 400
 				},
+				.clearColor = VK4::Vk_RGBColor {.r=0.5, .g=0.25, .b=0.25},
+				.clearAlpha = 1.0f,
 				.specs = VK4::Vk_CameraSpecs {
 					.type = VK4::Vk_CameraType::Rasterizer_IM,
 					.wPos = glm::tvec3<VK4::point_type> {5.0f, 5.0f, 5.0f },
@@ -217,11 +213,10 @@ BOOST_AUTO_TEST_CASE(Test_Camera_Scale, *new_test) {
 					.x = 650,
 					.y = 50,
 					.width = 450,
-					.height = 450,
-					.clearColor = VK4::Vk_RGBColor {
-						.r=0.75, .g=0.75, .b=0.75
-					}
+					.height = 450
 				},
+				.clearColor = VK4::Vk_RGBColor {.r=0.75, .g=0.75, .b=0.75},
+				.clearAlpha = 1.0f,
 				.specs = VK4::Vk_CameraSpecs {
 					.type = VK4::Vk_CameraType::Rasterizer_IM,
 					.wPos = glm::tvec3<VK4::point_type> {5.0f, 0.0f, 5.0f },

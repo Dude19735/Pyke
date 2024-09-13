@@ -36,9 +36,9 @@ namespace VK4 {
 			:
 			_surface(nullptr),
 			_device(nullptr),
-			_imageAvailableSemaphores({}),
-			_renderFinishedSemaphores({}),
-			_inFlightFences({}),
+			// _imageAvailableSemaphores({}),
+			// _renderFinishedSemaphores({}),
+			// _inFlightFences({}),
 			_onResize(false),
 			// _rebuildBeforeNextFrame({}),
 			_viewingType(Vk_ViewingType::GLOBAL),
@@ -61,9 +61,9 @@ namespace VK4 {
 			: 
 			_surface(nullptr),
 			_device(device),
-			_imageAvailableSemaphores({}),
-			_renderFinishedSemaphores({}),
-			_inFlightFences({}),
+			// _imageAvailableSemaphores({}),
+			// _renderFinishedSemaphores({}),
+			// _inFlightFences({}),
 			_onResize(false),
 			// _rebuildBeforeNextFrame({}),
 			_viewingType(params.viewingType),
@@ -726,156 +726,156 @@ public:
 			_surface->vk_lwws_window()->emit_windowEvent_Paint();
 		}
 
-		void _drawFrame() {
-			{
-				auto lock = std::shared_lock<std::shared_mutex>(_runMutex);
-				if(_running == false) return;
-			}
+		// void _drawFrame() {
+		// 	{
+		// 		auto lock = std::shared_lock<std::shared_mutex>(_runMutex);
+		// 		if(_running == false) return;
+		// 	}
 
-			auto lDev = _device->vk_lDev();
-			int nFramesInFlight = static_cast<int>(_renderFinishedSemaphores.size()); // doesn't matter which one...
+		// 	auto lDev = _device->vk_lDev();
+		// 	int nFramesInFlight = static_cast<int>(_renderFinishedSemaphores.size()); // doesn't matter which one...
 
-			{
-				auto lock = TryAcquireGlobalWriteLock("vk_viewer[_drawFrame]");
-				if(!lock.successful()) {
-					return;
-				}
+		// 	{
+		// 		auto lock = TryAcquireGlobalWriteLock("vk_viewer[_drawFrame]");
+		// 		if(!lock.successful()) {
+		// 			return;
+		// 		}
 
-				int currentFrame = _device->bridge.currentFrame();
+		// 		int currentFrame = _device->bridge.currentFrame();
 
-				// We have to wait for the current fence to be signaled to make sure that
-				VkResult res = vkWaitForFences(lDev, 1, &_inFlightFences[currentFrame], VK_TRUE, GLOBAL_FENCE_TIMEOUT);
-				if(res == VK_TIMEOUT){
-					Vk_Logger::RuntimeError(typeid(this), "drawFrame timeout for frame index [{0}]", currentFrame);
-					return;
-				}
-				else if (res != VK_SUCCESS) {
-					Vk_Logger::RuntimeError(typeid(this), "Waiting for fences had catastrphic result!");
-				}
+		// 		// We have to wait for the current fence to be signaled to make sure that
+		// 		VkResult res = vkWaitForFences(lDev, 1, &_inFlightFences[currentFrame], VK_TRUE, GLOBAL_FENCE_TIMEOUT);
+		// 		if(res == VK_TIMEOUT){
+		// 			Vk_Logger::RuntimeError(typeid(this), "drawFrame timeout for frame index [{0}]", currentFrame);
+		// 			return;
+		// 		}
+		// 		else if (res != VK_SUCCESS) {
+		// 			Vk_Logger::RuntimeError(typeid(this), "Waiting for fences had catastrphic result!");
+		// 		}
 
-				if(_device->bridge.runCurrentFrameUpdates()){
-					_recordCommandBuffer(currentFrame);
-				}
+		// 		if(_device->bridge.runCurrentFrameUpdates()){
+		// 			_recordCommandBuffer(currentFrame);
+		// 		}
 
-				// acquire the next imageenqueueJob
-				uint32_t imageIndex;
-				VkResult result = vkAcquireNextImageKHR(
-					lDev, _swapchain->vk_swapchain(),
-					GLOBAL_FENCE_TIMEOUT,
-					_imageAvailableSemaphores[currentFrame], // this one is signaled once the presentation queue is done with this image
-					VK_NULL_HANDLE, &imageIndex
-				);
+		// 		// acquire the next imageenqueueJob
+		// 		uint32_t imageIndex;
+		// 		VkResult result = vkAcquireNextImageKHR(
+		// 			lDev, _swapchain->vk_swapchain(),
+		// 			GLOBAL_FENCE_TIMEOUT,
+		// 			_imageAvailableSemaphores[currentFrame], // this one is signaled once the presentation queue is done with this image
+		// 			VK_NULL_HANDLE, &imageIndex
+		// 		);
 
-				// catch some exceptions
-				if(result != VK_SUCCESS){
-					switch(result){
-						case VK_ERROR_OUT_OF_DATE_KHR:
-							Vk_Logger::Log(typeid(this), "vkAcquireNextImageKHR result out of date, reset viewer [VK_SUBOPTIMAL_KHR]!");
-							_resetViewer();
-							return;
-						case VK_SUBOPTIMAL_KHR:
-							Vk_Logger::Log(typeid(this), "vkAcquireNextImageKHR result suboptimal, reset viewer [VK_SUBOPTIMAL_KHR]!");
-							_resetViewer();
-							return;
-						default:
-							Vk_Logger::RuntimeError(typeid(this), "vkAcquireNextImageKHR unknown error [{0}]!", static_cast<int>(result));
-					}
-				}
+		// 		// catch some exceptions
+		// 		if(result != VK_SUCCESS){
+		// 			switch(result){
+		// 				case VK_ERROR_OUT_OF_DATE_KHR:
+		// 					Vk_Logger::Log(typeid(this), "vkAcquireNextImageKHR result out of date, reset viewer [VK_SUBOPTIMAL_KHR]!");
+		// 					_resetViewer();
+		// 					return;
+		// 				case VK_SUBOPTIMAL_KHR:
+		// 					Vk_Logger::Log(typeid(this), "vkAcquireNextImageKHR result suboptimal, reset viewer [VK_SUBOPTIMAL_KHR]!");
+		// 					_resetViewer();
+		// 					return;
+		// 				default:
+		// 					Vk_Logger::RuntimeError(typeid(this), "vkAcquireNextImageKHR unknown error [{0}]!", static_cast<int>(result));
+		// 			}
+		// 		}
 
-				// otherwise update the uniform buffer with the mvp matrix
-				// Note: We always have this buffer. It belongs to the renderer. 
-				//       The only thing that matters is if it's used in the current shader or not.
-				//       the binding point for the uniform buffer is set in the 'createDescriptorSetLayout' 
-				//       for every individual shader. Here we just have to update the data.
+		// 		// otherwise update the uniform buffer with the mvp matrix
+		// 		// Note: We always have this buffer. It belongs to the renderer. 
+		// 		//       The only thing that matters is if it's used in the current shader or not.
+		// 		//       the binding point for the uniform buffer is set in the 'createDescriptorSetLayout' 
+		// 		//       for every individual shader. Here we just have to update the data.
 
-				for (auto& c : _cameras) {
-					auto& cam = c.second;
-					cam->vk_update(currentFrame);
-				}
+		// 		for (auto& c : _cameras) {
+		// 			auto& cam = c.second;
+		// 			cam->vk_update(currentFrame);
+		// 		}
 
-				// reset the fence we waited for because we updated all the camera shaders with the
-				// potentially new view perspective => GPU can go on...
-				vkResetFences(lDev, 1, &_inFlightFences[currentFrame]);
+		// 		// reset the fence we waited for because we updated all the camera shaders with the
+		// 		// potentially new view perspective => GPU can go on...
+		// 		vkResetFences(lDev, 1, &_inFlightFences[currentFrame]);
 
-				VkSubmitInfo submitInfo{};
-				submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		// 		VkSubmitInfo submitInfo{};
+		// 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-				VkSemaphore waitSemaphores[] = { _imageAvailableSemaphores[currentFrame] };
-				VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-				submitInfo.waitSemaphoreCount = 1;
-				submitInfo.pWaitSemaphores = waitSemaphores;
-				submitInfo.pWaitDstStageMask = waitStages;
-				submitInfo.commandBufferCount = 1;
-				submitInfo.pCommandBuffers = &_commandBuffer[currentFrame];
+		// 		VkSemaphore waitSemaphores[] = { _imageAvailableSemaphores[currentFrame] };
+		// 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+		// 		submitInfo.waitSemaphoreCount = 1;
+		// 		submitInfo.pWaitSemaphores = waitSemaphores;
+		// 		submitInfo.pWaitDstStageMask = waitStages;
+		// 		submitInfo.commandBufferCount = 1;
+		// 		submitInfo.pCommandBuffers = &_commandBuffer[currentFrame];
 
-				VkSemaphore signalSemaphores[] = { _renderFinishedSemaphores[currentFrame] };
-				submitInfo.signalSemaphoreCount = 1;
-				submitInfo.pSignalSemaphores = signalSemaphores;
+		// 		VkSemaphore signalSemaphores[] = { _renderFinishedSemaphores[currentFrame] };
+		// 		submitInfo.signalSemaphoreCount = 1;
+		// 		submitInfo.pSignalSemaphores = signalSemaphores;
 				
-				{
-					Vk_CheckVkResult(typeid(this), 
-						Vk_ThreadSafe::Vk_ThreadSafe_QueueSubmit(
-							_device->vk_graphicsQueue(),
-							1,
-							&submitInfo,
-							_inFlightFences[currentFrame]
-						),
-						"Failed to submit draw command buffer!"
-					);			
-				}
+		// 		{
+		// 			Vk_CheckVkResult(typeid(this), 
+		// 				Vk_ThreadSafe::Vk_ThreadSafe_QueueSubmit(
+		// 					_device->vk_graphicsQueue(),
+		// 					1,
+		// 					&submitInfo,
+		// 					_inFlightFences[currentFrame]
+		// 				),
+		// 				"Failed to submit draw command buffer!"
+		// 			);			
+		// 		}
 
-				VkPresentInfoKHR presentInfo{};
-				presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-				presentInfo.waitSemaphoreCount = 1;
-				presentInfo.pWaitSemaphores = signalSemaphores;
+		// 		VkPresentInfoKHR presentInfo{};
+		// 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		// 		presentInfo.waitSemaphoreCount = 1;
+		// 		presentInfo.pWaitSemaphores = signalSemaphores;
 
-				VkSwapchainKHR swapChains[] = { _swapchain->vk_swapchain() };
-				presentInfo.swapchainCount = 1;
-				presentInfo.pSwapchains = swapChains;
-				presentInfo.pImageIndices = &imageIndex;
+		// 		VkSwapchainKHR swapChains[] = { _swapchain->vk_swapchain() };
+		// 		presentInfo.swapchainCount = 1;
+		// 		presentInfo.pSwapchains = swapChains;
+		// 		presentInfo.pImageIndices = &imageIndex;
 
-				result = vkQueuePresentKHR(
-					_device->vk_presentationQueue(),
-					&presentInfo
-				);
+		// 		result = vkQueuePresentKHR(
+		// 			_device->vk_presentationQueue(),
+		// 			&presentInfo
+		// 		);
 
-				if(result != VK_SUCCESS){
-					switch(result) {
-						case VK_SUBOPTIMAL_KHR:
-							Vk_Logger::Log(typeid(this), "vkQueuePresentKHR subission suboptimal, reset viewer [VK_SUBOPTIMAL_KHR]!");
-							_resetViewer();
-							return;
-						break;
-						case VK_ERROR_OUT_OF_DATE_KHR:
-							Vk_Logger::Log(typeid(this), "vkQueuePresentKHR subission out of date, reset viewer [VK_ERROR_OUT_OF_DATE_KHR]!");
-							_resetViewer();
-							return;
-						break;
-							case VK_ERROR_OUT_OF_HOST_MEMORY:
-							Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR subission failed [VK_ERROR_OUT_OF_HOST_MEMORY]!");
-						break;
-							case VK_ERROR_OUT_OF_DEVICE_MEMORY:
-							Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR subission failed [VK_ERROR_OUT_OF_DEVICE_MEMORY]!");
-						break;
-						case VK_ERROR_DEVICE_LOST:
-							Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR subission failed [VK_ERROR_DEVICE_LOST]!");
-							break;
-						case VK_ERROR_SURFACE_LOST_KHR:
-							Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR subission failed [VK_ERROR_SURFACE_LOST_KHR]!");
-							break;
-						case VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT:
-							Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR subission failed [VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT]!");
-							break;
-						default:
-							Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR submission unknown error [{0}]", static_cast<int>(result));
-					}
-				}
+		// 		if(result != VK_SUCCESS){
+		// 			switch(result) {
+		// 				case VK_SUBOPTIMAL_KHR:
+		// 					Vk_Logger::Log(typeid(this), "vkQueuePresentKHR subission suboptimal, reset viewer [VK_SUBOPTIMAL_KHR]!");
+		// 					_resetViewer();
+		// 					return;
+		// 				break;
+		// 				case VK_ERROR_OUT_OF_DATE_KHR:
+		// 					Vk_Logger::Log(typeid(this), "vkQueuePresentKHR subission out of date, reset viewer [VK_ERROR_OUT_OF_DATE_KHR]!");
+		// 					_resetViewer();
+		// 					return;
+		// 				break;
+		// 					case VK_ERROR_OUT_OF_HOST_MEMORY:
+		// 					Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR subission failed [VK_ERROR_OUT_OF_HOST_MEMORY]!");
+		// 				break;
+		// 					case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+		// 					Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR subission failed [VK_ERROR_OUT_OF_DEVICE_MEMORY]!");
+		// 				break;
+		// 				case VK_ERROR_DEVICE_LOST:
+		// 					Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR subission failed [VK_ERROR_DEVICE_LOST]!");
+		// 					break;
+		// 				case VK_ERROR_SURFACE_LOST_KHR:
+		// 					Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR subission failed [VK_ERROR_SURFACE_LOST_KHR]!");
+		// 					break;
+		// 				case VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT:
+		// 					Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR subission failed [VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT]!");
+		// 					break;
+		// 				default:
+		// 					Vk_Logger::RuntimeError(typeid(this), "vkQueuePresentKHR submission unknown error [{0}]", static_cast<int>(result));
+		// 			}
+		// 		}
 
-				_device->bridge.incrFrameNr();
-			}
+		// 		_device->bridge.incrFrameNr();
+		// 	}
 
-			return;
-		}
+		// 	return;
+		// }
 
 		inline void _attachRenderer(
 			Vk_Camera* cam, 
@@ -889,6 +889,8 @@ public:
 					_device,
 					// auxilliaries,
 					surfaceConfig,
+					cam->vk_clearColor(),
+					cam->vk_clearAlpha(),
 					_freshPoolSize,
 					VK4::UniformBufferType_RendererMat4{ .mat = cam->vk_perspective() * cam->vk_view() }
 				));
@@ -940,27 +942,27 @@ public:
 		// 	}
 		// }
 
-		void _resetViewer() {
-			auto lock = AcquireGlobalWriteLock("vk_viewer[_onWindowAction(resetViewer)]");
-			_onResize = true;
-			Vk_ThreadSafe::Vk_ThreadSafe_DeviceWaitIdle(_device->vk_lDev());
+		// void _resetViewer() {
+		// 	auto lock = AcquireGlobalWriteLock("vk_viewer[_onWindowAction(resetViewer)]");
+		// 	_onResize = true;
+		// 	Vk_ThreadSafe::Vk_ThreadSafe_DeviceWaitIdle(_device->vk_lDev());
 
-			_destroySyncResources(); // must be done before swapchainSupport is invalidated to keep correct nFramesInFlight!
-			_device->vk_invalidateSwapchainSupport();
-			_device->vk_swapchainSupportActiveDevice(_surface.get());
-			_renderpass.reset();
-			_swapchain.reset();
-			_framebuffer.reset();
+		// 	_destroySyncResources(); // must be done before swapchainSupport is invalidated to keep correct nFramesInFlight!
+		// 	_device->vk_invalidateSwapchainSupport();
+		// 	_device->vk_swapchainSupportActiveDevice(_surface.get());
+		// 	_renderpass.reset();
+		// 	_swapchain.reset();
+		// 	_framebuffer.reset();
 
-			_renderpass = std::make_unique<Vk_RenderPass_IM>(_device, _surface.get());
-			_swapchain = std::make_unique<Vk_Swapchain_IM>(_device, _surface.get());
-			_framebuffer = std::make_unique<Vk_Framebuffer_IM>(_device, _surface.get(), _swapchain.get(), _renderpass.get());
-			_createSyncResources(); // must be done after swapchain creation to get correct nFramesInFlight
+		// 	_renderpass = std::make_unique<Vk_RenderPass_IM>(_device, _surface.get());
+		// 	_swapchain = std::make_unique<Vk_Swapchain_IM>(_device, _surface.get());
+		// 	_framebuffer = std::make_unique<Vk_Framebuffer_IM>(_device, _surface.get(), _swapchain.get(), _renderpass.get());
+		// 	_createSyncResources(); // must be done after swapchain creation to get correct nFramesInFlight
 
-			_recordCommandBuffers(true);
-			_device->bridge.setCurrentFrameTo(0);
-			_onResize = false;
-		}
+		// 	_recordCommandBuffers(true);
+		// 	_device->bridge.setCurrentFrameTo(0);
+		// 	_onResize = false;
+		// }
 
 
 // ############################################################################################################
@@ -973,12 +975,22 @@ public:
 //                     █████  █     █ ███████ ███████ ██████  █     █  █████  █    █  █████                    
 // ############################################################################################################
 		void _onWindowAction(int w, int h, int px, int py, const std::set<int>& pressedKeys, LWWS::WindowAction windowAction, void* aptr){
-			if(windowAction == LWWS::WindowAction::Resized){
-				_resetViewer();
-			}
-			else if(windowAction == LWWS::WindowAction::Paint){
-				_drawFrame();
-			}
+			// if(windowAction == LWWS::WindowAction::Resized){
+			// 	_resetViewer();
+			// }
+			// else if(windowAction == LWWS::WindowAction::Paint){
+			// 	_drawFrame();
+			// }
+			/**
+			 * TODO: loop trough all cameras and enqueue a redraw
+			 */
+			
+			// for(auto& c : _cameras){
+			// 	c.second->vk_waitFinish();
+			// }
+			// for(auto& c : _cameras){
+			// 	c.second->vk_nextImage();
+			// }
 		}
 
 		void _onMouseAction(int px, int py, int dx, int dy, float dz, const std::set<int>& pressedKeys, LWWS::MouseButton mouseButton, LWWS::ButtonOp op, LWWS::MouseAction mouseAction, void* aptr){
@@ -1007,13 +1019,13 @@ public:
 					for(const auto& c : cameras){
 						c.second->onMouseAction(px, py, dx, dy, dz, pressedKeys, mouseButton, op, mouseAction, aptr);
 					}
-					_redraw();
+					// _redraw(); // remove this
 				}
 				else {
 					for(const auto& c : cameras){
 						if(c.second->vk_contains(c.second->vk_lastMousePosX(), c.second->vk_lastMousePosY())){
 							c.second->onMouseAction(px, py, dx, dy, dz, pressedKeys, mouseButton, op, mouseAction, aptr);
-							_redraw();
+							// _redraw(); // remove this
 							break;
 						}
 					}
@@ -1036,11 +1048,11 @@ public:
 					for(const auto& c : cameras){
 						c.second->onMouseAction(px, py, dx, dy, dz, pressedKeys, mouseButton, op, mouseAction, aptr);
 					}
-					_redraw();
+					// _redraw();
 				}
 				else {
 					_lastSteeredCamera->onMouseAction(px, py, dx, dy, dz, pressedKeys, mouseButton, op, mouseAction, aptr);
-					_redraw();
+					// _redraw();
 				}
 			}
 			else if(mouseAction == LWWS::MouseAction::MouseButton && mouseButton == LWWS::MouseButton::Left && op == LWWS::ButtonOp::Up){

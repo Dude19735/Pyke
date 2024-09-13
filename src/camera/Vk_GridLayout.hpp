@@ -65,9 +65,10 @@ namespace VK4 {
                             .x = static_cast<int32_t>((c.x*(viewportWidth + 2*_xSpacing) + _xSpacing)),
                             .y = static_cast<int32_t>((c.y*(viewportHeight + 2*_ySpacing) + _ySpacing)),
                             .width = viewportWidth,
-                            .height = viewportHeight,
-                            .clearColor = c.lp.clearColor
+                            .height = viewportHeight
                         },
+                        .clearColor = c.lp.clearColor,
+                        .clearAlpha = 1.0f,
                         .specs = c.lp.specs
                     }
                 });

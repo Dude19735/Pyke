@@ -191,6 +191,8 @@ PYBIND11_MODULE(_vkviewer, m) {
 		.def_readwrite("grid_x", &Vk_CameraInit::gridX)
 		.def_readwrite("grid_y", &Vk_CameraInit::gridY)
 		.def_readwrite("viewport", &Vk_CameraInit::viewport)
+		.def_readwrite("clear_color", &Vk_CameraInit::clearColor)
+		.def_readwrite("clear_alpha", &Vk_CameraInit::clearAlpha)
 		.def_readwrite("specs", &Vk_CameraInit::specs);
 
 	py::class_<Vk_ViewportMargins, std::shared_ptr<Vk_ViewportMargins>>(m, "vk_viewport_margins")

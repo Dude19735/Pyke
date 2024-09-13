@@ -18,13 +18,15 @@ namespace VK4 {
         _gridY(init.gridY),
         _type(init.specs.type),
         _renderer(nullptr),
-        _viewport(init.viewport),
-        _originalWidth(init.viewport.width), 
-        _originalHeight(init.viewport.height), 
-        _originalOffsetX(init.viewport.x), 
-        _originalOffsetY(init.viewport.y),
-        _currentParentWindowWidth(currentParentWindowWidth),
-        _currentParentWindowHeight(currentParentWindowHeight),
+        _viewport(init.viewport), // global viewport (used by the windowing system, not the renderer)
+        _clearColor(init.clearColor),
+        _clearAlpha(init.clearAlpha),
+        // _originalWidth(init.viewport.width), 
+        // _originalHeight(init.viewport.height), 
+        // _originalOffsetX(init.viewport.x), 
+        // _originalOffsetY(init.viewport.y),
+        // _currentParentWindowWidth(currentParentWindowWidth),
+        // _currentParentWindowHeight(currentParentWindowHeight),
         _wPos(init.specs.wPos),
         _wLook(init.specs.wLook),
         _wUp(init.specs.wUp),
@@ -41,15 +43,15 @@ namespace VK4 {
         _lastMousePosY(0.0),
         _aspect(1.0f),
         _pv({}),
-        _xResizeRoundingIndicator(0),
-        _yResizeRoundingIndicator(0),
+        // _xResizeRoundingIndicator(0),
+        // _yResizeRoundingIndicator(0),
         _steering(nullptr)
         {
             _steering = std::move(steering);
 			vk_calculateTransform();
 		}
 
-		inline void vk_calculateTransform() {
+		void vk_calculateTransform() {
             _aspect = static_cast<point_type>(_viewport.width) / static_cast<point_type>(_viewport.height);
 			point_type f1 = _wFar / (_wFar - _wNear);
 			point_type f2 = -(_wNear * _wFar) / (_wFar - _wNear);
@@ -169,84 +171,85 @@ namespace VK4 {
 			return true;
 		}
 
-        inline void vk_update(const uint32_t imageIndex) {
+        bool vk_waitFinish(){
+            return _renderer->vk_waitFinish();
+        }
+
+        bool vk_nextImage(){
             _pv.mat = _perspective * _view;
             _renderer->vk_update(imageIndex, _pv);
         }
 
-        inline bool vk_contains(const double x, const double y){
+        // void vk_update(const uint32_t imageIndex) {
+        //     /**
+        //      * TODO: remove this
+        //      */
+        //     _pv.mat = _perspective * _view;
+        //     _renderer->vk_update(imageIndex, _pv);
+        // }
+
+        bool vk_contains(const double x, const double y){
             bool b1 = _viewport.x <= x && x <= _viewport.x + _viewport.width;
             bool b2 = _viewport.y <= y && y <= _viewport.y + _viewport.height;
             return b1 && b2;
         }
 
         /* == Setter == */
-        inline void vk_renderer(std::unique_ptr<I_Renderer> renderer){
+        void vk_renderer(std::unique_ptr<I_Renderer> renderer){
             _renderer = std::move(renderer);
         }
 
-        inline void vk_parentWindowSize(int currentParentWindowWidth, int currentParentWindowHeight){
-            _currentParentWindowWidth = currentParentWindowWidth;
-            _currentParentWindowHeight = currentParentWindowHeight;
-        }
-
-        inline void vk_viewport(const Vk_Viewport& viewport) { // int32_t x, int32_t y, uint32_t width, uint32_t height){
+        /**
+         * TODO: this one updates the viewport, must be clearer
+         * Probably, it's not required...
+         */
+        void vk_viewport(const Vk_Viewport& viewport) { // int32_t x, int32_t y, uint32_t width, uint32_t height){
             _viewport.x = viewport.x;
             _viewport.y = viewport.y;
             _viewport.width = viewport.width;
             _viewport.height = viewport.height;
         }
 
-        inline void vk_mvp(const glm::mat4& mvp){
-            _pv.mat = mvp;
-        }
+        void vk_mvp(const glm::mat4& mvp){ _pv.mat = mvp; }
+        void vk_view(const glm::mat4& view){ _view = view; }
+        void vk_wLook(const glm::tvec3<point_type>& wLook){ _wLook = wLook; }
+        void vk_wPos(const glm::tvec3<point_type>& wPos){ _wPos = wPos; }
+        void vk_wUp(const glm::tvec3<point_type>& wUp){ _wUp = wUp; }
+        void vk_clearColor(const Vk_RGBColor& clearColor) { _clearColor = clearColor; }
+        void vk_clearAlpha(const float clearAlpha) { _clearAlpha = clearAlpha; }
 
-        inline void vk_view(const glm::mat4& view){
-            _view = view;
-        }
-
-        inline void vk_wLook(const glm::tvec3<point_type>& wLook){
-            _wLook = wLook;
-        }
-
-        inline void vk_wPos(const glm::tvec3<point_type>& wPos){
-            _wPos = wPos;
-        }
-
-        inline void vk_wUp(const glm::tvec3<point_type>& wUp){
-            _wUp = wUp;
-        }
-
-        inline void vk_lastMousePosition(double lastMousePosX, double lastMousePosY){
+        void vk_lastMousePosition(double lastMousePosX, double lastMousePosY){
             _lastMousePosX = lastMousePosX;
             _lastMousePosY = lastMousePosY;
         }
 
         /* == Getter == */
-        inline const LWWS::TViewportId vk_viewportId() const { return _viewportId; }
-        inline const int vk_gridX() const { return _gridX; }
-        inline const int vk_gridY() const { return _gridY; }
-        inline const Vk_CameraType vk_type() const { return _type; }
-        inline const UniformBufferType_RendererMat4& vk_mvp() const { return _pv; }
-        inline const int vk_originalX() const { return _originalOffsetX; }
-        inline const int vk_originalY() const { return _originalOffsetY; }
-        inline const int vk_originalWidth() const { return _originalWidth; }
-        inline const int vk_originalHeight() const { return _originalHeight; }
-        inline const Vk_Viewport& vk_viewport() const { return _viewport; }
-        inline I_Renderer* const vk_renderer() const { return _renderer.get(); }
-        inline const I_ViewerSteering* vk_steering() const { return _steering.get(); }
-        inline const double vk_lastMousePosX() const { return _lastMousePosX; }
-        inline const double vk_lastMousePosY() const { return _lastMousePosY; }
-        inline const glm::tvec3<point_type>& vk_wPos() const { return _wPos; }
-        inline const glm::tvec3<point_type>& vk_wLook() const { return _wLook; }
-        inline const glm::tvec3<point_type>& vk_wUp() const { return _wUp; }
-        inline const point_type vk_fow() const { return _fow; }
-        inline const point_type vk_wNear() const { return _wNear; }
-        inline const point_type vk_wFar() const { return _wFar; }
-        inline const glm::mat4& vk_view() const { return _view; }
-        inline const glm::mat4& vk_perspective() const { return _perspective; }
+        const LWWS::TViewportId vk_viewportId() const { return _viewportId; }
+        const int vk_gridX() const { return _gridX; }
+        const int vk_gridY() const { return _gridY; }
+        const Vk_CameraType vk_type() const { return _type; }
+        const UniformBufferType_RendererMat4& vk_mvp() const { return _pv; }
+        // const int vk_originalX() const { return _originalOffsetX; }
+        // const int vk_originalY() const { return _originalOffsetY; }
+        // const int vk_originalWidth() const { return _originalWidth; }
+        // const int vk_originalHeight() const { return _originalHeight; }
+        const Vk_Viewport& vk_viewport() const { return _viewport; }
+        I_Renderer* const vk_renderer() const { return _renderer.get(); }
+        const I_ViewerSteering* vk_steering() const { return _steering.get(); }
+        const double vk_lastMousePosX() const { return _lastMousePosX; }
+        const double vk_lastMousePosY() const { return _lastMousePosY; }
+        const glm::tvec3<point_type>& vk_wPos() const { return _wPos; }
+        const glm::tvec3<point_type>& vk_wLook() const { return _wLook; }
+        const glm::tvec3<point_type>& vk_wUp() const { return _wUp; }
+        const point_type vk_fow() const { return _fow; }
+        const point_type vk_wNear() const { return _wNear; }
+        const point_type vk_wFar() const { return _wFar; }
+        const glm::mat4& vk_view() const { return _view; }
+        const glm::mat4& vk_perspective() const { return _perspective; }
+        const Vk_RGBColor vk_clearColor() const { return _clearColor; }
+        const float vk_clearAlpha() const { return _clearAlpha; }
         
-        inline const Vk_CameraCoords vk_cameraCoords() const {
+        const Vk_CameraCoords vk_cameraCoords() const {
             return Vk_CameraCoords {
                 .wPos = std::array<point_type, 3> {_wPos.x, _wPos.y, _wPos.z},
                 .wLook = std::array<point_type, 3> {_wLook.x, _wLook.y, _wLook.z},
@@ -258,23 +261,29 @@ namespace VK4 {
         }
 
         /* == Callbacks == */
-        inline void onMouseAction(int px, int py, int dx, int dy, float dz, const std::set<int>& pressedKeys, LWWS::MouseButton mouseButton, LWWS::ButtonOp op, LWWS::MouseAction mouseAction, void* aptr) {
+        void onMouseAction(int px, int py, int dx, int dy, float dz, const std::set<int>& pressedKeys, LWWS::MouseButton mouseButton, LWWS::ButtonOp op, LWWS::MouseAction mouseAction, void* aptr) {
 			_steering->onMouseAction(this, px, py, dx, dy, dz, pressedKeys, mouseButton, op, mouseAction, aptr);
+            /**
+             * TODO: trigger redraw
+             */
 		}
 
-		inline void onKeyAction(int k, LWWS::ButtonOp op, const std::set<int>& otherPressedKeys, void* aptr) {
+		void onKeyAction(int k, LWWS::ButtonOp op, const std::set<int>& otherPressedKeys, void* aptr) {
 			_steering->onKeyAction(this, k, op, otherPressedKeys, aptr);
+            /**
+             * TODO: trigger redraw
+             */
 		}
 
-        // inline void onMouseMoveCallback(GLFWwindow* window, double xpos, double ypos) {
+        // void onMouseMoveCallback(GLFWwindow* window, double xpos, double ypos) {
 		// 	_steering->onMouseMove(window, this, xpos, ypos);
 		// }
 
-		// inline void onMouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset){
+		// void onMouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset){
 		// 	_steering->onMouseScroll(window, this, yoffset, yoffset);
 		// }
 
-		// inline void onKeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+		// void onKeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 		// 	_steering->onKeyPressed(window, this, key, scancode, action, mods);
 		// }
 
@@ -286,14 +295,16 @@ namespace VK4 {
         Vk_CameraType _type;
         std::unique_ptr<I_Renderer> _renderer;
         Vk_Viewport _viewport;
+        Vk_RGBColor _clearColor;
+        float _clearAlpha;
  
-        const int _originalWidth;
-        const int _originalHeight;
-        const int _originalOffsetX;
-        const int _originalOffsetY;
+        // const int _originalWidth;
+        // const int _originalHeight;
+        // const int _originalOffsetX;
+        // const int _originalOffsetY;
 
-        int _currentParentWindowWidth;
-        int _currentParentWindowHeight;
+        // int _currentParentWindowWidth;
+        // int _currentParentWindowHeight;
  
         glm::tvec3<point_type> _wPos;
         glm::tvec3<point_type> _wLook;
@@ -314,8 +325,8 @@ namespace VK4 {
         float _aspect;
  
         UniformBufferType_RendererMat4 _pv;
-        int _xResizeRoundingIndicator;
-        int _yResizeRoundingIndicator;
+        // int _xResizeRoundingIndicator;
+        // int _yResizeRoundingIndicator;
 
         std::unique_ptr<I_ViewerSteering> _steering;
     };

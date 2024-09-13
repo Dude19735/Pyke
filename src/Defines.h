@@ -331,7 +331,6 @@ namespace VK4 {
 		int32_t y;
 		uint32_t width;
 		uint32_t height;
-		Vk_RGBColor clearColor;
 	};
 
 	enum class Vk_CameraType {
@@ -387,6 +386,8 @@ namespace VK4 {
 		int gridX;
 		int gridY;
 		Vk_Viewport viewport;
+		Vk_RGBColor clearColor;
+		float clearAlpha;
 		Vk_CameraSpecs specs;
 	};
 

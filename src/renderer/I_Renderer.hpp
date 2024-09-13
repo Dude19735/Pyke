@@ -8,6 +8,7 @@
 #include "../objects/Vk_Shader.hpp"
 #include "I_GraphicsPipeline.hpp"
 #include "I_GraphicsPipelineConfig.hpp"
+#include "Vk_RendererLib.hpp"
 
 namespace VK4 {
 
@@ -96,7 +97,10 @@ namespace VK4 {
 		/**
 		 * Before drawing a frame, we may have to update some things
 		 */
-		virtual void vk_update(const uint32_t imageIndex, const UniformBufferType_RendererMat4& mvp) = 0;
+		// virtual void vk_update(const uint32_t imageIndex, const UniformBufferType_RendererMat4& mvp) = 0;
+		virtual void vk_setClearValue(const Vk_RGBColor& color, float alpha) = 0;
+		virtual bool vk_waitFinish() = 0;
+		virtual bool vk_nextImage(const UniformBufferType_RendererMat4& mvp) = 0;
 
 		// /**
 		//  * A renderer needs a VkSurfaceKHR to render on. The base version of vk_assignSurface enforces
