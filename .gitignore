@@ -33,3 +33,4 @@
 
 /.vscode/*
 /build/*
+/test_py/__pycache__/*

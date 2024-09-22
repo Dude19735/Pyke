@@ -41,7 +41,17 @@ VSCode is a good 'works everywhere' platform. Thus the build process is describe
 ---
 ## Linux
 
-Install a C++ compiler first.
+Install a C++ compiler first. Best pick the newest versions.
+```bash
+sudo apt-get install gcc-14
+sudo apt-get install g++-14
+```
+
+#### X11/Wayland
+Currently only X11 is supporte (subject to change).
+```bash
+sudo apt-get install libx11-dev libxpm-dev libxft-dev libxext-dev mesa-common-dev
+```
 
 #### Download Visual Studio Code
 1. Goto https://visualstudio.microsoft.com/downloads/ (provided the link is still the same) and download and install the Linux version of VSCode.
@@ -68,7 +78,10 @@ $> source /home/lol/.venvs/standard/bin/activate
 ```
 * run *pip install pybind11* from a terminal inside that virtual environment
 
+**NOTE**: for Python 3.12
+
 ---
+
 ## Windows
 #### Download Visual Studio and Visual Studio Code
 1. Goto https://visualstudio.microsoft.com/downloads/ (provided the link is still the same, otherwise use a common internet search machine) and download the latest Visual Studio Community and Visual Studio Code versions. For Windows, installing Visual Studio is the least cumbersome method of installing a C++ compiler. Since you do the Windows build, you automatically have enough storage space on your disk. Also install VSCode because it's increasingly nicer to work with that one as opposed to Visual Studio unless you use C# or other exclusively Microsoft products.

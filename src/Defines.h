@@ -1,5 +1,5 @@
 #pragma once
-// #define PYVK
+#define PYVK
 // some generic way to distinguish operating systems
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
    //define something for Windows (32-bit and 64-bit, this part is common)
@@ -194,7 +194,7 @@ namespace VK4 {
 
         template<class T>
         static glm::tvec3<T> arrayToGLMv3(const py::array_t<T, py::array::c_style>& arr){
-            py::buffer_info info = arr.request();
+			py::buffer_info info = arr.request();
 			T* ptr = static_cast<T*>(info.ptr);
 			return glm::make_vec3(ptr);
         }
@@ -289,9 +289,13 @@ namespace VK4 {
 		)
 		: type(p_type), fow(p_fow), wNear(p_wNear), wFar(p_wFar), steeringType(p_steeringType)
 		{
+			std::cout << "hello world 1" << std::endl;
 			wPos = Vk_NumpyTransformers::arrayToGLMv3(p_wPos);
+			std::cout << "hello world 2" << std::endl;
 			wLook = Vk_NumpyTransformers::arrayToGLMv3(p_wLook);
+			std::cout << "hello world 3" << std::endl;
 			wUp = Vk_NumpyTransformers::arrayToGLMv3(p_wUp);
+			std::cout << "hello world 4" << std::endl;
 		}
 #endif
 	};

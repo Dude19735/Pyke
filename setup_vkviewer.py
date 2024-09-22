@@ -12,6 +12,7 @@
 #
 # Activate virtual environment:
 # $> source /home/lol/.venvs/standard/bin/activate
+venv_path = "/home/lol/.venvs/standard/"
 # If the setup is not run inside a user environment, it will complain about lacking permission at the
 # end of the setup
 #
@@ -24,6 +25,11 @@
 # Run installation
 # cd to where setup.py is located
 # $> clear && python3 setup.py build
+#
+# *** Ok, compiles and starts, but crashes
+#    * => instead of trying to figure out what is wrong, try nanobind first
+#    * => https://nanobind.readthedocs.io/en/latest/why.html
+#
 ############################################################################################################
 
 # Windows ##################################################################################################
@@ -108,7 +114,7 @@ class StubsWindows:
 class ConfigLinux:
     def __init__(self):
         cDir = os.getcwd()
-        self.install_path = "/usr/lib/python3.11"
+        self.install_path = "/usr/lib/python3.12"
         for p in sys.path:
             if p.find(".venvs/standard") >= 0:
                 self.install_path = p
@@ -120,13 +126,14 @@ class ConfigLinux:
         if sys_compile_args:
             self.extra_compile_args += sys_compile_args.split()
 
-        # self.extra_compile_args = ["-fsanitize=address"] + self.extra_compile_args + ["-std=gnu++20"]
-        self.extra_compile_args = self.extra_compile_args + ["-std=gnu++20"]
+        # self.extra_compile_args = ["-fsanitize=address"] + self.extra_compile_args + ["-std=gnu++23"]
+        self.extra_compile_args = self.extra_compile_args + ["-std=gnu++23"]
 
         self.include_dirs = [
             cDir,
             "/usr/include",
-            "/usr/include/python3.11"
+            "/usr/include/python3.12",
+            venv_path + "lib/python3.12/site-packages/pybind11/include"
         ]
         self.library_dirs = [
             "/usr/lib/x86_64-linux-gnu"
@@ -139,11 +146,12 @@ class ConfigLinux:
         #
         # In Linux all libraries are passed without 'lib' and '.so'
         # self.libraries = ["asan", "vulkan", "stdc++", "SM", "ICE", "X11", "Xext", "xcb"]
-        self.libraries = ["vulkan", "stdc++", "SM", "ICE", "X11", "Xext", "xcb"]
+        # self.libraries = ["vulkan", "stdc++", "SM", "ICE", "X11", "Xext", "xcb"]
+        self.libraries = ["vulkan", "stdc++", "X11", "Xext", "xcb"]
 
 class ConfigWindows:
     def __init__(self):
-        python = "C:/Python311/"
+        python = "C:/Python312/"
         cDir = os.getcwd()
         self.install_path = python + "Lib/site-packages"
 
@@ -181,9 +189,9 @@ version = sys.version.split(".")
 if version[0] != '3':
     print("Unsupported Python version: only {0}.XX supported", 3)
     exit(-1)
-if int(version[1]) > 11:
-    print("Python 3.12 not yet suported!")
-    exit(-1)
+# if int(version[1]) > 11:
+#     print("Python 3.12 not yet suported!")
+#     exit(-1)
 
 module_name = "pyke"
 script_path = os.path.split(os.path.realpath(__file__))[0]
@@ -205,10 +213,10 @@ else:
 
 # if not is_debug:
 #     # Release mode
-#     extra_compile_args += ["-rdynamic", "-std=gnu++20"]
+#     extra_compile_args += ["-rdynamic", "-std=gnu++23"]
 # else:
 #     # Debug mode
-#     extra_compile_args += ["-rdynamic", "-std=gnu++20"]
+#     extra_compile_args += ["-rdynamic", "-std=gnu++23"]
 
 build_run = "build" in sys.argv
 if build_run:
@@ -222,7 +230,7 @@ if build_run:
                 library_dirs=install_config.library_dirs,\
                 libraries=install_config.libraries,\
                 extra_compile_args=install_config.extra_compile_args,\
-                language='c++20',
+                language='c++23',
                 define_macros=[
                     ("PYVK", '1'), 
                     # ("_DEBUG", '1')
