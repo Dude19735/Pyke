@@ -1,6 +1,8 @@
 # Introduction
 This is a 3D viewer based on the Vulkan API with Python bindings. **Note:** this is very much a work in progress, so it may be a bit unstable because asynchronous programs are hard ^^. There will also be substantial changes in the future, potentially also in the structure of the files and folders. But the viewer in it's current state generally works.
 
+The Python bindings use Pybind. They work up to and including Python 3.11. Python 3.12++ doesn't work and no update is intended. There is a total remake in progress that will use Nanobind.
+
 The viewer should work on Linux and Windows and has custom windowing systems based on the Windows API and X11. It has never been tested on a Mac and will probably not work there out-of-the-box.
 
 <div style="text-align: center">
