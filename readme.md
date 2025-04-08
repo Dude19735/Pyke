@@ -84,7 +84,7 @@ $> source /home/lol/.venvs/standard/bin/activate
 ```
 * run *pip install pybind11* from a terminal inside that virtual environment
 
-**NOTE**: for Python 3.12
+**NOTE**: Python 3.12 with Pybind will crash!
 
 ---
 
