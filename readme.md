@@ -63,10 +63,14 @@ sudo apt-get install libx11-dev libxpm-dev libxft-dev libxext-dev mesa-common-de
 * Follow the instructions on https://vulkan.lunarg.com/doc/view/latest/linux/getting_started_ubuntu.html
 
 #### Download Boost
-* sudo apt-get install libboost-all-dev
+```bash
+sudo apt-get install libboost-all-dev
+```
 
 #### Download GLM
-* sudo apt-get install libglm-dev
+```bash
+sudo apt-get install libglm-dev
+```
 
 #### Download Pybind11
 * **Note:** this is only necessary to create the Python bindings. Make sure to also install the pybind-stub generator as outlined in the setup script.
