@@ -97,12 +97,24 @@ namespace VK4 {
 		bool vk_nextImage(const UniformBufferType_RendererMat4& mvp) {
 			auto lDev = _device->vk_lDev();
 
+			VkResult res = vkWaitForFences(lDev, 1, &_inFlightFences[_currentFrame], VK_TRUE, GLOBAL_FENCE_TIMEOUT);
+			if(res == VK_TIMEOUT){
+				Vk_Logger::RuntimeError(typeid(this), "drawFrame timeout for frame index [{0}]", currentFrame);
+				return;
+			}
+			else if (res != VK_SUCCESS) {
+				Vk_Logger::RuntimeError(typeid(this), "Waiting for fences had catastrphic result!");
+			}
+
 			/**
 			 * TODO: figure out if rebuild is necessary
 			 */
 			recordCommandBuffer(_currentFrame);
 
-			// acquire next image enqueue job
+			// Retrieve the index of the next available, presentable image from the swapchain
+			//  => get the index for where to render the next frame into
+			//  => needs to be protected by the current frame semaphore
+			//      => don't try to render the next image for the current frame if it's not finished yet
 			// NOTE: imageIndex != _currentFrame is possible => watch out for that!
 			uint32_t imageIndex;
 			VkResult result = vkAcquireNextImageKHR(
@@ -122,6 +134,8 @@ namespace VK4 {
 			// update the uniform buffer
 			_pv->vk_update(imageIndex, static_cast<const void*>(&mvp));
 
+			// reset the fence we waited for because we updated all the camera shaders with the
+			// potentially new view perspective => GPU can go on...
 			vkResetFences(lDev, 1, &_inFlightFences[_currentFrame]);
 
 			/**
@@ -130,15 +144,15 @@ namespace VK4 {
 			VkSubmitInfo submitInfo{};
 			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-			VkSemaphore waitSemaphores[] = { _imageAvailableSemaphores[currentFrame] };
+			VkSemaphore waitSemaphores[] = { _imageAvailableSemaphores[_currentFrame] };
 			VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 			submitInfo.waitSemaphoreCount = 1;
 			submitInfo.pWaitSemaphores = waitSemaphores;
 			submitInfo.pWaitDstStageMask = waitStages;
 			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &_commandBuffer[currentFrame];
+			submitInfo.pCommandBuffers = &_commandBuffer[_currentFrame];
 
-			VkSemaphore signalSemaphores[] = { _renderFinishedSemaphores[currentFrame] };
+			VkSemaphore signalSemaphores[] = { _renderFinishedSemaphores[_currentFrame] };
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = signalSemaphores;
 			

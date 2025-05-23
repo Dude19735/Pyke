@@ -646,7 +646,7 @@ namespace VK4 {
 			case VK_QUEUE_FLAG_BITS_MAX_ENUM: return "VK_QUEUE_FLAG_BITS_MAX_ENU";
 			default: return "UNKNOWN_VK_QUEUE";
 		}
-	};
+	}
 
 	static void Vk_CheckVkResult(const std::type_info& info, VkResult res, const std::string& msg){
 		if(res != VK_SUCCESS){
