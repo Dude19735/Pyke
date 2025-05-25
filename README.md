@@ -1,37 +1,41 @@
 # Introduction
-This is a 3D viewer based on the Vulkan API with Python bindings. **Note:** this is very much a work in progress, so it may be a bit unstable because asynchronous programs are hard ^^. There will also be substantial changes in the future, potentially also in the structure of the files and folders. But the viewer in it's current state generally works.
+This is a 3D viewer based on the Vulkan API with Python bindings.
 
-**Note**: The Python bindings use Pybind. They work up to and including Python 3.11. Python 3.12++ doesn't work and no update is intended. There is a total remake in progress that will use Nanobind.
+**Note:** This is a prototyle. It may be a bit unstable.
+**Note**: The Python bindings use Nanobind.
+**Note**: Tested up to Python 3.12.
+**Note**: MacOs is not supported.
 
 The viewer should work on Linux and Windows and has custom windowing systems based on the Windows API and X11. It has never been tested on a Mac and will probably not work there out-of-the-box.
 
 <div style="text-align: center">
    <img src="./png/screenshot.png" style="width: 70%;">
-   <figcaption></figcaption>
+   <figcaption>A 3x3 window with 9 times the same objects rendered by 9 different and independent cameras.</figcaption>
    <br>
 </div>
 
 # Intention
-The goal is to create a fully asynchronous viewer where data can be transfered between CPU and GPU and debug points can be set inside the program where the viewer is used to visualize things without blocking the rendering process. At the end, the viewer should allow someone to use for example numpy arrays to deal with 3D objects in Python and directly render them into a nice, representable scene using a slim and uncomplicated API.
+* data can be transfered between CPU and GPU without blocking
+* debug points in Python can be set anywhere in the script and examined without blocking the rendering process. The user can debug a Python script while examining the rendered objects without interruption
+* the GUI containing the cameras runs in a separate thread, managed by C++ (this is the main reason for the custom window implementations)
+* 3D objects can be transfered using Numpy arrays (in Python) or std::vector (in C++). No need for an external library (Thank You for the new Nanobind ndarray!!). Enable drawing with Numpy on a GPU accelerated surface.
+* computations can be performed inside of the main loop or inside of callback functions
+* callback functions have a parameter ```repeat``` that causes the callback function to run again. Note: this is not a recursive mechanism. ```repeat``` maps to a cpp lambda function that re-enqueues the current callback into the queue for an execution thread.
+* the API is slim and comprehensive
+* objects can be created separatedly and bound independently to one or multiple cameras as well as unbound and re-bound at runtime
+* all cameras can be moved separatly or synched
+* the rotation point of the cameras can be either an object (i.e a point in the 3D space) or the camera origin
 
-Currently points, lines and meshes are supported with corresponding update methods. There are not lights yet, but they will be added at some point. The format of the objects currently seperates vertices, colors and indices which is good to update only one of the three at any given time. Other combinations of data are technically already added but not supported yet.
-
-There is no mechanism to click on objects and get the 3D points underneath and there is no support for text labels yet.
-
-The viewer supports multiple viewports inside one single framebuffer with either object centric or viewing focused cameras. Objects can be attached and detached to individual viewports during runtime. Technically, everything relevant should be thread safe, but since it's a work in progress, you never know ^^.
-
-The viewer supports both registering callback functions and start-stop style usage as depicted below
-```Python
-   # start viewer outside of main thread
-   while(viewer.is_running()):
-      # do things here that may need debugging
-   # ...stop viewer
-```
-
-Python bindings can be created, but the script may have to be customized. There is no pip module yet. Check out setup_vkviewer.py. Instructions are included in the comments at the beginning of the script.
+# Shortcomings
+* the graphics are limited to dots, lines and surfaces (no lights, the original usecase was limited to geometry)
+* all cameras share the same frame buffer
+* there is one central bottleneck, albeit a short one
+* terminating a Python script that runs the viewer causes some Vulkan API problems because the sequence in how Python destroys objects is "difficult" to control
+* no mechanism for user interaction with the rendered 3D objects using the mouse pointer (only zoom, pan and rotation)
 
 # Examples
-Check out sample_viewer.cpp for an example on how the viewer works in C++ and test_py/test_viewer.py for a sample script on how the viewer works with the Python bindings.
+* **C++**: sample_viewer.cpp
+* **Python**: test_py/test_viewer.py
 
 # Installation
 1. Follow the instructions in *Build requirements* for your platform (Windows, Linux)
@@ -43,14 +47,14 @@ VSCode is a good 'works everywhere' platform. Thus the build process is describe
 ---
 ## Linux
 
-Install a C++ compiler first. Best pick the newest versions.
+Install a C++ compiler first. Maybe best not pick the very newest versions.
 ```bash
-sudo apt-get install gcc-14
-sudo apt-get install g++-14
+sudo apt-get install gcc-13
+sudo apt-get install g++-13
 ```
 
 #### X11/Wayland
-Currently only X11 is supporte (subject to change).
+Currently only X11 is supported by the Linux windowing system.
 ```bash
 sudo apt-get install libx11-dev libxpm-dev libxft-dev libxext-dev mesa-common-dev
 ```

@@ -261,7 +261,8 @@ class TestAp:
 
         self.on = False
 
-        # vk_run_thread starts the viewer and runs it inside a thread separate from the main thread
+        # vk_run_thread starts the viewer and runs it inside a thread separate from the main thread.
+        # Anywhere after this point, debug points will not interrupt the rendering process.
         self.cam.vk_run_thread()
         print("Started main thread")
 
@@ -282,6 +283,7 @@ class TestAp:
         self.cam.vk_rebuild_and_redraw()
         print("Rebuild viewer draw commands")
 
+        # This while loop is responsible for keeping the program from terminating early.
         while(self.cam.vk_running()):
             ####################################################################
             # This is the spot where processing code can be added. The viewer
