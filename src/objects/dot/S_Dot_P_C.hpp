@@ -58,7 +58,7 @@ namespace VK4 {
 		}
 
 		static std::shared_ptr<Vk_Dot<ObjectType_P_C>> create(
-			Vk_Device* const device,
+			Vk_Device* device,
 			std::string name,
 			const std::vector<point_type>& modelMatrix,
 			const std::vector<point_type>& p,

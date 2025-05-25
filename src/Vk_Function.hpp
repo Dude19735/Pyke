@@ -85,9 +85,10 @@ private:
 #else
     class Vk_PyFunc : public Vk_Func {
     public:
-        Vk_PyFunc(nb::callable func)
+        Vk_PyFunc(nb::object obj, nb::callable func)
         :
         _func(func),
+        _obj(obj),
         Vk_Func(sizeof(Vk_PyFunc) + sizeof(Vk_Func))
         {}
 
@@ -97,12 +98,16 @@ private:
 
     private:
         nb::callable _func;
+        nb::object _obj;
 
 		auto _call_F(std::function<void()> repeat) -> void
 		{
             nb::gil_scoped_acquire acquire;
-			_func(repeat);
-            nb::gil_scoped_release nogil;
+            try {
+                _func(_obj, nb::cpp_function(repeat));
+            } catch (const nb::python_error &e) {
+                Vk_Logger::Error(typeid(this), "[Python exception]: {0}", e.what());
+            }
 		}
     };
 #endif

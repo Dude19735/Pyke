@@ -25,6 +25,7 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/vector.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/array.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/set.h>
 #include <nanobind/stl/map.h>
@@ -36,103 +37,27 @@
 namespace nb = nanobind;
 using namespace VK4;
 
-class Vk_Casters {
+class LWWS_Converter {
 public:
-	// static const char* getTypeName(const nb::object& obj){
-	// 	std::cout << "fffffffffffffff 1" << std::endl;
-	// 	nb::handle typeObj = obj.type();
-	// 	std::cout << "fffffffffffffff 2" << std::endl;
-	// 	auto nn = typeObj.Name;
-	// 	std::cout << "fffffffffffffff 2.1" << std::endl;
-	// 	auto tt = nn.text;
-	// 	std::cout << "fffffffffffffff 2.2: " << tt << std::endl;
-	// 	auto tt2 = typeObj.attr("__name__");
-	// 	std::cout << "fffffffffffffff 2.3: " << tt << std::endl;
-	// 	std::cout << nb::str(tt2).c_str() << std::endl;
-	// 	std::cout << "fffffffffffffff 2.4: " << tt << std::endl;
-	// 	nb::str typeName = nb::str(tt2);
-	// 	std::cout << "fffffffffffffff 3" << std::endl;
-	// 	return typeName.c_str();
-	// }
-
-	// template<class T>
-	// static bool tryCast(nb::object obj, T& ret) {
-	// 	std::cout << "yyyyyyyyyyyy 1" << std::endl;
-	// 	auto incomming = getTypeName(obj);
-	// 	std::cout << "yyyyyyyyyyyy 2: " << incomming << std::endl;
-	// 	if (strcmp(incomming, "str") == 0 && typeid(T) != typeid(std::to_string(0))) return false;
-	// 	if (strcmp(incomming, "int") == 0 && typeid(T) != typeid(0)) return false;
-	// 	if (strcmp(incomming, "float") == 0 && typeid(T) != typeid(0.0f) && typeid(T) != typeid(0.0)) return false;
-	// 	if (strcmp(incomming, "pyvk._vkviewer.lwws_key") == 0 && typeid(T) != typeid(LWWS::LWWS_Key::Special::RandomKey)) return false; 
-	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_viewing_type") == 0 && typeid(T) != typeid(Vk_ViewingType)) return false;
-	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_camera_type") == 0 && typeid(T) != typeid(Vk_CameraType)) return false;
-	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_steering_type") == 0 && typeid(T) != typeid(Vk_SteeringType)) return false;
-	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_render_type") == 0 && typeid(T) != typeid(RenderType)) return false;
-	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_topology") == 0 && typeid(T) != typeid(Topology)) return false;
-	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_cull_mode") == 0 && typeid(T) != typeid(CullMode)) return false;
-	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_buffer_characteristics") == 0 && typeid(T) != typeid(Vk_BufferSizeBehaviour)) return false;
-	// 	std::cout << "yyyyyyyyyyyy 3" << std::endl;
-	// 	ret = nb::cast<T>(obj);
-	// 	std::cout << "yyyyyyyyyyyy 4" << std::endl;		
-	// 	return true;
-	// }
-
-	static int tryCastKey(nb::object key){
-		if(nb::isinstance<std::string>(key)){
-			std::string kk = nb::cast<std::string>(key);
-			std::cout << "std::string: Cast worked...: " << kk << std::endl;
-			char c = static_cast<char>(*kk.begin());
-			return LWWS::LWWS_Key::KeyToInt(c);
+	static bool lwwsStrKey2Int(const std::string& key, int& outKey){
+		char c = static_cast<char>(*key.begin());
+		int intKey = LWWS::LWWS_Key::KeyToInt(c);
+		if(intKey < 0) {
+			Vk_Logger::Error(typeid(NoneObj), "Unable to cast passed key");
+			return false;
 		}
-		else {
-			std::cout << "blablabla" << std::endl;
-			if(nb::isinstance<LWWS::LWWS_Key::Special>(key)){
-				std::cout << "Special key..." << std::endl;
-				LWWS::LWWS_Key::Special kk = nb::cast<LWWS::LWWS_Key::Special>(key);
-				int keyInt = LWWS::LWWS_Key::KeyToInt(kk);
-				std::cout << "Special: Cast worked...: " << LWWS::LWWS_Key::IntKey2String(keyInt) << std::endl;
-				return keyInt;
-			}
-			else{
-				std::cout << "No fit" << std::endl;
-				return -1;
-			}
-		}
-		// std::string kk;
-		// bool ok = nb::try_cast(key, kk);
-		// if(ok){
-		// 	std::cout << "Special: Cast worked...: " << kk << std::endl;
-		// 	char c = static_cast<char>(*kk.begin());
-		// 	return LWWS::LWWS_Key::KeyToInt(c);
-		// }
+		outKey = intKey;
+		return True;
+	}
 
-		// // LWWS::LWWS_Key::Special sk;
-		// // ok = nb::try_cast<LWWS::LWWS_Key::Special>(key, sk, True);
-		// // auto t = nb::cast<LWWS::LWWS_Key::Special>(key, True);
-		// int ik;
-		// ok = nb::try_cast(key, ik);
-		// if(ok){
-		// 	int keyInt = LWWS::LWWS_Key::IntToKeyInt(ik);
-		// 	std::cout << "Special: Cast worked...: " << LWWS::LWWS_Key::IntKey2String(keyInt) << std::endl;
-		// 	return LWWS::LWWS_Key::IntToKeyInt(ik);
-		// }
-		
-		// std::cout << "bla 1" << std::endl;
-		// if(tryCast(key, kk)){
-		// 	std::cout << "bla 2" << std::endl;
-		// 	char c = static_cast<char>(*kk.begin());
-		// 	std::cout << "bla 3" << std::endl;
-		// 	return LWWS::LWWS_Key::KeyToInt(c);
-		// }
-		// std::cout << "bla 4" << std::endl;
-		// LWWS::LWWS_Key::Special sk;
-		// if(tryCast(key, sk)){
-		// 	std::cout << "bla 5" << std::endl;
-		// 	std::cout << "hello world 3.5 " << LWWS::LWWS_Key::SpecialKey2String(sk) << std::endl;
-		// 	return LWWS::LWWS_Key::KeyToInt(sk);
-		// }
-		// std::cout << "bla 6" << std::endl;
-		return -1;
+	static bool lwwsSpecialKey2Int(const LWWS::LWWS_Key::Special& key, int& outKey){
+		int intKey = LWWS::LWWS_Key::KeyToInt(key);
+		if(intKey < 0) {
+			Vk_Logger::Error(typeid(NoneObj), "Unable to cast passed key");
+			return false;
+		}
+		outKey = intKey;
+		return True;
 	}
 };
 
@@ -148,21 +73,6 @@ public:
 
 	template<class T>
 	static T* structArrayToCpp(const nb::ndarray<const point_type, nb::ndim<2>, nb::c_contig, nb::device::cpu>& inData, size_t& outLen){
-		// NOTE: this way of passing numpy data is absolutely not copying anything
-		// For example, the following code
-		// 		std::cout << glm::to_string(p[0].pos) << std::endl;
-		//		p[0].pos.x = 5.5f;
-		// 		std::cout << glm::to_string(p[0].pos) << std::endl;
-		// will output 5.5 as the x-component of the first entry
-		// If we then output the first entry of the numpy array on the python side,
-		// we get the same thing
-
-		// using 
-		// 		py::array_t<VK4::point_type, py::array::c_style>& points
-		// or
-		// 		py::array_t<VK4::point_type, py::array::c_style> points
-		// doesn't make any difference, so use the reference type for now
-		
 		int innerDimensionLen = T::innerDimensionLen();
 		size_t size = inData.size();
 		if(size % innerDimensionLen != 0){
@@ -172,7 +82,7 @@ public:
 		return reinterpret_cast<T*>(inData.data());
 	}
 
-	static const index_type* indexArrayToCpp(const nb::ndarray<const index_type, nb::c_contig>& inData, size_t& outLen){
+	static const index_type* indexArrayToCpp(const nb::ndarray<const index_type, nb::c_contig, nb::device::cpu>& inData, size_t& outLen){
 		return reinterpret_cast<const index_type*>(inData.data());
 	}
 };
@@ -180,7 +90,7 @@ public:
 NB_MODULE(_pyke, m) {
 	m.doc() = "Vulkan Viewer for Numpy"; // optional module docstring
 
-	nb::enum_<LWWS::LWWS_Key::Special>(m, "lwws_key")
+	nb::enum_<LWWS::LWWS_Key::Special>(m, "lwws_key", nb::is_flag())
 		.value("RandomKey", LWWS::LWWS_Key::Special::RandomKey)
 		.value("Sleep", LWWS::LWWS_Key::Special::Sleep)  
 		.value("F1", LWWS::LWWS_Key::Special::F1) 
@@ -224,44 +134,44 @@ NB_MODULE(_pyke, m) {
 		.value("Oem_8", LWWS::LWWS_Key::Special::Oem_8) // $ (CH), between L/P/0 and Backspace/Enter
 		.value("IntentionalSkip", LWWS::LWWS_Key::Special::IntentionalSkip); // this is just some placeholder to skip certain stuff
 
-	nb::enum_<Vk_DevicePreference>(m, "vk_device_preferences")
+	nb::enum_<Vk_DevicePreference>(m, "vk_device_preferences", nb::is_flag())
 		.value("use_any_gpu", Vk_DevicePreference::USE_ANY_GPU)
 		.value("use_integrated_gpu", Vk_DevicePreference::USE_INTEGRATED_GPU)
 		.value("use_discrete_gpu", Vk_DevicePreference::USE_DISCRETE_GPU);
 
-	nb::enum_<Vk_ViewingType>(m, "vk_viewing_type")
+	nb::enum_<Vk_ViewingType>(m, "vk_viewing_type", nb::is_flag())
 		.value("local", Vk_ViewingType::LOCAL)
 		.value("all", Vk_ViewingType::GLOBAL);
 
-	nb::enum_<Vk_CameraType>(m, "vk_camera_type")
+	nb::enum_<Vk_CameraType>(m, "vk_camera_type", nb::is_flag())
 		.value("Rasterizer_IM", Vk_CameraType::Rasterizer_IM);
 
-	nb::enum_<Vk_SteeringType>(m, "vk_steering_type")
+	nb::enum_<Vk_SteeringType>(m, "vk_steering_type", nb::is_flag())
 		.value("camera_centric", Vk_SteeringType::CAMERA_CENTRIC)
 		.value("object_centric", Vk_SteeringType::OBJECT_CENTRIC);
 
-	nb::enum_<RenderType>(m, "vk_render_type")
+	nb::enum_<RenderType>(m, "vk_render_type", nb::is_flag())
 		.value("solid", RenderType::Solid)
 		.value("wireframe", RenderType::Wireframe)
 		.value("point", RenderType::Point);
 
-	nb::enum_<Topology>(m, "vk_topology")
+	nb::enum_<Topology>(m, "vk_topology", nb::is_flag())
 		.value("points", Topology::Points)
 		.value("lines", Topology::Lines)
 		.value("triangles", Topology::Triangles);
 
-	nb::enum_<CullMode>(m, "vk_cull_mode")
+	nb::enum_<CullMode>(m, "vk_cull_mode", nb::is_flag())
 		.value("none", CullMode::NoCulling)
 		.value("back", CullMode::Back)
 		.value("front", CullMode::Front);
 
-	nb::enum_<Vk_BufferUpdateBehaviour>(m, "vk_buffer_update_behaviour")
+	nb::enum_<Vk_BufferUpdateBehaviour>(m, "vk_buffer_update_behaviour", nb::is_flag())
 		.value("global_lock", Vk_BufferUpdateBehaviour::GlobalLock)		 
 		.value("double_buffering", Vk_BufferUpdateBehaviour::DoubleBuffering)
 		.value("lazy_double_buffering", Vk_BufferUpdateBehaviour::LazyDoubleBuffering)
 		.value("pinned", Vk_BufferUpdateBehaviour::Pinned);
 
-	nb::enum_<Vk_BufferSizeBehaviour>(m, "vk_buffer_characteristics")
+	nb::enum_<Vk_BufferSizeBehaviour>(m, "vk_buffer_size_behaviour", nb::is_flag())
 		.value("init_empty_grow_1_5", Vk_BufferSizeBehaviour::Init_Empty_Grow_1_5)
 		.value("init_empty_grow_2", Vk_BufferSizeBehaviour::Init_Empty_Grow_2)
 		.value("init_1_0_grow_1_5", Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5)
@@ -365,12 +275,12 @@ NB_MODULE(_pyke, m) {
 
 	nb::class_<Vk_CameraCoords>(m, "vk_camera_coords")
 		.def(nb::init())
-		.def_rw("w_pos", &Vk_CameraCoords::wPos, nb::rv_policy::reference_internal, nb::call_guard<nb::gil_scoped_release>())
-		.def_rw("w_look", &Vk_CameraCoords::wLook, nb::rv_policy::reference_internal, nb::call_guard<nb::gil_scoped_release>())
-		.def_rw("w_up", &Vk_CameraCoords::wUp, nb::rv_policy::reference_internal, nb::call_guard<nb::gil_scoped_release>())
-		.def_rw("x_axis", &Vk_CameraCoords::xAxis, nb::rv_policy::reference_internal, nb::call_guard<nb::gil_scoped_release>())
-		.def_rw("y_axis", &Vk_CameraCoords::yAxis, nb::rv_policy::reference_internal, nb::call_guard<nb::gil_scoped_release>())
-		.def_rw("z_axis", &Vk_CameraCoords::zAxis, nb::rv_policy::reference_internal, nb::call_guard<nb::gil_scoped_release>());
+		.def_rw("w_pos", &Vk_CameraCoords::wPos, nb::rv_policy::copy, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("w_look", &Vk_CameraCoords::wLook, nb::rv_policy::copy, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("w_up", &Vk_CameraCoords::wUp, nb::rv_policy::copy, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("x_axis", &Vk_CameraCoords::xAxis, nb::rv_policy::copy, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("y_axis", &Vk_CameraCoords::yAxis, nb::rv_policy::copy, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("z_axis", &Vk_CameraCoords::zAxis, nb::rv_policy::copy, nb::call_guard<nb::gil_scoped_release>());
 
 	nb::class_<Vk_CameraInit>(m, "vk_camera_init")
 		.def("__init__", [](
@@ -404,19 +314,25 @@ NB_MODULE(_pyke, m) {
 		.def_rw("bottom", &Vk_ViewportMargins::bottom);
 
     nb::class_<Vk_ViewerParams>(m, "vk_viewer_params")
-		.def("__init__", [](
-			Vk_ViewerParams& self,
-			std::string name, int width, int height, 
-			const Vk_ViewingType& viewingType, 
-			int freshPoolSize, std::string screenshotSavePath){
-				self = Vk_ViewerParams(name, width, height, viewingType, freshPoolSize, screenshotSavePath);
-			},
+		.def(nb::new_([](
+			const std::string& name, int width, int height, 
+			Vk_ViewingType viewingType, 
+			int freshPoolSize, 
+			const std::string& screenshotSavePath){
+				return std::make_shared<Vk_ViewerParams>(Vk_ViewerParams{
+					.name=name, 
+					.width=width, 
+					.height=height, 
+					.freshPoolSize=freshPoolSize, 
+					.viewingType=viewingType, 
+					.screenshotSavePath=screenshotSavePath
+				});
+			}),
 			nb::arg("name"),
 			nb::arg("width"), nb::arg("height"), 
 			nb::arg("viewing_type"), 
 			nb::arg("fresh_pool_size")=100,
 			nb::arg("screenshot_save_path")="./",
-			nb::rv_policy::reference_internal,
 			nb::call_guard<nb::gil_scoped_release>())
 		.def_rw("width", &Vk_ViewerParams::width)
 		.def_rw("height", &Vk_ViewerParams::height)
@@ -463,10 +379,10 @@ NB_MODULE(_pyke, m) {
 		.def(nb::new_([](
 				std::shared_ptr<Vk_Device> device,
 				std::string name,
-				const nb::ndarray<const point_type, nb::c_contig>& modelMatrix,
-				const nb::ndarray<const point_type, nb::c_contig>& points,
-				const nb::ndarray<const point_type, nb::c_contig>& colors,
-				const nb::ndarray<const index_type, nb::c_contig>& indices,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& modelMatrix,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& points,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& colors,
+				const nb::ndarray<const index_type, nb::c_contig, nb::device::cpu>& indices,
 				float pointSize,
 				float alpha,
 				// Topology topology = VK4::Topology::Points,
@@ -500,7 +416,7 @@ NB_MODULE(_pyke, m) {
 		.def("vk_update_points", 
 			 [](
 				std::shared_ptr<Vk_Dot<ObjectType_P_C>> self,
-				const nb::ndarray<const point_type, nb::c_contig>& points,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& points,
 				size_t new_from
 			 ){
 				self->vk_updatePoints(std::span<const point_type>(reinterpret_cast<const point_type*>(points.data()), points.size()), new_from);
@@ -510,7 +426,7 @@ NB_MODULE(_pyke, m) {
 		.def("vk_update_colors", 
 			 [](
 				std::shared_ptr<Vk_Dot<ObjectType_P_C>> self,
-				const nb::ndarray<const point_type, nb::c_contig>& colors,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& colors,
 				size_t new_from
 			 ){
 				self->vk_updateColors(std::span<const point_type>(reinterpret_cast<const point_type*>(colors.data()), colors.size()), new_from);
@@ -520,7 +436,7 @@ NB_MODULE(_pyke, m) {
 		.def("vk_update_indices", 
 			 [](
 				std::shared_ptr<Vk_Dot<ObjectType_P_C>> self,
-				const nb::ndarray<const index_type, nb::c_contig>& indices,
+				const nb::ndarray<const index_type, nb::c_contig, nb::device::cpu>& indices,
 				size_t new_from
 			 ){
 				self->vk_updateIndices(std::span<const index_type>(reinterpret_cast<const index_type*>(indices.data()), indices.size()), new_from);
@@ -540,10 +456,10 @@ NB_MODULE(_pyke, m) {
 		.def(nb::new_([](
 				std::shared_ptr<Vk_Device> device,
 				std::string name,
-				const nb::ndarray<const point_type, nb::c_contig>& modelMatrix,
-				const nb::ndarray<const point_type, nb::c_contig>& points,
-				const nb::ndarray<const point_type, nb::c_contig>& colors,
-				const nb::ndarray<const index_type, nb::c_contig>& indices,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& modelMatrix,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& points,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& colors,
+				const nb::ndarray<const index_type, nb::c_contig, nb::device::cpu>& indices,
 				float lineWidth,
 				float alpha,
 				// Topology topology = VK4::Topology::Points,
@@ -577,7 +493,7 @@ NB_MODULE(_pyke, m) {
 		.def("vk_update_points", 
 			[](
 				std::shared_ptr<Vk_Line<ObjectType_P_C>> self,
-				const nb::ndarray<const point_type, nb::c_contig>& points,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& points,
 				size_t new_from
 			){
 				self->vk_updatePoints(std::span<const point_type>(reinterpret_cast<const point_type*>(points.data()), points.size()), new_from);
@@ -587,7 +503,7 @@ NB_MODULE(_pyke, m) {
 		.def("vk_update_colors", 
 			[](
 				std::shared_ptr<Vk_Line<ObjectType_P_C>> self,
-				const nb::ndarray<const point_type, nb::c_contig>& colors,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& colors,
 				size_t new_from
 			){
 				self->vk_updateColors(std::span<const point_type>(reinterpret_cast<const point_type*>(colors.data()), colors.size()), new_from);
@@ -597,7 +513,7 @@ NB_MODULE(_pyke, m) {
 		.def("vk_update_indices", 
 			[](
 				std::shared_ptr<Vk_Line<ObjectType_P_C>> self,
-				const nb::ndarray<const index_type, nb::c_contig>& indices,
+				const nb::ndarray<const index_type, nb::c_contig, nb::device::cpu>& indices,
 				size_t new_from
 			){
 				self->vk_updateIndices(std::span<const index_type>(reinterpret_cast<const index_type*>(indices.data()), indices.size()), new_from);
@@ -617,10 +533,10 @@ NB_MODULE(_pyke, m) {
 		.def(nb::new_([](
 				std::shared_ptr<Vk_Device> device,
 				std::string name,
-				const nb::ndarray<const point_type, nb::c_contig>& modelMatrix,
-				const nb::ndarray<const point_type, nb::c_contig>& points,
-				const nb::ndarray<const point_type, nb::c_contig>& colors,
-				const nb::ndarray<const index_type, nb::c_contig>& indices,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& modelMatrix,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& points,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& colors,
+				const nb::ndarray<const index_type, nb::c_contig, nb::device::cpu>& indices,
 				// Topology topology = VK4::Topology::Points,
 				float alpha=1.0f,
 				CullMode cullMode = VK4::CullMode::Back,
@@ -661,7 +577,7 @@ NB_MODULE(_pyke, m) {
 		.def("vk_update_points", 
 			[](
 				std::shared_ptr<Vk_Mesh<ObjectType_P_C>> self,
-				const nb::ndarray<const point_type, nb::c_contig>& points,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& points,
 				size_t new_from
 			){
 				self->vk_updatePoints(std::span<const point_type>(reinterpret_cast<const point_type*>(points.data()), points.size()), new_from);
@@ -671,7 +587,7 @@ NB_MODULE(_pyke, m) {
 		.def("vk_update_colors", 
 			[](
 				std::shared_ptr<Vk_Mesh<ObjectType_P_C>> self,
-				const nb::ndarray<const point_type, nb::c_contig>& colors,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& colors,
 				size_t new_from
 			){
 				self->vk_updateColors(std::span<const point_type>(reinterpret_cast<const point_type*>(colors.data()), colors.size()), new_from);
@@ -681,7 +597,7 @@ NB_MODULE(_pyke, m) {
 		.def("vk_update_indices", 
 			[](
 				std::shared_ptr<Vk_Mesh<ObjectType_P_C>> self,
-				const nb::ndarray<const index_type, nb::c_contig>& indices,
+				const nb::ndarray<const index_type, nb::c_contig, nb::device::cpu>& indices,
 				size_t new_from
 			){
 				self->vk_updateIndices(std::span<const index_type>(reinterpret_cast<const index_type*>(indices.data()), indices.size()), new_from);
@@ -754,45 +670,72 @@ NB_MODULE(_pyke, m) {
 			 "Run camera loop",
 			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_register_action",
-			 [](std::shared_ptr<Vk_Viewer> self, nb::object key, nb::callable f, int cameraId=-1){
-				std::cout << "hello 1" << std::endl;
+			 [](std::shared_ptr<Vk_Viewer> self, nb::object obj, const std::string& key, nb::callable f, int cameraId=-1){
 				if(cameraId >= 0){
 					Vk_Logger::RuntimeError(typeid(self), "Per camera localized actions not supported yet!");
 					return false;
 				}
-				std::cout << "hello 2" << std::endl;
-				int intKey = Vk_Casters::tryCastKey(key);
-				if(intKey < 0) {
-					Vk_Logger::Error(typeid(self), "Unable to cast passed key");
-					return false;
-				}
-				// auto pyFunc = Vk_PyFunc(f);
-				// return self->vk_registerAction(intKey, &pyFunc, cameraId);
+				int intKey;
+				if(!LWWS_Converter::lwwsStrKey2Int(key, intKey)) return false;
+				auto pyFunc = Vk_PyFunc(obj, f);
+				return self->vk_registerAction(intKey, &pyFunc, cameraId);
 				return true;
 			 },
-			 nb::arg("key"), nb::arg("f"), nb::arg("camera_id")=-1,
+			 nb::arg("obj"), nb::arg("key"), nb::arg("f"), nb::arg("camera_id")=-1,
 			 "Register action f to all cameras (Note: per-camera actions not yet supported)",
 			 nb::call_guard<nb::gil_scoped_release>())
-		.def("vk_unregister_action",
-			 [](std::shared_ptr<Vk_Viewer> self, nb::object key){
-				int intKey = Vk_Casters::tryCastKey(key);
-				if(intKey < 0) {
-					Vk_Logger::Error(typeid(self), "Unable to cast passed key");
+		.def("vk_register_action",
+			[](std::shared_ptr<Vk_Viewer> self, nb::object obj, const LWWS::LWWS_Key::Special& key, nb::callable f, int cameraId=-1){
+				if(cameraId >= 0){
+					Vk_Logger::RuntimeError(typeid(self), "Per camera localized actions not supported yet!");
 					return false;
 				}
+				int intKey;
+				if(!LWWS_Converter::lwwsSpecialKey2Int(key, intKey)) return false;
+				auto pyFunc = Vk_PyFunc(obj, f);
+				return self->vk_registerAction(intKey, &pyFunc, cameraId);
+				return true;
+			},
+			nb::arg("obj"), nb::arg("key"), nb::arg("f"), nb::arg("camera_id")=-1,
+			"Register action f to all cameras (Note: per-camera actions not yet supported)",
+			nb::call_guard<nb::gil_scoped_release>())
+		.def("vk_unregister_action",
+			 [](std::shared_ptr<Vk_Viewer> self, const std::string& key){
+				char c = static_cast<char>(*key.begin());
+				int intKey;
+				if(!LWWS_Converter::lwwsStrKey2Int(key, intKey)) return false;
 				return self->vk_unregisterAction(intKey);
 			 },
 			 nb::arg("key"),
 			 "Unregister action bound to key",
 			 nb::call_guard<nb::gil_scoped_release>())
+		.def("vk_unregister_action",
+			[](std::shared_ptr<Vk_Viewer> self, const LWWS::LWWS_Key::Special& key){
+				int intKey;
+				if(!LWWS_Converter::lwwsSpecialKey2Int(key, intKey)) return false;
+				return self->vk_unregisterAction(intKey);
+			},
+			nb::arg("key"),
+			"Unregister action bound to key",
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_exec_action",
-			 [](std::shared_ptr<Vk_Viewer> self, nb::object key){
-				int intKey = Vk_Casters::tryCastKey(key);
+			 [](std::shared_ptr<Vk_Viewer> self, const std::string& key){
+				int intKey;
+				if(!LWWS_Converter::lwwsStrKey2Int(key, intKey)) return;
 				return self->vk_execAction(intKey);
 			 },
 			 nb::arg("key"),
 			 "Run action associated with the <key>. This is equivalent to pressing the associated <key> button.",
 			 nb::call_guard<nb::gil_scoped_release>())
+		.def("vk_exec_action",
+			[](std::shared_ptr<Vk_Viewer> self, const LWWS::LWWS_Key::Special& key){
+				int intKey;
+				if(!LWWS_Converter::lwwsSpecialKey2Int(key, intKey)) return;
+				return self->vk_execAction(intKey);
+			},
+			nb::arg("key"),
+			"Run action associated with the <key>. This is equivalent to pressing the associated <key> button.",
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_camera_coords",
 			 &Vk_Viewer::vk_cameraCoords,
 			 nb::rv_policy::move,
@@ -840,9 +783,3 @@ NB_MODULE(_pyke, m) {
 			 nb::arg("x"), nb::arg("y"), nb::arg("pack"), nb::arg("override")=false,
 			 nb::call_guard<nb::gil_scoped_release>());
 }
-// #else
-// #include <iostream>
-// int main(int argc, char** argv) {
-// 	std::cout << "Pybind11 not available" << std::endl;
-// }
-// #endif

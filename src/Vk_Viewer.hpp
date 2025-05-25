@@ -20,10 +20,6 @@
 #include "./camera/Vk_ViewerSteering_CameraCentric.hpp"
 #include "./camera/Vk_ViewerSteering_ObjectCentric.hpp"
 
-// #ifdef PYVK
-// 	namespace py = pybind11;
-// #endif
-
 namespace VK4 {
 	std::ofstream vk_jpegFile;
 
@@ -87,14 +83,7 @@ namespace VK4 {
 			
 			Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create Viewer"));
 
-			_threadPool.start(
-// #ifdef PYVK
-// 				1, // no use for more on python XD
-// #else
-				1, // until a proper mechanism can be defined, one thread is enough. It can start other threads if it likes... std::thread::hardware_concurrency(), 
-// #endif
-				this
-			);
+			_threadPool.start(1, this);
 		}
 
 		~Vk_Viewer() {
@@ -356,54 +345,6 @@ namespace VK4 {
 			return _cameras.at(camId).get();
 		}
 
-// #ifdef PYVK
-// 		bool vk_register_action(py::object key, py::function f, int cameraId=-1){
-// 			if(cameraId >= 0){
-// 				Vk_Logger::RuntimeError(typeid(this), "Per camera localized actions not supported yet!");
-// 				return false;
-// 			}
-
-// 			int intKey = tryCastKey(key);
-// 			if(intKey < 0) {
-// 				Vk_Logger::Error(typeid(this), "Unable to cast passed key");
-// 				return false;
-// 			}
-
-// 			if(_actions.find(intKey) != _actions.end()){
-// 				Vk_Logger::Error(typeid(this), "Key is already registered");
-// 				return false;
-// 			}
-// 			_actions.insert({intKey, f});
-// 			return true;
-// 		}
-
-// 		bool vk_unregister_action(py::object key){
-// 			int intKey = tryCastKey(key);
-// 			if(intKey < 0) {
-// 				Vk_Logger::Error(typeid(this), "Unable to cast passed key");
-// 				return false;
-// 			}
-
-// 			if(_actions.find(intKey) == _actions.end()){
-// 				Vk_Logger::Error(typeid(this), "Key is not registered");
-// 				return false;
-// 			}
-
-// 			_actions.erase(intKey);
-// 			return true;
-// 		}
-
-// 		bool vk_exec_action(py::object key){
-// 			int intKey = tryCastKey(key);
-// 			if(_actions.find(intKey) == _actions.end()){
-// 				Vk_Logger::Error(typeid(this), "Key is not registered");
-// 				return false;
-// 			}
-
-// 			vk_execAction(intKey);
-// 			return true;
-// 		}
-// #endif
 		template<class ObjType>
 		bool vk_registerAction(LWWS::LWWS_Key::Special key, ObjType* obj, t_func<ObjType> f, int cameraId=-1){
 			return vk_registerAction(LWWS::LWWS_Key::KeyToInt(key), obj, f, cameraId);
@@ -479,11 +420,7 @@ namespace VK4 {
 
 		void vk_execAction(int key){
 			if(_actions.find(key) != _actions.end()){
-// #ifdef PYVK
-// 				_threadPool.enqueueJob(&_actions.at(key), std::bind(&Vk_Viewer::_redraw, this));
-// #else
 				_threadPool.enqueueJob(_actions.at(key), std::bind(&Vk_Viewer::_redraw, this));
-// #endif
 			}
 		}
 
@@ -1032,6 +969,7 @@ namespace VK4 {
 		void _onKey(int k, LWWS::ButtonOp op, const std::set<int>& otherPressedKeys, void* aptr){
 			int lctrl = LWWS::LWWS_Key::KeyToInt(LWWS::LWWS_Key::Special::LControl);
 			int rctrl = LWWS::LWWS_Key::KeyToInt(LWWS::LWWS_Key::Special::RControl);
+
 			if (op == LWWS::ButtonOp::Down) {
 				// int lshift = LWWS::LWWS_Key::KeyToInt(LWWS::LWWS_Key::Special::LShift);
 				// int rshift = LWWS::LWWS_Key::KeyToInt(LWWS::LWWS_Key::Special::RShift);
@@ -1039,7 +977,6 @@ namespace VK4 {
 				bool ctrlPressed = otherPressedKeys.contains(lctrl) || otherPressedKeys.contains(rctrl);
 				int sKey = LWWS::LWWS_Key::KeyToInt('s');
 				bool sPressed = otherPressedKeys.contains(sKey);
-
 				if (ctrlPressed && sPressed) {
 					long long timestamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
 					std::string filename = std::string("screenshot_") + std::to_string(timestamp) + std::string(".jpeg");

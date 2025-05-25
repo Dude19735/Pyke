@@ -331,10 +331,7 @@ namespace VK4 {
 		int freshPoolSize;
 		Vk_ViewingType viewingType;
 		std::string screenshotSavePath;
-
-		Vk_ViewerParams(std::string name, int width, int height, Vk_ViewingType viewingType, int freshPoolSize, std::string screenshotSavePath) 
-		: name(name), width(width), height(height), freshPoolSize(freshPoolSize), viewingType(viewingType), screenshotSavePath(screenshotSavePath)
-		{}
+#ifndef PYVK
 		Vk_ViewerParams(std::string name, int width, int height) 
 		: name(name), width(width), height(height), freshPoolSize(100), viewingType(Vk_ViewingType::GLOBAL), screenshotSavePath("./")
 		{}
@@ -358,7 +355,7 @@ namespace VK4 {
 		Vk_ViewerParams(std::string name, int width, int height, Vk_ViewingType viewingType, std::string screenshotSavePath) 
 		: name(name), width(width), height(height), freshPoolSize(100), viewingType(viewingType), screenshotSavePath(screenshotSavePath)
 		{}
-// #endif
+ #endif
 	};
 
 	enum class Vk_BufferUpdateBehaviour {
