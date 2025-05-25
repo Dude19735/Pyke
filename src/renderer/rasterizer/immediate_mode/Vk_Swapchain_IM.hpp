@@ -189,7 +189,7 @@ namespace VK4 {
 			int width = static_cast<int>(extent2d.width);
 			int height = static_cast<int>(extent2d.height);
 
-			_device->vk_submitWork(_copyCmd[index]);
+			_device->vk_submitWork(_copyCmd[index], CommandCapabilities::RuntimeCopy);
 
 			VkDeviceSize size = static_cast<VkDeviceSize>(width * height * sizeof(uint8_t) * 4);
 			_device->vk_copyDeviceBufferToVector(_color1.data(), _dstColor1BufferMemory, size);

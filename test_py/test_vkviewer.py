@@ -156,7 +156,7 @@ class TestAp:
         print("Added all cameras to viewer")
 
         # register some actions
-        self.cam.vk_register_action(self, pyke.lwws_key.LControl, cam_specs)
+        self.cam.vk_register_action(self, pyke.lwws_key.RControl, cam_specs)
         self.cam.vk_register_action(self, "r", rotate)
         self.cam.vk_register_action(self, "o", onoff)
         self.cam.vk_register_action(self, "s", scale)

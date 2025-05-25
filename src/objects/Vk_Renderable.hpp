@@ -119,6 +119,11 @@ namespace VK4 {
 //                       █     █ █       █     █ █     █    █    █       █    █  █     █                       
 //                        █████  █       ██████  █     █    █    ███████ █     █  █████                        
 // ############################################################################################################
+		void vk_updateModelMatrix(const std::span<const point_type>& modelMatrix) { 
+			glm::tmat4x4<point_type> glmModelMatrix = glm::make_mat4x4(modelMatrix.data());
+			vk_updateModelMatrix(glmModelMatrix);
+		}
+
 		void vk_updateModelMatrix(const glm::tmat4x4<point_type>& modelMatrix) { 
 			_modelMatrix.mat = modelMatrix;
 

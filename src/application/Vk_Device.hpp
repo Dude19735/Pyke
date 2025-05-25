@@ -16,11 +16,6 @@
 namespace VK4 {
 	class  Vk_Device {
 	public:
-		enum class CommandCapabilities {
-			Render,
-			RuntimeCopy,
-			Initialization
-		};
 
 		Vk_Device(std::string deviceName, Vk_DevicePreference devicePreference = Vk_DevicePreference::USE_ANY_GPU)
 			:
@@ -251,9 +246,10 @@ namespace VK4 {
 			return _activePhysicalDevice->maxUsableSampleCount;
 		}
 
-		void vk_submitWork(VkCommandBuffer cmdBuffer) {
+		void vk_submitWork(VkCommandBuffer cmdBuffer, CommandCapabilities commandCapabilities) {
 			auto lock = AcquireGlobalLock("vk_device[vk_submitWork]");
-			Vk_DeviceLib::submitWork(_device, cmdBuffer, _graphicsQueues[0]);
+			
+			Vk_DeviceLib::submitWork(_device, cmdBuffer, selectQueue(commandCapabilities));
 		}
 
 		void vk_copyDeviceBufferToVector(void* dstPtr, VkDeviceMemory deviceBufferMemory, VkDeviceSize size) {

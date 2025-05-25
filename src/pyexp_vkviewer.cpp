@@ -363,10 +363,15 @@ NB_MODULE(_pyke, m) {
 			 &Vk_Renderable::vk_isAttachedTo,
 			 nb::arg("cam_id"),
 			 nb::call_guard<nb::gil_scoped_release>())
-		.def("vk_update_model_matrix",
-			 &Vk_Renderable::vk_updateModelMatrix,
-			 nb::arg("model_matrix"),
-			 nb::call_guard<nb::gil_scoped_release>());
+		.def("vk_update_model_matrix", 
+			[](
+				std::shared_ptr<Vk_Dot<ObjectType_P_C>> self,
+				const nb::ndarray<const point_type, nb::c_contig, nb::device::cpu>& model_matrix
+			){
+				self->vk_updateModelMatrix(std::span<const point_type>(reinterpret_cast<const point_type*>(model_matrix.data()), model_matrix.size()));
+			}, 
+			nb::arg("model_matrix"),
+			nb::call_guard<nb::gil_scoped_release>());
 
 	nb::class_<I_Object<ObjectType_P_C>, Vk_Renderable>(m, "i_object_p_c")
 		.def(nb::init(),

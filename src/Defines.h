@@ -173,6 +173,12 @@ namespace VK4 {
 		}
 	};
 
+	enum class CommandCapabilities {
+		Render,
+		RuntimeCopy,
+		Initialization
+	};
+
 	struct Vk_ViewportMargins {
 		int32_t left;
 		int32_t right;
