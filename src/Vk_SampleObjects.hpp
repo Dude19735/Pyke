@@ -74,10 +74,8 @@ namespace VK4{
 //                                     █       █     █  █  █    ██    █                                        
 //                                     █       ███████ ███ █     █    █                                        
 // ############################################################################################################
-		static std::vector<VK4::Vk_Vertex_P> Point_P(float angle=0) {
-			std::vector<VK4::Vk_Vertex_P> geometry =
-			{
-				
+		static std::vector<VK4::Vk_Vertex_P> Point_Pv(float angle=0) {
+			return {				
 				VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 0, 0, 0), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 1, 1, 1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>(-1, 1, 1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
@@ -88,10 +86,19 @@ namespace VK4{
 				VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>(-1,-1,-1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 1,-1,-1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) }
 			};
-			return geometry;
+		}
+		static std::vector<VK4::point_type> Point_P(float angle=0) {
+			auto geometry = Point_Pv(angle);
+			std::vector<VK4::point_type> geometryVec;
+			for(const auto& p : geometry){
+				geometryVec.push_back(p.pos.x);
+				geometryVec.push_back(p.pos.y);
+				geometryVec.push_back(p.pos.z);
+			}
+			return geometryVec;
 		}
 
-		static std::vector<VK4::Vk_Vertex_C> Point_C()
+		static std::vector<VK4::point_type> Point_C()
 		{
 			std::vector<VK4::Vk_Vertex_C> colors =
 			{
@@ -105,7 +112,13 @@ namespace VK4{
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(1.0, 0.5,   0    ) },
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(0.5,   0, 0.5    ) }
 			};
-			return colors;
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : colors){
+				vec.push_back(p.color.x);
+				vec.push_back(p.color.y);
+				vec.push_back(p.color.z);
+			}
+			return vec;
 		}
 
 		static std::vector<VK4::index_type> Point_P_C_Indices() {
@@ -123,8 +136,8 @@ namespace VK4{
 //                                         █        █  █    ██ █                                               
 //                                         ███████ ███ █     █ ███████                                         
 // ############################################################################################################
-		static std::vector<VK4::Vk_Vertex_P> Line_P(float angle=0.0f) {
-			return std::vector<VK4::Vk_Vertex_P> {
+		static std::vector<VK4::point_type> Line_P(float angle=0.0f) {
+			auto data = std::vector<VK4::Vk_Vertex_P> {
 				VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 1, 1, 1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>(-1, 1, 1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>(-1,-1, 1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
@@ -134,10 +147,17 @@ namespace VK4{
 				VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>(-1,-1,-1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 1,-1,-1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) }
 			};
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : data){
+				vec.push_back(p.pos.x);
+				vec.push_back(p.pos.y);
+				vec.push_back(p.pos.z);
+			}
+			return vec;
 		}
 
-		static std::vector<VK4::Vk_Vertex_C> Line_C() {
-			return std::vector<VK4::Vk_Vertex_C> {
+		static std::vector<VK4::point_type> Line_C() {
+			auto data = std::vector<VK4::Vk_Vertex_C> {
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(1.0,   0,   0) },
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(0,   1.0,   0) },
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(0,     0, 1.0) },
@@ -147,6 +167,13 @@ namespace VK4{
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(1.0, 0.5,   0) },
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(0.5,   0, 0.5) }
 			};
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : data){
+				vec.push_back(p.color.x);
+				vec.push_back(p.color.y);
+				vec.push_back(p.color.z);
+			}
+			return vec;
 		}
 
 		static std::vector<VK4::index_type> Line_P_C_Indices() { 
@@ -167,7 +194,7 @@ namespace VK4{
 //               █     █ █     █ █     █ █    █  █     █         █     █    █    █     █    █                  
 //                █████  ███████ ███████ █     █ ██████           █████     █     █████     █                  
 // ############################################################################################################
-		static std::vector<VK4::Vk_Vertex_P> Coords_P(float fromX, float toX, float tipLenX, float fromY, float toY, float tipLenY, float fromZ, float toZ, float tipLenZ)
+		static std::vector<VK4::point_type> Coords_P(float fromX, float toX, float tipLenX, float fromY, float toY, float tipLenY, float fromZ, float toZ, float tipLenZ)
 		{
 			std::vector<VK4::Vk_Vertex_P> geometry =
 			{
@@ -181,10 +208,16 @@ namespace VK4{
 				VK4::Vk_Vertex_P { glm::tvec3<VK4::point_type>(     0,     0,   toZ-tipLenZ) },
 				VK4::Vk_Vertex_P { glm::tvec3<VK4::point_type>(     0,     0,   toZ) }
 			};
-			return geometry;
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : geometry){
+				vec.push_back(p.pos.x);
+				vec.push_back(p.pos.y);
+				vec.push_back(p.pos.z);
+			}
+			return vec;
 		}
 
-		static std::vector<VK4::Vk_Vertex_C> Coords_C(float tipR, float tipG, float tipB)
+		static std::vector<VK4::point_type> Coords_C(float tipR, float tipG, float tipB)
 		{
 			std::vector<VK4::Vk_Vertex_C> colors =
 			{
@@ -198,7 +231,13 @@ namespace VK4{
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(0,     0, 1.0) },
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(tipR,tipG,tipB)}
 			};
-			return colors;
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : colors){
+				vec.push_back(p.color.x);
+				vec.push_back(p.color.y);
+				vec.push_back(p.color.z);
+			}
+			return vec;
 		}
 
 		static std::vector<VK4::index_type> Coords_P_C_Indices() { 
@@ -219,7 +258,7 @@ namespace VK4{
 //   █     █ █     █ █     █ █               █  █  █ █     █         █    ██ █     █ █    █  █     █ █     █   
 //    █████   █████  ██████  ███████          ██ ██  ███████         █     █ ███████ █     █ █     █  █████    
 // ############################################################################################################
-		static std::vector<VK4::Vk_Vertex_P> Cube1_P(float angle=0.0f)
+		static std::vector<VK4::point_type> Cube1_P(float angle=0.0f)
 		{
 			std::vector<VK4::Vk_Vertex_P> geometry =
 			{
@@ -232,10 +271,16 @@ namespace VK4{
 				VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>(-1,-1,-1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 1,-1,-1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) }
 			};
-			return geometry;
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : geometry){
+				vec.push_back(p.pos.x);
+				vec.push_back(p.pos.y);
+				vec.push_back(p.pos.z);
+			}
+			return vec;
 		}
 
-		static std::vector<VK4::Vk_Vertex_C> Cube1_C()
+		static std::vector<VK4::point_type> Cube1_C()
 		{
 			std::vector<VK4::Vk_Vertex_C> colors =
 			{
@@ -248,10 +293,16 @@ namespace VK4{
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(1.0, 0.5,   0) },
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(0.5,   0, 0.5) }
 			};
-			return colors;
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : colors){
+				vec.push_back(p.color.x);
+				vec.push_back(p.color.y);
+				vec.push_back(p.color.z);
+			}
+			return vec;
 		}
 
-		static std::vector<VK4::Vk_Vertex_N> Cube1_N()
+		static std::vector<VK4::point_type> Cube1_N()
 		{
 			std::vector<VK4::Vk_Vertex_N> normals =
 			{
@@ -264,7 +315,13 @@ namespace VK4{
 				VK4::Vk_Vertex_N { glm::tvec3<VK4::point_type>(-1,-1,-1) },
 				VK4::Vk_Vertex_N { glm::tvec3<VK4::point_type>( 1,-1,-1) }
 			};
-			return normals;
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : normals){
+				vec.push_back(p.normal.x);
+				vec.push_back(p.normal.y);
+				vec.push_back(p.normal.z);
+			}
+			return vec;
 		}
 
 		static std::vector<VK4::Vk_Vertex_PC> Cube1_PC()
@@ -355,10 +412,9 @@ namespace VK4{
 //       █     █ █     █ █     █ █               █  █  █         █    ██ █     █ █    █  █     █ █     █       
 //        █████   █████  ██████  ███████          ██ ██          █     █ ███████ █     █ █     █  █████        
 // ############################################################################################################
-		static std::vector<VK4::Vk_Vertex_P> Cube2_P(float angle=0.0f)
+		static std::vector<VK4::Vk_Vertex_P> Cube2_Pv(float angle=0.0f)
 		{
-			std::vector<VK4::Vk_Vertex_P> geometry =
-			{
+			return {
 				/* 00t */ VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 1, 1, 1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				/* 01b */ VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 1, 1, 1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				/* 02r */ VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 1, 1, 1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
@@ -391,14 +447,22 @@ namespace VK4{
 				/* 22f */ VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 1,-1,-1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				/* 23r */ VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 1,-1,-1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) }
 			};
-			return geometry;
+		}
+		static std::vector<VK4::point_type> Cube2_P(float angle=0.0f) {
+			auto geometry = Cube2_Pv(angle);
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : geometry){
+				vec.push_back(p.pos.x);
+				vec.push_back(p.pos.y);
+				vec.push_back(p.pos.z);
+			}
+			return vec;
 		}
 
-		static std::vector<VK4::Vk_Vertex_P> Cube2_N(float angle=0.0f)
+		static std::vector<VK4::Vk_Vertex_P> Cube2_Nv(float angle=0.0f)
 		{
 			/*t=top, b=back, r=right, l=left, f=front, u=under(==bottom)*/
-			std::vector<VK4::Vk_Vertex_P> geometry =
-			{
+			return {
 				/* 00t */ VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 0, 0, 1), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				/* 01b */ VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 0, 1, 0), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				/* 02r */ VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 1, 0, 0), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
@@ -431,10 +495,19 @@ namespace VK4{
 				/* 22r */ VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 0,-1, 0), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) },
 				/* 23f */ VK4::Vk_Vertex_P { glm::rotate(glm::tvec3<VK4::point_type>( 1, 0, 0), angle, glm::tvec3<VK4::point_type>( 0, 0, 1)) }
 			};
-			return geometry;
+		}
+		static std::vector<VK4::point_type> Cube2_N(float angle=0.0f) {
+			auto geometry = Cube2_Nv(angle);
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : geometry){
+				vec.push_back(p.pos.x);
+				vec.push_back(p.pos.y);
+				vec.push_back(p.pos.z);
+			}
+			return vec;
 		}		
 
-		static std::vector<VK4::Vk_Vertex_C> Cube2_C()
+		static std::vector<VK4::point_type> Cube2_C()
 		{
 			std::vector<VK4::Vk_Vertex_C> colors =
 			{
@@ -470,7 +543,13 @@ namespace VK4{
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(0.5,   0, 0.5) },
 				VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(0.5,   0, 0.5) }
 			};
-			return colors;
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : colors){
+				vec.push_back(p.color.x);
+				vec.push_back(p.color.y);
+				vec.push_back(p.color.z);
+			}
+			return vec;
 		}
 
 		static std::vector<VK4::index_type> Cube2_P_C_N_Indices() {
@@ -485,11 +564,11 @@ namespace VK4{
 			return indices;
 		}
 
-		static std::vector<VK4::Vk_Vertex_P> Cube2_NormalLines_P(float len, float angle=0.0f)
+		static std::vector<VK4::point_type> Cube2_NormalLines_P(float len, float angle=0.0f)
 		{
 			std::vector<VK4::Vk_Vertex_P> res;
-			auto p = Cube2_P(angle);
-			auto n = Cube2_N(angle);
+			auto p = Cube2_Pv(angle);
+			auto n = Cube2_Nv(angle);
 			size_t s = p.size();
 			for(size_t i=0; i<s; ++i){
 				res.push_back(p.at(i));
@@ -498,8 +577,13 @@ namespace VK4{
 				auto f = pPos + len*nPos;
 				res.push_back(VK4::Vk_Vertex_P{ .pos=f });
 			};
-
-			return res;
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : res){
+				vec.push_back(p.pos.x);
+				vec.push_back(p.pos.y);
+				vec.push_back(p.pos.z);
+			}
+			return vec;
 		}
 
 		static std::vector<VK4::index_type> Cube2_NormalLines_Indices() {
@@ -510,9 +594,16 @@ namespace VK4{
 			return indices;
 		}
 
-		static std::vector<VK4::Vk_Vertex_C> Cube2_NormalLines_C()
+		static std::vector<VK4::point_type> Cube2_NormalLines_C()
 		{
-			return std::vector<VK4::Vk_Vertex_C>(48, VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(0.0, 1.0, 0.0) });
+			auto data = std::vector<VK4::Vk_Vertex_C>(48, VK4::Vk_Vertex_C { glm::tvec3<VK4::point_type>(0.0, 1.0, 0.0) });
+			std::vector<VK4::point_type> vec;
+			for(const auto& p : data){
+				vec.push_back(p.color.x);
+				vec.push_back(p.color.y);
+				vec.push_back(p.color.z);
+			}
+			return vec;
 		}
 	};
 }

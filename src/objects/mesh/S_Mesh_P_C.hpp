@@ -51,17 +51,10 @@ namespace VK4 {
 		static std::shared_ptr<Vk_Mesh<ObjectType_P_C>> create(
 			Vk_Device* const device,
 			std::string name,
-#ifdef PYVK
-			const py::array_t<VK4::point_type, py::array::c_style>& modelMatrix,
-			const py::array_t<VK4::point_type, py::array::c_style>& points,
-			const py::array_t<VK4::point_type, py::array::c_style>& colors,
-			const py::array_t<VK4::index_type, py::array::c_style>& indices,
-#else
-			const glm::tmat4x4<point_type>& modelMatrix,
-			const std::vector<Vk_Vertex_P>& p,
-			const std::vector<Vk_Vertex_C>& c,
+			const std::vector<point_type>& modelMatrix,
+			const std::vector<point_type>& p,
+			const std::vector<point_type>& c,
 			const std::vector<index_type>& i,
-#endif
 			// Topology topology = VK4::Topology::Points,
 			float alpha=1.0f,
 			CullMode cullMode = VK4::CullMode::Back,
@@ -71,15 +64,41 @@ namespace VK4 {
 			Vk_BufferUpdateBehaviour sizeBehaviour = Vk_BufferUpdateBehaviour::GlobalLock,
 			Vk_BufferSizeBehaviour updateBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
 		) {
-#ifdef PYVK
-			glm::tmat4x4<point_type> m = Vk_NumpyTransformers::arrayToGLM4x4<point_type>(modelMatrix);
-			size_t pLen;
-			Vk_Vertex_P* p = Vk_NumpyTransformers::structArrayToCpp<Vk_Vertex_P>(points, pLen);
-			size_t cLen;
-			Vk_Vertex_C* c = Vk_NumpyTransformers::structArrayToCpp<Vk_Vertex_C>(colors, cLen);
-			size_t iLen;
-			index_type* i = Vk_NumpyTransformers::indexArrayToCpp(indices, iLen);
-#endif
+			return S_Mesh_P_C::create(
+				device, name,
+				std::span<const point_type>(modelMatrix.data(), modelMatrix.size()),
+				std::span<const point_type>(p.data(), p.size()),
+				std::span<const point_type>(c.data(), c.size()),
+				std::span<const index_type>(i.data(), i.size()),
+				alpha, cullMode, renderType, pointSize, lineWidth, sizeBehaviour, updateBehaviour
+			);
+		}
+
+		static std::shared_ptr<Vk_Mesh<ObjectType_P_C>> create(
+			Vk_Device* const device,
+			std::string name,
+			const std::span<const point_type>& modelMatrix,
+			const std::span<const point_type>& p,
+			const std::span<const point_type>& c,
+			const std::span<const index_type>& i,
+			// Topology topology = VK4::Topology::Points,
+			float alpha=1.0f,
+			CullMode cullMode = VK4::CullMode::Back,
+			RenderType renderType = VK4::RenderType::Solid,
+			float pointSize=1.0f,
+			float lineWidth=1.0f,
+			Vk_BufferUpdateBehaviour sizeBehaviour = Vk_BufferUpdateBehaviour::GlobalLock,
+			Vk_BufferSizeBehaviour updateBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
+		) {
+			if(modelMatrix.size() != 16){
+				Vk_Logger::RuntimeError(typeid(NoneObj), "Size of model matrix must be 16 but is {0}", modelMatrix.size());
+			}
+			if(!(p.size()%Vk_Vertex_P::innerDimensionLen() == 0)){
+				Vk_Logger::RuntimeError(typeid(NoneObj), "Vertices size must be a multiple of {0} but is {1}", Vk_Vertex_P::innerDimensionLen(), p.size());
+			}
+			if(!(c.size()%Vk_Vertex_C::innerDimensionLen() == 0)){
+				Vk_Logger::RuntimeError(typeid(NoneObj), "Colors size must be a multiple of {0} but is C={2}", Vk_Vertex_C::innerDimensionLen(), c.size());
+			}
 			if(lineWidth != 1.0f && renderType != RenderType::Wireframe){
 				Vk_Logger::Warn(typeid(NoneObj), "Mesh object only supports dynamic line width if renderType=Wireframe");
 			}
@@ -91,11 +110,10 @@ namespace VK4 {
 				device,
 				name,
 				Identifier,
-#ifdef PYVK
-				m, p, pLen, c, cLen, i, iLen,
-#else
-				modelMatrix, p.data(), p.size(), c.data(), c.size(), i.data(), i.size(), 
-#endif
+				glm::make_mat4x4<point_type>(modelMatrix.data()),
+				reinterpret_cast<const Vk_Vertex_P*>(p.data()), static_cast<int>(p.size()/Vk_Vertex_P::innerDimensionLen()), 
+				reinterpret_cast<const Vk_Vertex_C*>(c.data()), static_cast<int>(c.size()/Vk_Vertex_C::innerDimensionLen()), 
+				i.data(), i.size(),
 				cullMode,
 				renderType,
 				pointSize, lineWidth, alpha,

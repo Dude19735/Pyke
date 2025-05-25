@@ -3,6 +3,11 @@
 #include <tuple>
 #include <functional>
 
+#ifdef PYVK
+    #include <nanobind/nanobind.h>
+    namespace nb = nanobind;
+#endif
+
 namespace VK4 {
     class Vk_Func {
     public:
@@ -64,4 +69,41 @@ namespace VK4 {
 			(_obj->*_func)(repeat, std::get<_Inds>(args)...);
 		}
     };
+
+#ifndef PYVK
+class Vk_PyFunc : public Vk_Func {
+
+public:
+    void operator()(std::function<void()> repeat) override {
+        _call_F(repeat);
+    }
+
+private:
+    auto _call_F(std::function<void()> repeat) -> void
+    {}
+};
+#else
+    class Vk_PyFunc : public Vk_Func {
+    public:
+        Vk_PyFunc(nb::callable func)
+        :
+        _func(func),
+        Vk_Func(sizeof(Vk_PyFunc) + sizeof(Vk_Func))
+        {}
+
+        void operator()(std::function<void()> repeat) override {
+			_call_F(repeat);
+        }
+
+    private:
+        nb::callable _func;
+
+		auto _call_F(std::function<void()> repeat) -> void
+		{
+            nb::gil_scoped_acquire acquire;
+			_func(repeat);
+            nb::gil_scoped_release nogil;
+		}
+    };
+#endif
 }

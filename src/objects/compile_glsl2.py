@@ -108,4 +108,6 @@ namespace VK4 {
                     ff.write(new_file)
 
 if __name__ == "__main__":
+    print("Build shaders... ==========================================================")
     ToSPV("pyvk").compile()
+    print("... finished! =============================================================")

@@ -11,9 +11,9 @@
 #include "Defines.h"
 #include "Vk_Function.hpp"
 
-#ifdef PYVK
-	namespace py = pybind11;
-#endif
+// #ifdef PYVK
+// 	namespace py = pybind11;
+// #endif
 
 namespace VK4 {
 
@@ -86,17 +86,17 @@ namespace VK4 {
 			_stopped = true;
 		}
 
-#ifdef PYVK
-		void enqueueJob(py::function* job, std::function<void()> followup) {
-			{
-				std::unique_lock<std::mutex> lock(_mutex);
-				Vk_Logger::Log(typeid(this), "[Threadpool] Enqueue job");
-				_jobs.push({job, followup});
-			}
+// #ifdef PYVK
+// 		void enqueueJob(py::function* job, std::function<void()> followup) {
+// 			{
+// 				std::unique_lock<std::mutex> lock(_mutex);
+// 				Vk_Logger::Log(typeid(this), "[Threadpool] Enqueue job");
+// 				_jobs.push({job, followup});
+// 			}
 
-			_condition.notify_one();
-		}
-#else
+// 			_condition.notify_one();
+// 		}
+// #else
 		void enqueueJob(std::shared_ptr<VK4::Vk_Func> job, std::function<void()> followup) {
 			{
 				std::unique_lock<std::mutex> lock(_mutex);
@@ -106,18 +106,18 @@ namespace VK4 {
 
 			_condition.notify_one();
 		}
-#endif
+// #endif
 
 	private:
 		// std::queue<Vk_ViewerJob> _jobs;
 		// Vk_ViewerJob _currentJob;
-#ifdef PYVK
-		std::queue<std::pair<py::function*, std::function<void()>>> _jobs;
-		std::pair<py::function*, std::function<void()>> _currentJob;
-#else
+// #ifdef PYVK
+// 		std::queue<std::pair<py::function*, std::function<void()>>> _jobs;
+// 		std::pair<py::function*, std::function<void()>> _currentJob;
+// #else
 		std::queue<std::pair<std::shared_ptr<VK4::Vk_Func>, std::function<void()>>> _jobs;
 		std::pair<std::shared_ptr<VK4::Vk_Func>, std::function<void()>> _currentJob;
-#endif
+// #endif
 		std::vector<std::thread> _pool;
 		std::condition_variable _condition;
 		std::mutex _mutex;
@@ -136,11 +136,11 @@ namespace VK4 {
 
 					if (_terminate) {
 						Vk_Logger::Log(typeid(this), "[Threadpool::Worker] got termination signal");
-#ifdef PYVK
-						std::queue<std::pair<py::function*, std::function<void()>>> empty;
-#else
+// #ifdef PYVK
+// 						std::queue<std::pair<py::function*, std::function<void()>>> empty;
+// #else
 						std::queue<std::pair<std::shared_ptr<VK4::Vk_Func>, std::function<void()>>> empty;
-#endif
+// #endif
 						std::swap(_jobs, empty);
 						return;
 					}
@@ -149,18 +149,18 @@ namespace VK4 {
 					_currentJob = _jobs.front();
 					_jobs.pop();
 				}
-#ifdef PYVK
-				py::gil_scoped_acquire acquire;
-				(*_currentJob.first)(
-					py::cpp_function([this]() {
-						enqueueJob(_currentJob.first, _currentJob.second);
-					})
-				);
-				py::gil_scoped_release nogil;
-				if (_currentJob.second != nullptr) {
-					_currentJob.second();
-				}
-#else
+// #ifdef PYVK
+// 				py::gil_scoped_acquire acquire;
+// 				(*_currentJob.first)(
+// 					py::cpp_function([this]() {
+// 						enqueueJob(_currentJob.first, _currentJob.second);
+// 					})
+// 				);
+// 				py::gil_scoped_release nogil;
+// 				if (_currentJob.second != nullptr) {
+// 					_currentJob.second();
+// 				}
+// #else
 				(*_currentJob.first)(
 					[this]() {
 						enqueueJob(_currentJob.first, _currentJob.second);
@@ -169,7 +169,7 @@ namespace VK4 {
 				if (_currentJob.second != nullptr) {
 					_currentJob.second();
 				}
-#endif
+// #endif
 			}
 		}
 	};

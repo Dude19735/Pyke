@@ -1,5 +1,5 @@
 #pragma once
-#define PYVK
+
 // some generic way to distinguish operating systems
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
    //define something for Windows (32-bit and 64-bit, this part is common)
@@ -55,6 +55,7 @@
 #include <streambuf>
 #include <array>
 #include <thread>
+#include <exception>
 
 #pragma warning(push)
 #pragma warning(disable : 4196)
@@ -67,15 +68,17 @@
 #undef max
 #undef min
 
-#ifdef PYVK
-	#include <pybind11/pybind11.h>
-	#include <pybind11/numpy.h>
-	#include <pybind11/stl.h>
-	#include <pybind11/functional.h>
-	#include <pybind11/embed.h>
+// #ifdef PYVK
+// 	#include <nanobind/nanobind.h>
+// 	#include <nanobind/stl/bind_vector.h>
+// 	#include <nanobind/stl/string.h>
+// 	#include <nanobind/stl/tuple.h>
+// 	#include <nanobind/stl/set.h>
+// 	#include <nanobind/stl/map.h>
 
-	namespace py = pybind11;
-#endif
+// 	// namespace py = pybind11;
+// 	namespace nb = nanobind;
+// #endif
 
 #include <cinttypes>
 #include "Vk_Coloring.hpp"
@@ -182,56 +185,56 @@ namespace VK4 {
 		}
 	};
 
-#ifdef PYVK
-    class Vk_NumpyTransformers {
-    public:
-        template<class T>
-        static glm::tmat4x4<T> arrayToGLM4x4(const py::array_t<point_type, py::array::c_style>& inData){
-            py::buffer_info pInfo = inData.request();
-            T* p = static_cast<T*>(pInfo.ptr);
-            return glm::make_mat4x4(p);
-        }
+// #ifdef PYVK
+//     class Vk_NumpyTransformers {
+//     public:
+//         template<class T>
+//         static glm::tmat4x4<T> arrayToGLM4x4(const nb::array_t<point_type, nb::array::c_style>& inData){
+//             nb::buffer_info pInfo = inData.request();
+//             T* p = static_cast<T*>(pInfo.ptr);
+//             return glm::make_mat4x4(p);
+//         }
 
-        template<class T>
-        static glm::tvec3<T> arrayToGLMv3(const py::array_t<T, py::array::c_style>& arr){
-			py::buffer_info info = arr.request();
-			T* ptr = static_cast<T*>(info.ptr);
-			return glm::make_vec3(ptr);
-        }
+//         template<class T>
+//         static glm::tvec3<T> arrayToGLMv3(const nb::array_t<T, nb::array::c_style>& arr){
+// 			nb::buffer_info info = arr.request();
+// 			T* ptr = static_cast<T*>(info.ptr);
+// 			return glm::make_vec3(ptr);
+//         }
 
-        template<class T>
-        static T* structArrayToCpp(const py::array_t<point_type, py::array::c_style>& inData, size_t& outLen){
-            // NOTE: this way of passing numpy data is absolutely not copying anything
-            // For example, the following code
-            // 		std::cout << glm::to_string(p[0].pos) << std::endl;
-            //		p[0].pos.x = 5.5f;
-            // 		std::cout << glm::to_string(p[0].pos) << std::endl;
-            // will output 5.5 as the x-component of the first entry
-            // If we then output the first entry of the numpy array on the python side,
-            // we get the same thing
+//         template<class T>
+//         static T* structArrayToCpp(const py::array_t<point_type, py::array::c_style>& inData, size_t& outLen){
+//             // NOTE: this way of passing numpy data is absolutely not copying anything
+//             // For example, the following code
+//             // 		std::cout << glm::to_string(p[0].pos) << std::endl;
+//             //		p[0].pos.x = 5.5f;
+//             // 		std::cout << glm::to_string(p[0].pos) << std::endl;
+//             // will output 5.5 as the x-component of the first entry
+//             // If we then output the first entry of the numpy array on the python side,
+//             // we get the same thing
 
-            // using 
-            // 		py::array_t<VK4::point_type, py::array::c_style>& points
-            // or
-            // 		py::array_t<VK4::point_type, py::array::c_style> points
-            // doesn't make any difference, so use the reference type for now
+//             // using 
+//             // 		py::array_t<VK4::point_type, py::array::c_style>& points
+//             // or
+//             // 		py::array_t<VK4::point_type, py::array::c_style> points
+//             // doesn't make any difference, so use the reference type for now
             
-            int innerDimensionLen = T::innerDimensionLen();
-            py::buffer_info pInfo = inData.request();
-            if(pInfo.size % innerDimensionLen != 0){
-                Vk_Logger::RuntimeError(typeid(NoneObj), std::string(typeid(T).name()) + std::string(" array must be of size Nx") + std::to_string(innerDimensionLen) + std::string("!"));
-            }
-            outLen = static_cast<size_t>(pInfo.size/innerDimensionLen);
-            return static_cast<T*>(pInfo.ptr);
-        }
+//             int innerDimensionLen = T::innerDimensionLen();
+//             py::buffer_info pInfo = inData.request();
+//             if(pInfo.size % innerDimensionLen != 0){
+//                 Vk_Logger::RuntimeError(typeid(NoneObj), std::string(typeid(T).name()) + std::string(" array must be of size Nx") + std::to_string(innerDimensionLen) + std::string("!"));
+//             }
+//             outLen = static_cast<size_t>(pInfo.size/innerDimensionLen);
+//             return static_cast<T*>(pInfo.ptr);
+//         }
 
-        static index_type* indexArrayToCpp(const py::array_t<index_type, py::array::c_style>& inData, size_t& outLen){
-            py::buffer_info pInfo = inData.request();
-            outLen = static_cast<size_t>(pInfo.size);
-            return static_cast<index_type*>(pInfo.ptr);
-        }
-    };
-#endif
+//         static index_type* indexArrayToCpp(const py::array_t<index_type, py::array::c_style>& inData, size_t& outLen){
+//             py::buffer_info pInfo = inData.request();
+//             outLen = static_cast<size_t>(pInfo.size);
+//             return static_cast<index_type*>(pInfo.ptr);
+//         }
+//     };
+// #endif
 
 	struct Vk_ViewportMargins {
 		int32_t left;
@@ -276,28 +279,28 @@ namespace VK4 {
 		point_type wFar;
 		Vk_SteeringType steeringType;
 
-#ifdef PYVK
-		Vk_CameraSpecs(
-			Vk_CameraType p_type,
-			const py::array_t<VK4::point_type, py::array::c_style>& p_wPos,
-			const py::array_t<VK4::point_type, py::array::c_style>& p_wLook,
-			const py::array_t<VK4::point_type, py::array::c_style>& p_wUp,
-			point_type p_fow,
-			point_type p_wNear,
-			point_type p_wFar,
-			Vk_SteeringType p_steeringType
-		)
-		: type(p_type), fow(p_fow), wNear(p_wNear), wFar(p_wFar), steeringType(p_steeringType)
-		{
-			std::cout << "hello world 1" << std::endl;
-			wPos = Vk_NumpyTransformers::arrayToGLMv3(p_wPos);
-			std::cout << "hello world 2" << std::endl;
-			wLook = Vk_NumpyTransformers::arrayToGLMv3(p_wLook);
-			std::cout << "hello world 3" << std::endl;
-			wUp = Vk_NumpyTransformers::arrayToGLMv3(p_wUp);
-			std::cout << "hello world 4" << std::endl;
-		}
-#endif
+// #ifdef PYVK
+// 		Vk_CameraSpecs(
+// 			Vk_CameraType p_type,
+// 			const py::array_t<VK4::point_type, py::array::c_style>& p_wPos,
+// 			const py::array_t<VK4::point_type, py::array::c_style>& p_wLook,
+// 			const py::array_t<VK4::point_type, py::array::c_style>& p_wUp,
+// 			point_type p_fow,
+// 			point_type p_wNear,
+// 			point_type p_wFar,
+// 			Vk_SteeringType p_steeringType
+// 		)
+// 		: type(p_type), fow(p_fow), wNear(p_wNear), wFar(p_wFar), steeringType(p_steeringType)
+// 		{
+// 			std::cout << "hello world 1" << std::endl;
+// 			wPos = Vk_NumpyTransformers::arrayToGLMv3(p_wPos);
+// 			std::cout << "hello world 2" << std::endl;
+// 			wLook = Vk_NumpyTransformers::arrayToGLMv3(p_wLook);
+// 			std::cout << "hello world 3" << std::endl;
+// 			wUp = Vk_NumpyTransformers::arrayToGLMv3(p_wUp);
+// 			std::cout << "hello world 4" << std::endl;
+// 		}
+// #endif
 	};
 
 	struct Vk_CameraInit {
@@ -323,15 +326,15 @@ namespace VK4 {
 
 	struct Vk_ViewerParams {
 		std::string name;
-		int width, height, freshPoolSize;
+		int width;
+		int height; 
+		int freshPoolSize;
 		Vk_ViewingType viewingType;
 		std::string screenshotSavePath;
 
-#ifdef PYVK
 		Vk_ViewerParams(std::string name, int width, int height, Vk_ViewingType viewingType, int freshPoolSize, std::string screenshotSavePath) 
 		: name(name), width(width), height(height), freshPoolSize(freshPoolSize), viewingType(viewingType), screenshotSavePath(screenshotSavePath)
 		{}
-#else
 		Vk_ViewerParams(std::string name, int width, int height) 
 		: name(name), width(width), height(height), freshPoolSize(100), viewingType(Vk_ViewingType::GLOBAL), screenshotSavePath("./")
 		{}
@@ -355,7 +358,7 @@ namespace VK4 {
 		Vk_ViewerParams(std::string name, int width, int height, Vk_ViewingType viewingType, std::string screenshotSavePath) 
 		: name(name), width(width), height(height), freshPoolSize(100), viewingType(viewingType), screenshotSavePath(screenshotSavePath)
 		{}
-#endif
+// #endif
 	};
 
 	enum class Vk_BufferUpdateBehaviour {
@@ -490,42 +493,6 @@ namespace VK4 {
 			return "Unknown";
 		}
 	}
-
-#ifdef PYVK
-	template<class T>
-	static bool tryCast(py::object obj, T& ret) {
-		auto incomming = obj.ptr()->ob_type->tp_name;
-		if (strcmp(incomming, "str") == 0 && typeid(T) != typeid(std::to_string(0))) return false;
-		if (strcmp(incomming, "int") == 0 && typeid(T) != typeid(0)) return false;
-		if (strcmp(incomming, "float") == 0 && typeid(T) != typeid(0.0f) && typeid(T) != typeid(0.0)) return false;
-		if (strcmp(incomming, "pyvk._vkviewer.lwws_key") == 0 && typeid(T) != typeid(LWWS::LWWS_Key::Special::RandomKey)) return false; 
-		if (strcmp(incomming, "pyvk._vkviewer.vk_viewing_type") == 0 && typeid(T) != typeid(Vk_ViewingType)) return false;
-		if (strcmp(incomming, "pyvk._vkviewer.vk_camera_type") == 0 && typeid(T) != typeid(Vk_CameraType)) return false;
-		if (strcmp(incomming, "pyvk._vkviewer.vk_steering_type") == 0 && typeid(T) != typeid(Vk_SteeringType)) return false;
-		if (strcmp(incomming, "pyvk._vkviewer.vk_render_type") == 0 && typeid(T) != typeid(RenderType)) return false;
-		if (strcmp(incomming, "pyvk._vkviewer.vk_topology") == 0 && typeid(T) != typeid(Topology)) return false;
-		if (strcmp(incomming, "pyvk._vkviewer.vk_cull_mode") == 0 && typeid(T) != typeid(CullMode)) return false;
-		if (strcmp(incomming, "pyvk._vkviewer.vk_buffer_characteristics") == 0 && typeid(T) != typeid(Vk_BufferSizeBehaviour)) return false;
-		ret = obj.cast<T>();
-		return true;
-	}
-
-	static int tryCastKey(py::object key){
-		std::string kk;
-		if(tryCast(key, kk)){
-			char c = static_cast<char>(*kk.begin());
-			return LWWS::LWWS_Key::KeyToInt(c);
-		}
-
-		LWWS::LWWS_Key::Special sk;
-		if(tryCast(key, sk)){
-			std::cout << "hello world 3.5 " << LWWS::LWWS_Key::SpecialKey2String(sk) << std::endl;
-			return LWWS::LWWS_Key::KeyToInt(sk);
-		}
-
-		return -1;
-	}
-#endif
 
 #if defined(PLATFORM_WINDOWS_x64)
 	const char PATH_BREAKER = '\\';

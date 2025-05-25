@@ -197,6 +197,12 @@ namespace LWWS {
             return static_cast<int>(c);
         }
 
+        static int IntToKeyInt(int k){
+            int t = k + 1000;
+            if(t == 1000) return -1;
+            return t;
+        }
+
         static int KeyToInt(Special k){
             int t = static_cast<int>(k) + 1000;
             if(t == 1000) return -1;

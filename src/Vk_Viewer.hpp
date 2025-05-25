@@ -20,9 +20,9 @@
 #include "./camera/Vk_ViewerSteering_CameraCentric.hpp"
 #include "./camera/Vk_ViewerSteering_ObjectCentric.hpp"
 
-#ifdef PYVK
-	namespace py = pybind11;
-#endif
+// #ifdef PYVK
+// 	namespace py = pybind11;
+// #endif
 
 namespace VK4 {
 	std::ofstream vk_jpegFile;
@@ -88,11 +88,11 @@ namespace VK4 {
 			Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create Viewer"));
 
 			_threadPool.start(
-#ifdef PYVK
-				1, // no use for more on python XD
-#else
+// #ifdef PYVK
+// 				1, // no use for more on python XD
+// #else
 				1, // until a proper mechanism can be defined, one thread is enough. It can start other threads if it likes... std::thread::hardware_concurrency(), 
-#endif
+// #endif
 				this
 			);
 		}
@@ -356,54 +356,54 @@ namespace VK4 {
 			return _cameras.at(camId).get();
 		}
 
-#ifdef PYVK
-		bool vk_register_action(py::object key, py::function f, int cameraId=-1){
-			if(cameraId >= 0){
-				Vk_Logger::RuntimeError(typeid(this), "Per camera localized actions not supported yet!");
-				return false;
-			}
+// #ifdef PYVK
+// 		bool vk_register_action(py::object key, py::function f, int cameraId=-1){
+// 			if(cameraId >= 0){
+// 				Vk_Logger::RuntimeError(typeid(this), "Per camera localized actions not supported yet!");
+// 				return false;
+// 			}
 
-			int intKey = tryCastKey(key);
-			if(intKey < 0) {
-				Vk_Logger::Error(typeid(this), "Unable to cast passed key");
-				return false;
-			}
+// 			int intKey = tryCastKey(key);
+// 			if(intKey < 0) {
+// 				Vk_Logger::Error(typeid(this), "Unable to cast passed key");
+// 				return false;
+// 			}
 
-			if(_actions.find(intKey) != _actions.end()){
-				Vk_Logger::Error(typeid(this), "Key is already registered");
-				return false;
-			}
-			_actions.insert({intKey, f});
-			return true;
-		}
+// 			if(_actions.find(intKey) != _actions.end()){
+// 				Vk_Logger::Error(typeid(this), "Key is already registered");
+// 				return false;
+// 			}
+// 			_actions.insert({intKey, f});
+// 			return true;
+// 		}
 
-		bool vk_unregister_action(py::object key){
-			int intKey = tryCastKey(key);
-			if(intKey < 0) {
-				Vk_Logger::Error(typeid(this), "Unable to cast passed key");
-				return false;
-			}
+// 		bool vk_unregister_action(py::object key){
+// 			int intKey = tryCastKey(key);
+// 			if(intKey < 0) {
+// 				Vk_Logger::Error(typeid(this), "Unable to cast passed key");
+// 				return false;
+// 			}
 
-			if(_actions.find(intKey) == _actions.end()){
-				Vk_Logger::Error(typeid(this), "Key is not registered");
-				return false;
-			}
+// 			if(_actions.find(intKey) == _actions.end()){
+// 				Vk_Logger::Error(typeid(this), "Key is not registered");
+// 				return false;
+// 			}
 
-			_actions.erase(intKey);
-			return true;
-		}
+// 			_actions.erase(intKey);
+// 			return true;
+// 		}
 
-		bool vk_exec_action(py::object key){
-			int intKey = tryCastKey(key);
-			if(_actions.find(intKey) == _actions.end()){
-				Vk_Logger::Error(typeid(this), "Key is not registered");
-				return false;
-			}
+// 		bool vk_exec_action(py::object key){
+// 			int intKey = tryCastKey(key);
+// 			if(_actions.find(intKey) == _actions.end()){
+// 				Vk_Logger::Error(typeid(this), "Key is not registered");
+// 				return false;
+// 			}
 
-			vk_execAction(intKey);
-			return true;
-		}
-#endif
+// 			vk_execAction(intKey);
+// 			return true;
+// 		}
+// #endif
 		template<class ObjType>
 		bool vk_registerAction(LWWS::LWWS_Key::Special key, ObjType* obj, t_func<ObjType> f, int cameraId=-1){
 			return vk_registerAction(LWWS::LWWS_Key::KeyToInt(key), obj, f, cameraId);
@@ -428,6 +428,24 @@ namespace VK4 {
 				_actions.insert({
 					key,
 					Vk_TFunc(obj, f, {}).get()
+				});
+				return true;
+			}
+		}
+
+		bool vk_registerAction(int key, Vk_PyFunc* pyFunc, int cameraId=-1){
+			if(cameraId >= 0){
+				Vk_Logger::Warn(typeid(this), "Per camera localized actions not supported yet!");
+				return false;
+			}
+			else{
+				if(_actions.find(key) != _actions.end()){
+					Vk_Logger::Warn(typeid(this), "Tried to register the same key twice! Unregister key first.");
+					return false;
+				}
+				_actions.insert({
+					key,
+					pyFunc->get()
 				});
 				return true;
 			}
@@ -461,11 +479,11 @@ namespace VK4 {
 
 		void vk_execAction(int key){
 			if(_actions.find(key) != _actions.end()){
-#ifdef PYVK
-				_threadPool.enqueueJob(&_actions.at(key), std::bind(&Vk_Viewer::_redraw, this));
-#else
+// #ifdef PYVK
+// 				_threadPool.enqueueJob(&_actions.at(key), std::bind(&Vk_Viewer::_redraw, this));
+// #else
 				_threadPool.enqueueJob(_actions.at(key), std::bind(&Vk_Viewer::_redraw, this));
-#endif
+// #endif
 			}
 		}
 
@@ -514,11 +532,11 @@ namespace VK4 {
 		std::shared_mutex _runMutex;
 		int _initWidth;
 		int _initHeight;
-#ifdef PYVK
-		std::map<int, py::function> _actions;
-#else
+// #ifdef PYVK
+// 		std::map<int, py::function> _actions;
+// #else
 		std::map<int, std::shared_ptr<VK4::Vk_Func>> _actions;
-#endif
+// #endif
 
 		int _freshPoolSize;
 		std::unordered_map<int, std::unique_ptr<Vk_Camera>> _cameras;

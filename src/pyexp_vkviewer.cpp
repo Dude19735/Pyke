@@ -1,5 +1,6 @@
 
 #include "./Defines.h"
+
 #include "./Vk_ColorOp.hpp"
 #include "./camera/Vk_GridLayout.hpp"
 #include "./Vk_Viewer.hpp"
@@ -8,14 +9,178 @@
 #include "./objects/mesh/S_Mesh_P_C.hpp"
 #include "./lwws_win/include/lwws_key.hpp"
 
+#ifdef Bool
+#undef Bool
+#endif
+#ifdef Complex
+#undef Complex
+#endif
+#ifdef Float
+#undef Float
+#endif
+#ifdef Int
+#undef Int
+#endif
+
+#include <nanobind/nanobind.h>
+#include <nanobind/stl/vector.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/tuple.h>
+#include <nanobind/stl/set.h>
+#include <nanobind/stl/map.h>
+#include <nanobind/stl/shared_ptr.h>
+#include <nanobind/ndarray.h>
+
 // #ifdef PYVK
-namespace py = pybind11;
+// namespace py = pybind11;
+namespace nb = nanobind;
 using namespace VK4;
 
-PYBIND11_MODULE(_vkviewer, m) {
+class Vk_Casters {
+public:
+	// static const char* getTypeName(const nb::object& obj){
+	// 	std::cout << "fffffffffffffff 1" << std::endl;
+	// 	nb::handle typeObj = obj.type();
+	// 	std::cout << "fffffffffffffff 2" << std::endl;
+	// 	auto nn = typeObj.Name;
+	// 	std::cout << "fffffffffffffff 2.1" << std::endl;
+	// 	auto tt = nn.text;
+	// 	std::cout << "fffffffffffffff 2.2: " << tt << std::endl;
+	// 	auto tt2 = typeObj.attr("__name__");
+	// 	std::cout << "fffffffffffffff 2.3: " << tt << std::endl;
+	// 	std::cout << nb::str(tt2).c_str() << std::endl;
+	// 	std::cout << "fffffffffffffff 2.4: " << tt << std::endl;
+	// 	nb::str typeName = nb::str(tt2);
+	// 	std::cout << "fffffffffffffff 3" << std::endl;
+	// 	return typeName.c_str();
+	// }
+
+	// template<class T>
+	// static bool tryCast(nb::object obj, T& ret) {
+	// 	std::cout << "yyyyyyyyyyyy 1" << std::endl;
+	// 	auto incomming = getTypeName(obj);
+	// 	std::cout << "yyyyyyyyyyyy 2: " << incomming << std::endl;
+	// 	if (strcmp(incomming, "str") == 0 && typeid(T) != typeid(std::to_string(0))) return false;
+	// 	if (strcmp(incomming, "int") == 0 && typeid(T) != typeid(0)) return false;
+	// 	if (strcmp(incomming, "float") == 0 && typeid(T) != typeid(0.0f) && typeid(T) != typeid(0.0)) return false;
+	// 	if (strcmp(incomming, "pyvk._vkviewer.lwws_key") == 0 && typeid(T) != typeid(LWWS::LWWS_Key::Special::RandomKey)) return false; 
+	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_viewing_type") == 0 && typeid(T) != typeid(Vk_ViewingType)) return false;
+	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_camera_type") == 0 && typeid(T) != typeid(Vk_CameraType)) return false;
+	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_steering_type") == 0 && typeid(T) != typeid(Vk_SteeringType)) return false;
+	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_render_type") == 0 && typeid(T) != typeid(RenderType)) return false;
+	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_topology") == 0 && typeid(T) != typeid(Topology)) return false;
+	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_cull_mode") == 0 && typeid(T) != typeid(CullMode)) return false;
+	// 	if (strcmp(incomming, "pyvk._vkviewer.vk_buffer_characteristics") == 0 && typeid(T) != typeid(Vk_BufferSizeBehaviour)) return false;
+	// 	std::cout << "yyyyyyyyyyyy 3" << std::endl;
+	// 	ret = nb::cast<T>(obj);
+	// 	std::cout << "yyyyyyyyyyyy 4" << std::endl;		
+	// 	return true;
+	// }
+
+	static int tryCastKey(nb::object key){
+		if(nb::isinstance<std::string>(key)){
+			std::string kk = nb::cast<std::string>(key);
+			std::cout << "std::string: Cast worked...: " << kk << std::endl;
+			char c = static_cast<char>(*kk.begin());
+			return LWWS::LWWS_Key::KeyToInt(c);
+		}
+		else {
+			std::cout << "blablabla" << std::endl;
+			if(nb::isinstance<LWWS::LWWS_Key::Special>(key)){
+				std::cout << "Special key..." << std::endl;
+				LWWS::LWWS_Key::Special kk = nb::cast<LWWS::LWWS_Key::Special>(key);
+				int keyInt = LWWS::LWWS_Key::KeyToInt(kk);
+				std::cout << "Special: Cast worked...: " << LWWS::LWWS_Key::IntKey2String(keyInt) << std::endl;
+				return keyInt;
+			}
+			else{
+				std::cout << "No fit" << std::endl;
+				return -1;
+			}
+		}
+		// std::string kk;
+		// bool ok = nb::try_cast(key, kk);
+		// if(ok){
+		// 	std::cout << "Special: Cast worked...: " << kk << std::endl;
+		// 	char c = static_cast<char>(*kk.begin());
+		// 	return LWWS::LWWS_Key::KeyToInt(c);
+		// }
+
+		// // LWWS::LWWS_Key::Special sk;
+		// // ok = nb::try_cast<LWWS::LWWS_Key::Special>(key, sk, True);
+		// // auto t = nb::cast<LWWS::LWWS_Key::Special>(key, True);
+		// int ik;
+		// ok = nb::try_cast(key, ik);
+		// if(ok){
+		// 	int keyInt = LWWS::LWWS_Key::IntToKeyInt(ik);
+		// 	std::cout << "Special: Cast worked...: " << LWWS::LWWS_Key::IntKey2String(keyInt) << std::endl;
+		// 	return LWWS::LWWS_Key::IntToKeyInt(ik);
+		// }
+		
+		// std::cout << "bla 1" << std::endl;
+		// if(tryCast(key, kk)){
+		// 	std::cout << "bla 2" << std::endl;
+		// 	char c = static_cast<char>(*kk.begin());
+		// 	std::cout << "bla 3" << std::endl;
+		// 	return LWWS::LWWS_Key::KeyToInt(c);
+		// }
+		// std::cout << "bla 4" << std::endl;
+		// LWWS::LWWS_Key::Special sk;
+		// if(tryCast(key, sk)){
+		// 	std::cout << "bla 5" << std::endl;
+		// 	std::cout << "hello world 3.5 " << LWWS::LWWS_Key::SpecialKey2String(sk) << std::endl;
+		// 	return LWWS::LWWS_Key::KeyToInt(sk);
+		// }
+		// std::cout << "bla 6" << std::endl;
+		return -1;
+	}
+};
+
+class Vk_NumpyTransformers {
+public:
+	static glm::tmat4x4<point_type> arrayToGLM4x4(const nb::ndarray<const point_type, nb::ndim<2>, nb::c_contig, nb::device::cpu>& inData){
+		return glm::make_mat4x4(reinterpret_cast<const point_type*>(inData.data()));
+	}
+
+	static glm::tvec3<point_type> arrayToGLMv3(const nb::ndarray<const point_type, nb::ndim<1>, nb::c_contig, nb::device::cpu>& arr){
+		return glm::make_vec3(reinterpret_cast<const point_type*>(arr.data()));
+	}
+
+	template<class T>
+	static T* structArrayToCpp(const nb::ndarray<const point_type, nb::ndim<2>, nb::c_contig, nb::device::cpu>& inData, size_t& outLen){
+		// NOTE: this way of passing numpy data is absolutely not copying anything
+		// For example, the following code
+		// 		std::cout << glm::to_string(p[0].pos) << std::endl;
+		//		p[0].pos.x = 5.5f;
+		// 		std::cout << glm::to_string(p[0].pos) << std::endl;
+		// will output 5.5 as the x-component of the first entry
+		// If we then output the first entry of the numpy array on the python side,
+		// we get the same thing
+
+		// using 
+		// 		py::array_t<VK4::point_type, py::array::c_style>& points
+		// or
+		// 		py::array_t<VK4::point_type, py::array::c_style> points
+		// doesn't make any difference, so use the reference type for now
+		
+		int innerDimensionLen = T::innerDimensionLen();
+		size_t size = inData.size();
+		if(size % innerDimensionLen != 0){
+			Vk_Logger::RuntimeError(typeid(NoneObj), std::string(typeid(T).name()) + std::string(" array must be of size Nx") + std::to_string(innerDimensionLen) + std::string("!"));
+		}
+		outLen = static_cast<size_t>(size/innerDimensionLen);
+		return reinterpret_cast<T*>(inData.data());
+	}
+
+	static const index_type* indexArrayToCpp(const nb::ndarray<const index_type, nb::c_contig>& inData, size_t& outLen){
+		return reinterpret_cast<const index_type*>(inData.data());
+	}
+};
+
+NB_MODULE(_pyke, m) {
 	m.doc() = "Vulkan Viewer for Numpy"; // optional module docstring
 
-	py::enum_<LWWS::LWWS_Key::Special>(m, "lwws_key")
+	nb::enum_<LWWS::LWWS_Key::Special>(m, "lwws_key")
 		.value("RandomKey", LWWS::LWWS_Key::Special::RandomKey)
 		.value("Sleep", LWWS::LWWS_Key::Special::Sleep)  
 		.value("F1", LWWS::LWWS_Key::Special::F1) 
@@ -59,44 +224,44 @@ PYBIND11_MODULE(_vkviewer, m) {
 		.value("Oem_8", LWWS::LWWS_Key::Special::Oem_8) // $ (CH), between L/P/0 and Backspace/Enter
 		.value("IntentionalSkip", LWWS::LWWS_Key::Special::IntentionalSkip); // this is just some placeholder to skip certain stuff
 
-	py::enum_<Vk_DevicePreference>(m, "vk_device_preferences")
+	nb::enum_<Vk_DevicePreference>(m, "vk_device_preferences")
 		.value("use_any_gpu", Vk_DevicePreference::USE_ANY_GPU)
 		.value("use_integrated_gpu", Vk_DevicePreference::USE_INTEGRATED_GPU)
 		.value("use_discrete_gpu", Vk_DevicePreference::USE_DISCRETE_GPU);
 
-	py::enum_<Vk_ViewingType>(m, "vk_viewing_type")
+	nb::enum_<Vk_ViewingType>(m, "vk_viewing_type")
 		.value("local", Vk_ViewingType::LOCAL)
 		.value("all", Vk_ViewingType::GLOBAL);
 
-	py::enum_<Vk_CameraType>(m, "vk_camera_type")
+	nb::enum_<Vk_CameraType>(m, "vk_camera_type")
 		.value("Rasterizer_IM", Vk_CameraType::Rasterizer_IM);
 
-	py::enum_<Vk_SteeringType>(m, "vk_steering_type")
+	nb::enum_<Vk_SteeringType>(m, "vk_steering_type")
 		.value("camera_centric", Vk_SteeringType::CAMERA_CENTRIC)
 		.value("object_centric", Vk_SteeringType::OBJECT_CENTRIC);
 
-	py::enum_<RenderType>(m, "vk_render_type")
+	nb::enum_<RenderType>(m, "vk_render_type")
 		.value("solid", RenderType::Solid)
 		.value("wireframe", RenderType::Wireframe)
 		.value("point", RenderType::Point);
 
-	py::enum_<Topology>(m, "vk_topology")
+	nb::enum_<Topology>(m, "vk_topology")
 		.value("points", Topology::Points)
 		.value("lines", Topology::Lines)
 		.value("triangles", Topology::Triangles);
 
-	py::enum_<CullMode>(m, "vk_cull_mode")
+	nb::enum_<CullMode>(m, "vk_cull_mode")
 		.value("none", CullMode::NoCulling)
 		.value("back", CullMode::Back)
 		.value("front", CullMode::Front);
 
-	py::enum_<Vk_BufferUpdateBehaviour>(m, "vk_buffer_update_behaviour")
+	nb::enum_<Vk_BufferUpdateBehaviour>(m, "vk_buffer_update_behaviour")
 		.value("global_lock", Vk_BufferUpdateBehaviour::GlobalLock)		 
 		.value("double_buffering", Vk_BufferUpdateBehaviour::DoubleBuffering)
 		.value("lazy_double_buffering", Vk_BufferUpdateBehaviour::LazyDoubleBuffering)
 		.value("pinned", Vk_BufferUpdateBehaviour::Pinned);
 
-	py::enum_<Vk_BufferSizeBehaviour>(m, "vk_buffer_characteristics")
+	nb::enum_<Vk_BufferSizeBehaviour>(m, "vk_buffer_characteristics")
 		.value("init_empty_grow_1_5", Vk_BufferSizeBehaviour::Init_Empty_Grow_1_5)
 		.value("init_empty_grow_2", Vk_BufferSizeBehaviour::Init_Empty_Grow_2)
 		.value("init_1_0_grow_1_5", Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5)
@@ -105,361 +270,575 @@ PYBIND11_MODULE(_vkviewer, m) {
 		.value("init_1_5_grow_2", Vk_BufferSizeBehaviour::Init_1_5_Grow_2);
 
 
-	py::class_<Vk_RGBColor, std::shared_ptr<Vk_RGBColor>>(m, "vk_rgb_color")
-		.def(py::init<float, float, float>(),
-			py::arg("r"), py::arg("g"), py::arg("b"),
-			py::call_guard<py::gil_scoped_release>())
-		.def_readwrite("r", &Vk_RGBColor::r)
-		.def_readwrite("g", &Vk_RGBColor::g)
-		.def_readwrite("b", &Vk_RGBColor::b);
+	nb::class_<Vk_RGBColor>(m, "vk_rgb_color")
+		.def("__init__", [](Vk_RGBColor& self, float r, float g, float b){
+				self = Vk_RGBColor{.r=r, .g=g, .b=b};
+			},
+			nb::arg("r"), nb::arg("g"), nb::arg("b"),
+			nb::rv_policy::reference_internal,
+			nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("r", &Vk_RGBColor::r)
+		.def_rw("g", &Vk_RGBColor::g)
+		.def_rw("b", &Vk_RGBColor::b);
 
-	py::class_<Vk_OklabColor, std::shared_ptr<Vk_OklabColor>>(m, "vk_oklab_color")
-		.def(py::init<float, float, float>(),
-			py::arg("L"), py::arg("a"), py::arg("b"),
-			py::call_guard<py::gil_scoped_release>())
-		.def_readwrite("L", &Vk_OklabColor::L)
-		.def_readwrite("a", &Vk_OklabColor::a)
-		.def_readwrite("b", &Vk_OklabColor::b);
+	nb::class_<Vk_OklabColor>(m, "vk_oklab_color")
+		.def("__init__", [](Vk_OklabColor& self, float L, float a, float b){
+				self = Vk_OklabColor{.L=L, .a=a, .b=b};
+			},
+			nb::arg("L"), nb::arg("a"), nb::arg("b"),
+			nb::rv_policy::reference_internal,
+			nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("L", &Vk_OklabColor::L)
+		.def_rw("a", &Vk_OklabColor::a)
+		.def_rw("b", &Vk_OklabColor::b);
 
-	py::class_<Vk_ColorOp, std::shared_ptr<Vk_ColorOp>>(m, "vk_color_op")
+	nb::class_<Vk_ColorOp>(m, "vk_color_op")
 		.def_static("rgb_to_oklab", 
 					&Vk_ColorOp::rgb_to_oklab, 
-					py::arg("rgb"), 
+					nb::arg("rgb"), 
 					"Convert vk_rgb_color to vk_oklab_color", 
-					py::call_guard<py::gil_scoped_release>())
+					nb::rv_policy::reference_internal,
+					nb::call_guard<nb::gil_scoped_release>())
 		.def_static("oklab_to_rgb", 
 					&Vk_ColorOp::oklab_to_rgb, 
-					py::arg("oklab"), 
+					nb::arg("oklab"), 
 					"Convert vk_oklab_color to vk_rgb_color", 
-					py::call_guard<py::gil_scoped_release>())
+					nb::rv_policy::reference_internal,
+					nb::call_guard<nb::gil_scoped_release>())
 		.def_static("oklab_lerp", 
 					&Vk_ColorOp::oklab_lerp, 
-					py::arg("p"), py::arg("from_color"), py::arg("to_color"), 
+					nb::arg("p"), nb::arg("from_color"), nb::arg("to_color"), 
 					"Linear interpolation between two oklab colors", 
-					py::call_guard<py::gil_scoped_release>())
+					nb::rv_policy::reference_internal,
+					nb::call_guard<nb::gil_scoped_release>())
 		.def_static("rgb_lerp", 
 					&Vk_ColorOp::rgb_lerp, 
-					py::arg("p"), py::arg("from_color"), py::arg("to"), 
+					nb::arg("p"), nb::arg("from_color"), nb::arg("to"), 
 					"Linear interpolation between two rgb colors. Interpolation first converts to Oklab then interpolates, then converts back.", 
-					py::call_guard<py::gil_scoped_release>());
+					nb::rv_policy::reference_internal,
+					nb::call_guard<nb::gil_scoped_release>());
 
 
-	py::class_<Vk_Viewport, std::shared_ptr<Vk_Viewport>>(m, "vk_viewport")
-		.def(py::init<uint32_t, uint32_t, uint32_t, uint32_t, Vk_RGBColor>(),
-			py::arg("x"), py::arg("y"), py::arg("width"), py::arg("height"), py::arg("clearColor"),
-			py::call_guard<py::gil_scoped_release>())
-		.def_readwrite("x", &Vk_Viewport::x)
-		.def_readwrite("y", &Vk_Viewport::y)
-		.def_readwrite("width", &Vk_Viewport::width)
-		.def_readwrite("height", &Vk_Viewport::height)
-		.def_readwrite("clearColor", &Vk_Viewport::clearColor);
+	nb::class_<Vk_Viewport>(m, "vk_viewport")
+		.def("__init__", [](Vk_Viewport& self, int32_t x, int32_t y, uint32_t width, uint32_t height, std::shared_ptr<Vk_RGBColor> clearColor){
+				self = Vk_Viewport{.x=x,.y=y,.width=width,.height=height,.clearColor=*clearColor.get()};
+			},
+			nb::arg("x"), nb::arg("y"), nb::arg("width"), nb::arg("height"), nb::arg("clearColor"),
+			nb::rv_policy::reference_internal,
+			nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("x", &Vk_Viewport::x)
+		.def_rw("y", &Vk_Viewport::y)
+		.def_rw("width", &Vk_Viewport::width)
+		.def_rw("height", &Vk_Viewport::height)
+		.def_rw("clearColor", &Vk_Viewport::clearColor);
 
-	py::class_<Vk_CameraSpecs, std::shared_ptr<Vk_CameraSpecs>>(m, "vk_camera_specs")
-		.def(py::init<
-				Vk_CameraType,
-				py::array_t<point_type, py::array::c_style>,
-				py::array_t<point_type, py::array::c_style>,
-				py::array_t<point_type, py::array::c_style>,
-				point_type,
-				point_type, 
-				point_type,
-				Vk_SteeringType
-			>(),
-			py::arg("type"), 
-			py::arg("w_pos"), py::arg("w_look"), py::arg("w_up"), 
-			py::arg("fow"), py::arg("w_near"), py::arg("w_far"), 
-			py::arg("steering_type"),
-			py::call_guard<py::gil_scoped_release>());
-		// ... maybe not expose these becaue of the py::arrays above ...
-		// .def_readwrite("type", &Vk_CameraSpecs::type)
-		// .def_readwrite("w_pos", &Vk_CameraSpecs::wPos)
-		// .def_readwrite("w_look", &Vk_CameraSpecs::wLook)
-		// .def_readwrite("w_up", &Vk_CameraSpecs::wUp)
-		// .def_readwrite("fow", &Vk_CameraSpecs::fow)
-		// .def_readwrite("w_near", &Vk_CameraSpecs::wNear)
-		// .def_readwrite("w_far", &Vk_CameraSpecs::wFar)
-		// .def_readwrite("steeringType", &Vk_CameraSpecs::steeringType);
+	// NOTE: needs revision...
+	nb::class_<Vk_CameraSpecs>(m, "vk_camera_specs")
+		.def("__init__", [](
+			Vk_CameraSpecs& self,
+			const Vk_CameraType& type,
+			const nb::ndarray<const point_type, nb::ndim<1>, nb::c_contig, nb::device::cpu>& w_pos,
+			const nb::ndarray<const point_type, nb::ndim<1>, nb::c_contig, nb::device::cpu>& w_look,
+			const nb::ndarray<const point_type, nb::ndim<1>, nb::c_contig, nb::device::cpu>& w_up,
+			point_type fow,
+			point_type w_near,
+			point_type w_far,
+			Vk_SteeringType steering_type
+		){
+			self = Vk_CameraSpecs{
+				.type=type,
+				.wPos = Vk_NumpyTransformers::arrayToGLMv3(w_pos),
+				.wLook = Vk_NumpyTransformers::arrayToGLMv3(w_look),
+				.wUp = Vk_NumpyTransformers::arrayToGLMv3(w_up),
+				.fow = fow,
+				.wNear = w_near,
+				.wFar = w_far,
+				.steeringType = steering_type
+			};
+		},
+		nb::arg("type"), 
+		nb::arg("w_pos"), nb::arg("w_look"), nb::arg("w_up"), 
+		nb::arg("fow"), nb::arg("w_near"), nb::arg("w_far"), 
+		nb::arg("steering_type"),
+		nb::rv_policy::reference_internal,
+		nb::call_guard<nb::gil_scoped_release>());
 
-	py::class_<Vk_CameraCoords, std::shared_ptr<Vk_CameraCoords>>(m, "vk_camera_coords")
-		.def(py::init())
-		.def_readwrite("w_pos", &Vk_CameraCoords::wPos)
-		.def_readwrite("w_look", &Vk_CameraCoords::wLook)
-		.def_readwrite("w_up", &Vk_CameraCoords::wUp)
-		.def_readwrite("x_axis", &Vk_CameraCoords::xAxis)
-		.def_readwrite("y_axis", &Vk_CameraCoords::yAxis)
-		.def_readwrite("z_axis", &Vk_CameraCoords::zAxis);
+	nb::class_<Vk_CameraCoords>(m, "vk_camera_coords")
+		.def(nb::init())
+		.def_rw("w_pos", &Vk_CameraCoords::wPos, nb::rv_policy::reference_internal, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("w_look", &Vk_CameraCoords::wLook, nb::rv_policy::reference_internal, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("w_up", &Vk_CameraCoords::wUp, nb::rv_policy::reference_internal, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("x_axis", &Vk_CameraCoords::xAxis, nb::rv_policy::reference_internal, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("y_axis", &Vk_CameraCoords::yAxis, nb::rv_policy::reference_internal, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("z_axis", &Vk_CameraCoords::zAxis, nb::rv_policy::reference_internal, nb::call_guard<nb::gil_scoped_release>());
 
-	py::class_<Vk_CameraInit, std::shared_ptr<Vk_CameraInit>>(m, "vk_camera_init")
-		.def(py::init<int, int, int, Vk_Viewport, Vk_CameraSpecs>(),
-			py::arg("cam_id"), py::arg("grid_x"), py::arg("grid_y"), py::arg("viewport"), py::arg("specs"),
-			py::call_guard<py::gil_scoped_release>())
-		.def_readwrite("cam_id", &Vk_CameraInit::camId)
-		.def_readwrite("grid_x", &Vk_CameraInit::gridX)
-		.def_readwrite("grid_y", &Vk_CameraInit::gridY)
-		.def_readwrite("viewport", &Vk_CameraInit::viewport)
-		.def_readwrite("specs", &Vk_CameraInit::specs);
+	nb::class_<Vk_CameraInit>(m, "vk_camera_init")
+		.def("__init__", [](
+			Vk_CameraInit& self,
+			int camId, int gridX, int gridY, 
+			std::shared_ptr<Vk_Viewport> viewport, 
+			std::shared_ptr<Vk_CameraSpecs> specs){
+				self = Vk_CameraInit{.camId=camId, .gridX=gridX, .gridY=gridY, .viewport=*viewport.get(), .specs=*specs.get()};
+			},
+			nb::arg("cam_id"), nb::arg("grid_x"), nb::arg("grid_y"), nb::arg("viewport"), nb::arg("specs"),
+			nb::rv_policy::reference_internal,
+			nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("cam_id", &Vk_CameraInit::camId, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("grid_x", &Vk_CameraInit::gridX, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("grid_y", &Vk_CameraInit::gridY, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("viewport", &Vk_CameraInit::viewport, nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("specs", &Vk_CameraInit::specs, nb::call_guard<nb::gil_scoped_release>());
 
-	py::class_<Vk_ViewportMargins, std::shared_ptr<Vk_ViewportMargins>>(m, "vk_viewport_margins")
-		.def(py::init<uint32_t, uint32_t, uint32_t, uint32_t>(),
-			py::arg("left"), py::arg("right"), py::arg("top"), py::arg("bottom"),
-			py::call_guard<py::gil_scoped_release>())
-		.def_readwrite("left", &Vk_ViewportMargins::left)
-		.def_readwrite("right", &Vk_ViewportMargins::right)
-		.def_readwrite("top", &Vk_ViewportMargins::top)
-		.def_readwrite("bottom", &Vk_ViewportMargins::bottom);
+	nb::class_<Vk_ViewportMargins>(m, "vk_viewport_margins")
+		.def("__init__", [](
+			Vk_ViewportMargins& self,
+			int32_t left, int32_t right, int32_t top, int32_t bottom){
+				self = Vk_ViewportMargins{.left=left, .right=right, .top=top, .bottom=bottom};
+			},
+			nb::arg("left"), nb::arg("right"), nb::arg("top"), nb::arg("bottom"),
+			nb::rv_policy::reference_internal,
+			nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("left", &Vk_ViewportMargins::left)
+		.def_rw("right", &Vk_ViewportMargins::right)
+		.def_rw("top", &Vk_ViewportMargins::top)
+		.def_rw("bottom", &Vk_ViewportMargins::bottom);
 
-    py::class_<Vk_ViewerParams, std::shared_ptr<Vk_ViewerParams>>(m, "vk_viewer_params")
-		.def(py::init<std::string, int, int, Vk_ViewingType, int, std::string>(),
-			py::arg("name"),
-			py::arg("width"), py::arg("height"), 
-			py::arg("viewing_type"), 
-			py::arg("fresh_pool_size")=100,
-			py::arg("screenshot_save_path")="./",
-			py::call_guard<py::gil_scoped_release>())
-		.def_readwrite("width", &Vk_ViewerParams::width)
-		.def_readwrite("height", &Vk_ViewerParams::height)
-		.def_readwrite("freshPoolSize", &Vk_ViewerParams::freshPoolSize)
-		.def_readwrite("viewingType", &Vk_ViewerParams::viewingType)
-		.def_readwrite("screenshotSavePath", &Vk_ViewerParams::screenshotSavePath);
+    nb::class_<Vk_ViewerParams>(m, "vk_viewer_params")
+		.def("__init__", [](
+			Vk_ViewerParams& self,
+			std::string name, int width, int height, 
+			const Vk_ViewingType& viewingType, 
+			int freshPoolSize, std::string screenshotSavePath){
+				self = Vk_ViewerParams(name, width, height, viewingType, freshPoolSize, screenshotSavePath);
+			},
+			nb::arg("name"),
+			nb::arg("width"), nb::arg("height"), 
+			nb::arg("viewing_type"), 
+			nb::arg("fresh_pool_size")=100,
+			nb::arg("screenshot_save_path")="./",
+			nb::rv_policy::reference_internal,
+			nb::call_guard<nb::gil_scoped_release>())
+		.def_rw("width", &Vk_ViewerParams::width)
+		.def_rw("height", &Vk_ViewerParams::height)
+		.def_rw("freshPoolSize", &Vk_ViewerParams::freshPoolSize)
+		.def_rw("viewingType", &Vk_ViewerParams::viewingType)
+		.def_rw("screenshotSavePath", &Vk_ViewerParams::screenshotSavePath);
 
 
 	// TODO: in the future export some more features here
-	py::class_<Vk_Device, std::unique_ptr<Vk_Device, py::nodelete>>(m, "vk_device")
-		.def(py::init<std::string, Vk_DevicePreference>(),
-			 py::arg("name"),
-			 py::arg("device_preferences")=Vk_DevicePreference::USE_ANY_GPU,
-			 py::call_guard<py::gil_scoped_release>());
+	nb::class_<Vk_Device>(m, "vk_device")
+		.def(nb::new_([](std::string name, const Vk_DevicePreference& prefs){
+				return std::make_shared<Vk_Device>(name, prefs);
+			}),
+			nb::arg("name"),
+			nb::arg("device_preferences")=Vk_DevicePreference::USE_ANY_GPU,
+			nb::rv_policy::reference_internal,
+			nb::call_guard<nb::gil_scoped_release>());
 
-
-	py::class_<Vk_Renderable, std::shared_ptr<Vk_Renderable>>(m, "vk_renderable")
-		.def(py::init(),
-			py::call_guard<py::gil_scoped_release>())
+	nb::class_<Vk_Renderable>(m, "vk_renderable")
+		.def(nb::init(),
+			nb::rv_policy::reference_internal,
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_descriptor_count",
 			 &Vk_Renderable::vk_descriptorCount,
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_object_name",
 			 &Vk_Renderable::vk_objectName,
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_is_attached_to",
 			 &Vk_Renderable::vk_isAttachedTo,
-			 py::arg("cam_id"),
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::arg("cam_id"),
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_model_matrix",
 			 &Vk_Renderable::vk_updateModelMatrix,
-			 py::arg("model_matrix"),
-			 py::call_guard<py::gil_scoped_release>());
+			 nb::arg("model_matrix"),
+			 nb::call_guard<nb::gil_scoped_release>());
 
-	py::class_<I_Object<ObjectType_P_C>, Vk_Renderable, std::shared_ptr<I_Object<ObjectType_P_C>>>(m, "i_object_p_c")
-		.def(py::init(), py::call_guard<py::gil_scoped_release>());
+	nb::class_<I_Object<ObjectType_P_C>, Vk_Renderable>(m, "i_object_p_c")
+		.def(nb::init(),
+			nb::rv_policy::reference_internal,
+			nb::call_guard<nb::gil_scoped_release>());
 
-	py::class_<Vk_Dot<ObjectType_P_C>, I_Object<ObjectType_P_C>, std::shared_ptr<Vk_Dot<ObjectType_P_C>>>(m, "vk_dot_p_c")
-		.def(py::init(&S_Dot_P_C::create),
-			py::arg("device"), py::arg("name"), 
-			py::arg("model_matrix"),
-			py::arg("points"), py::arg("colors"), py::arg("indices"),
-			py::arg("point_size"), py::arg("alpha"),
-			py::arg("cull_mode")=CullMode::NoCulling,
-			py::arg("updateBehaviour")=Vk_BufferUpdateBehaviour::GlobalLock,
-			py::arg("sizeBehaviour")=Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
+	nb::class_<Vk_Dot<ObjectType_P_C>, I_Object<ObjectType_P_C>>(m, "vk_dot_p_c")
+		.def(nb::new_([](
+				std::shared_ptr<Vk_Device> device,
+				std::string name,
+				const nb::ndarray<const point_type, nb::c_contig>& modelMatrix,
+				const nb::ndarray<const point_type, nb::c_contig>& points,
+				const nb::ndarray<const point_type, nb::c_contig>& colors,
+				const nb::ndarray<const index_type, nb::c_contig>& indices,
+				float pointSize,
+				float alpha,
+				// Topology topology = VK4::Topology::Points,
+				CullMode cullMode = VK4::CullMode::NoCulling,
+				// RenderType renderType = VK4::RenderType::Point,
+				Vk_BufferUpdateBehaviour updateBehaviour = Vk_BufferUpdateBehaviour::GlobalLock,
+				Vk_BufferSizeBehaviour sizeBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
+			){
+				return S_Dot_P_C::create(
+					device.get(),
+					name,
+					std::span<const point_type>(reinterpret_cast<const point_type*>(modelMatrix.data()), modelMatrix.size()), 
+					std::span<const point_type>(reinterpret_cast<const point_type*>(points.data()), points.size()),
+					std::span<const point_type>(reinterpret_cast<const point_type*>(colors.data()), colors.size()),
+					std::span<const index_type>(reinterpret_cast<const index_type*>(indices.data()), indices.size()),
+					pointSize, alpha,
+					cullMode,
+					updateBehaviour,
+					sizeBehaviour
+				);
+			}),
+			nb::arg("device"), nb::arg("name"), 
+			nb::arg("model_matrix"),
+			nb::arg("points"), nb::arg("colors"), nb::arg("indices"),
+			nb::arg("point_size"), nb::arg("alpha"),
+			nb::arg("cull_mode")=CullMode::NoCulling,
+			nb::arg("updateBehaviour")=Vk_BufferUpdateBehaviour::GlobalLock,
+			nb::arg("sizeBehaviour")=Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
 			"Create dot object with distinct buffers for points, colors and indices", 
-			py::call_guard<py::gil_scoped_release>())
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_points", 
-			 &Vk_Dot<ObjectType_P_C>::vk_update_points, 
-			 py::arg("points"), py::arg("new_from"),
-			 py::call_guard<py::gil_scoped_release>())
+			 [](
+				std::shared_ptr<Vk_Dot<ObjectType_P_C>> self,
+				const nb::ndarray<const point_type, nb::c_contig>& points,
+				size_t new_from
+			 ){
+				self->vk_updatePoints(std::span<const point_type>(reinterpret_cast<const point_type*>(points.data()), points.size()), new_from);
+			 }, 
+			 nb::arg("points"), nb::arg("new_from"),
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_colors", 
-			 &Vk_Dot<ObjectType_P_C>::vk_update_colors, 
-			 py::arg("colors"), py::arg("new_from"),
-			 py::call_guard<py::gil_scoped_release>())
+			 [](
+				std::shared_ptr<Vk_Dot<ObjectType_P_C>> self,
+				const nb::ndarray<const point_type, nb::c_contig>& colors,
+				size_t new_from
+			 ){
+				self->vk_updateColors(std::span<const point_type>(reinterpret_cast<const point_type*>(colors.data()), colors.size()), new_from);
+			 }, 
+			 nb::arg("colors"), nb::arg("new_from"),
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_indices", 
-			 &Vk_Dot<ObjectType_P_C>::vk_update_indices, 
-			 py::arg("indices"), py::arg("new_from"),
-			 py::call_guard<py::gil_scoped_release>())
+			 [](
+				std::shared_ptr<Vk_Dot<ObjectType_P_C>> self,
+				const nb::ndarray<const index_type, nb::c_contig>& indices,
+				size_t new_from
+			 ){
+				self->vk_updateIndices(std::span<const index_type>(reinterpret_cast<const index_type*>(indices.data()), indices.size()), new_from);
+			 }, 
+			 nb::arg("indices"), nb::arg("new_from"),
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_alpha", 
 			 &Vk_Dot<ObjectType_P_C>::vk_updateAlpha, 
-			 py::arg("alpha"),
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::arg("alpha"),
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_point_size", 
 			 &Vk_Dot<ObjectType_P_C>::vk_updatePointSize, 
-			 py::arg("point_size"),
-			 py::call_guard<py::gil_scoped_release>());
+			 nb::arg("point_size"),
+			 nb::call_guard<nb::gil_scoped_release>());
 
-	py::class_<Vk_Line<ObjectType_P_C>, I_Object<ObjectType_P_C>, std::shared_ptr<Vk_Line<ObjectType_P_C>>>(m, "vk_line_p_c")
-		.def(py::init(&S_Line_P_C::create),
-			py::arg("device"), py::arg("name"), 
-			py::arg("model_matrix"),
-			py::arg("points"), py::arg("colors"), py::arg("indices"),
-			py::arg("line_width"), py::arg("alpha"),
-			py::arg("cull_mode")=CullMode::NoCulling,
-			py::arg("updateBehaviour")=Vk_BufferUpdateBehaviour::GlobalLock,
-			py::arg("sizeBehaviour")=Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
+	nb::class_<Vk_Line<ObjectType_P_C>, I_Object<ObjectType_P_C>>(m, "vk_line_p_c")
+		.def(nb::new_([](
+				std::shared_ptr<Vk_Device> device,
+				std::string name,
+				const nb::ndarray<const point_type, nb::c_contig>& modelMatrix,
+				const nb::ndarray<const point_type, nb::c_contig>& points,
+				const nb::ndarray<const point_type, nb::c_contig>& colors,
+				const nb::ndarray<const index_type, nb::c_contig>& indices,
+				float lineWidth,
+				float alpha,
+				// Topology topology = VK4::Topology::Points,
+				CullMode cullMode = VK4::CullMode::NoCulling,
+				// RenderType renderType = VK4::RenderType::Point,
+				Vk_BufferUpdateBehaviour updateBehaviour = Vk_BufferUpdateBehaviour::GlobalLock,
+				Vk_BufferSizeBehaviour sizeBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
+			){
+				return S_Line_P_C::create(
+					device.get(),
+					name,
+					std::span<const point_type>(reinterpret_cast<const point_type*>(modelMatrix.data()), modelMatrix.size()), 
+					std::span<const point_type>(reinterpret_cast<const point_type*>(points.data()), points.size()),
+					std::span<const point_type>(reinterpret_cast<const point_type*>(colors.data()), colors.size()),
+					std::span<const index_type>(reinterpret_cast<const index_type*>(indices.data()), indices.size()),
+					lineWidth, alpha,
+					cullMode,
+					updateBehaviour,
+					sizeBehaviour
+				);
+			}),
+			nb::arg("device"), nb::arg("name"), 
+			nb::arg("model_matrix"),
+			nb::arg("points"), nb::arg("colors"), nb::arg("indices"),
+			nb::arg("line_width"), nb::arg("alpha"),
+			nb::arg("cull_mode")=CullMode::NoCulling,
+			nb::arg("updateBehaviour")=Vk_BufferUpdateBehaviour::GlobalLock,
+			nb::arg("sizeBehaviour")=Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
 			"Create line object with distinct buffers for points, colors and indices", 
-			py::call_guard<py::gil_scoped_release>())
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_points", 
-			 &Vk_Line<ObjectType_P_C>::vk_update_points, 
-			 py::arg("points"), py::arg("new_from"),
-			 py::call_guard<py::gil_scoped_release>())
+			[](
+				std::shared_ptr<Vk_Line<ObjectType_P_C>> self,
+				const nb::ndarray<const point_type, nb::c_contig>& points,
+				size_t new_from
+			){
+				self->vk_updatePoints(std::span<const point_type>(reinterpret_cast<const point_type*>(points.data()), points.size()), new_from);
+			}, 
+			nb::arg("points"), nb::arg("new_from"),
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_colors", 
-			 &Vk_Line<ObjectType_P_C>::vk_update_colors, 
-			 py::arg("colors"), py::arg("new_from"),
-			 py::call_guard<py::gil_scoped_release>())
+			[](
+				std::shared_ptr<Vk_Line<ObjectType_P_C>> self,
+				const nb::ndarray<const point_type, nb::c_contig>& colors,
+				size_t new_from
+			){
+				self->vk_updateColors(std::span<const point_type>(reinterpret_cast<const point_type*>(colors.data()), colors.size()), new_from);
+			}, 
+			nb::arg("colors"), nb::arg("new_from"),
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_indices", 
-			 &Vk_Line<ObjectType_P_C>::vk_update_indices, 
-			 py::arg("indices"), py::arg("new_from"),
-			 py::call_guard<py::gil_scoped_release>())
+			[](
+				std::shared_ptr<Vk_Line<ObjectType_P_C>> self,
+				const nb::ndarray<const index_type, nb::c_contig>& indices,
+				size_t new_from
+			){
+				self->vk_updateIndices(std::span<const index_type>(reinterpret_cast<const index_type*>(indices.data()), indices.size()), new_from);
+			}, 
+			nb::arg("indices"), nb::arg("new_from"),
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_alpha", 
 			 &Vk_Line<ObjectType_P_C>::vk_updateAlpha, 
-			 py::arg("alpha"),
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::arg("alpha"),
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_line_width", 
 			 &Vk_Line<ObjectType_P_C>::vk_updateLineWidth, 
-			 py::arg("line_width"),
-			 py::call_guard<py::gil_scoped_release>());
+			 nb::arg("line_width"),
+			 nb::call_guard<nb::gil_scoped_release>());
 
-	py::class_<Vk_Mesh<ObjectType_P_C>, I_Object<ObjectType_P_C>, std::shared_ptr<Vk_Mesh<ObjectType_P_C>>>(m, "vk_mesh_p_c")
-		.def(py::init(&S_Mesh_P_C::create),
-			py::arg("device"), py::arg("name"), 
-			py::arg("model_matrix"),
-			py::arg("points"), py::arg("colors"), py::arg("indices"),
-			py::arg("alpha"),
-			py::arg("cull_mode")=CullMode::NoCulling,
-			py::arg("render_type")=RenderType::Solid,
-			py::arg("point_size"), py::arg("line_width"), 
-			py::arg("updateBehaviour")=Vk_BufferUpdateBehaviour::GlobalLock,
-			py::arg("sizeBehaviour")=Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
+	nb::class_<Vk_Mesh<ObjectType_P_C>, I_Object<ObjectType_P_C>>(m, "vk_mesh_p_c")
+		.def(nb::new_([](
+				std::shared_ptr<Vk_Device> device,
+				std::string name,
+				const nb::ndarray<const point_type, nb::c_contig>& modelMatrix,
+				const nb::ndarray<const point_type, nb::c_contig>& points,
+				const nb::ndarray<const point_type, nb::c_contig>& colors,
+				const nb::ndarray<const index_type, nb::c_contig>& indices,
+				// Topology topology = VK4::Topology::Points,
+				float alpha=1.0f,
+				CullMode cullMode = VK4::CullMode::Back,
+				RenderType renderType = VK4::RenderType::Solid,
+				float pointSize=1.0f,
+				float lineWidth=1.0f,
+				Vk_BufferUpdateBehaviour sizeBehaviour = Vk_BufferUpdateBehaviour::GlobalLock,
+				Vk_BufferSizeBehaviour updateBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
+			){
+				return S_Mesh_P_C::create(
+					device.get(),
+					name,
+					std::span<const point_type>(reinterpret_cast<const point_type*>(modelMatrix.data()), modelMatrix.size()), 
+					std::span<const point_type>(reinterpret_cast<const point_type*>(points.data()), points.size()),
+					std::span<const point_type>(reinterpret_cast<const point_type*>(colors.data()), colors.size()),
+					std::span<const index_type>(reinterpret_cast<const index_type*>(indices.data()), indices.size()),
+					alpha,
+					cullMode,
+					renderType,
+					pointSize,
+					lineWidth,
+					sizeBehaviour,
+					updateBehaviour
+				);
+			}),
+			nb::arg("device"), 
+			nb::arg("name"), 
+			nb::arg("model_matrix"),
+			nb::arg("points"), nb::arg("colors"), nb::arg("indices"),
+			nb::arg("alpha"),
+			nb::arg("cull_mode")=CullMode::NoCulling,
+			nb::arg("render_type")=RenderType::Solid,
+			nb::arg("point_size"), nb::arg("line_width"), 
+			nb::arg("updateBehaviour")=Vk_BufferUpdateBehaviour::GlobalLock,
+			nb::arg("sizeBehaviour")=Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5,
 			"Create mesh object with distinct buffers for points, colors and indices", 
-			py::call_guard<py::gil_scoped_release>())
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_points", 
-			 &Vk_Mesh<ObjectType_P_C>::vk_update_points, 
-			 py::arg("points"), py::arg("new_from"),
-			 py::call_guard<py::gil_scoped_release>())
+			[](
+				std::shared_ptr<Vk_Mesh<ObjectType_P_C>> self,
+				const nb::ndarray<const point_type, nb::c_contig>& points,
+				size_t new_from
+			){
+				self->vk_updatePoints(std::span<const point_type>(reinterpret_cast<const point_type*>(points.data()), points.size()), new_from);
+			}, 
+			nb::arg("points"), nb::arg("new_from"),
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_colors", 
-			 &Vk_Mesh<ObjectType_P_C>::vk_update_colors, 
-			 py::arg("colors"), py::arg("new_from"),
-			 py::call_guard<py::gil_scoped_release>())
+			[](
+				std::shared_ptr<Vk_Mesh<ObjectType_P_C>> self,
+				const nb::ndarray<const point_type, nb::c_contig>& colors,
+				size_t new_from
+			){
+				self->vk_updateColors(std::span<const point_type>(reinterpret_cast<const point_type*>(colors.data()), colors.size()), new_from);
+			}, 
+			nb::arg("colors"), nb::arg("new_from"),
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_indices", 
-			 &Vk_Mesh<ObjectType_P_C>::vk_update_indices, 
-			 py::arg("indices"), py::arg("new_from"),
-			 py::call_guard<py::gil_scoped_release>())
+			[](
+				std::shared_ptr<Vk_Mesh<ObjectType_P_C>> self,
+				const nb::ndarray<const index_type, nb::c_contig>& indices,
+				size_t new_from
+			){
+				self->vk_updateIndices(std::span<const index_type>(reinterpret_cast<const index_type*>(indices.data()), indices.size()), new_from);
+			}, 
+			nb::arg("indices"), nb::arg("new_from"),
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_alpha", 
 			 &Vk_Mesh<ObjectType_P_C>::vk_updateAlpha, 
-			 py::arg("alpha"),
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::arg("alpha"),
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_point_size", 
 			 &Vk_Mesh<ObjectType_P_C>::vk_updatePointSize, 
-			 py::arg("line_width"),
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::arg("line_width"),
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_update_line_width", 
 			 &Vk_Mesh<ObjectType_P_C>::vk_updateLineWidth, 
-			 py::arg("line_width"),
-			 py::call_guard<py::gil_scoped_release>());
+			 nb::arg("line_width"),
+			 nb::call_guard<nb::gil_scoped_release>());
 
-
-	py::class_<Vk_Viewer, std::shared_ptr<Vk_Viewer>>(m, "vk_viewer")
-		.def(py::init<Vk_Device*, Vk_ViewerParams>(),
-			 py::arg("device"),
-			 py::arg("params"))
+	nb::class_<Vk_Viewer>(m, "vk_viewer")
+		.def(nb::new_([](std::shared_ptr<Vk_Device> device, const Vk_ViewerParams& params){
+				return std::make_shared<Vk_Viewer>(device.get(), params);
+			}),
+			nb::arg("device"),
+			nb::arg("params"),
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_get_version", 
-			 &Vk_Viewer::vk_getVersion,
-			 "Get version of viewer", 
-			 py::call_guard<py::gil_scoped_release>())
+			&Vk_Viewer::vk_getVersion,
+			"Get version of viewer", 
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_add_camera",
 			 &Vk_Viewer::vk_addCamera,
-			 py::arg("cameras"),
+			 nb::arg("cameras"),
 			 "Add camera to viewer",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_attach_to_all",
 			 &Vk_Viewer::vk_attachToAll,
-			 py::arg("object"),
+			 nb::arg("object"),
 			 "Attach object to all cameras",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_attach_to",
 			 &Vk_Viewer::vk_attachTo,
-			 py::arg("cam_id"), py::arg("object"),
+			 nb::arg("cam_id"), nb::arg("object"),
 			 "Attach object camera with cameraId cam_id",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		// .def("vk_build",
 		// 	 &Vk_Viewer::vk_build,
 		// 	 "Build renderer",
-		// 	 py::call_guard<py::gil_scoped_release>())
+		// 	 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_rebuild_and_redraw",
 			 &Vk_Viewer::vk_rebuildAndRedraw,
 			 "Rebuild renderer",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_detach_from_all",
 			 &Vk_Viewer::vk_detachFromAll,
-			 py::arg("object"),
+			 nb::arg("object"),
 			 "Detach object with objectName from all cameras",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_detach_from",
 			 &Vk_Viewer::vk_detachFrom,
-			 py::arg("cam_id"), py::arg("object"),
+			 nb::arg("cam_id"), nb::arg("object"),
 			 "Detach object with objectName from camera with cam_id",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_run_thread",
 			 &Vk_Viewer::vk_runThread,
 			 "Run camera loop in separate thread (use while viewer.vk_running(): ...)",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_run",
 			 &Vk_Viewer::vk_run,
 			 "Run camera loop",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_register_action",
-			 &Vk_Viewer::vk_register_action,
-			 py::arg("key"), py::arg("f"), py::arg("camera_id")=-1,
+			 [](std::shared_ptr<Vk_Viewer> self, nb::object key, nb::callable f, int cameraId=-1){
+				std::cout << "hello 1" << std::endl;
+				if(cameraId >= 0){
+					Vk_Logger::RuntimeError(typeid(self), "Per camera localized actions not supported yet!");
+					return false;
+				}
+				std::cout << "hello 2" << std::endl;
+				int intKey = Vk_Casters::tryCastKey(key);
+				if(intKey < 0) {
+					Vk_Logger::Error(typeid(self), "Unable to cast passed key");
+					return false;
+				}
+				// auto pyFunc = Vk_PyFunc(f);
+				// return self->vk_registerAction(intKey, &pyFunc, cameraId);
+				return true;
+			 },
+			 nb::arg("key"), nb::arg("f"), nb::arg("camera_id")=-1,
 			 "Register action f to all cameras (Note: per-camera actions not yet supported)",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_unregister_action",
-			 &Vk_Viewer::vk_unregister_action,
-			 py::arg("key"),
+			 [](std::shared_ptr<Vk_Viewer> self, nb::object key){
+				int intKey = Vk_Casters::tryCastKey(key);
+				if(intKey < 0) {
+					Vk_Logger::Error(typeid(self), "Unable to cast passed key");
+					return false;
+				}
+				return self->vk_unregisterAction(intKey);
+			 },
+			 nb::arg("key"),
 			 "Unregister action bound to key",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_exec_action",
-			 &Vk_Viewer::vk_exec_action,
-			 py::arg("key"),
+			 [](std::shared_ptr<Vk_Viewer> self, nb::object key){
+				int intKey = Vk_Casters::tryCastKey(key);
+				return self->vk_execAction(intKey);
+			 },
+			 nb::arg("key"),
 			 "Run action associated with the <key>. This is equivalent to pressing the associated <key> button.",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_camera_coords",
 			 &Vk_Viewer::vk_cameraCoords,
-			 py::return_value_policy::move,
-			 py::arg("cam_id"),
+			 nb::rv_policy::move,
+			 nb::arg("cam_id"),
 			 "Get the camera specs of camera with id cam_id in the current state",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_running",
 			 &Vk_Viewer::vk_running,
 			 "True while the viewer is running, False afterwards (threadsafe)",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_pause_draw",
 			 &Vk_Viewer::vk_pauseDraw,
 			 "Stops updating the frame until vk_unpause_draw is called. For example, in order to update all objects if the user wants a synchronized picture.",
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_unpause_draw",
 			 &Vk_Viewer::vk_unpauseDraw,
 			 "If vk_pause_draw was called previously, then resume drawing, otherwise, does nothing.",
-			 py::call_guard<py::gil_scoped_release>());
+			 nb::call_guard<nb::gil_scoped_release>());
 
-		py::class_<I_LayoutPack, std::shared_ptr<I_LayoutPack>>(m, "vk_layout_pack")
-		.def(py::init<Vk_CameraSpecs, Vk_RGBColor>(),
-			py::arg("specs"), py::arg("clear_color"),
-			py::call_guard<py::gil_scoped_release>());
+	nb::class_<I_LayoutPack>(m, "vk_layout_pack")
+		.def("__init__", [](
+				I_LayoutPack& self,
+				const Vk_CameraSpecs& specs, 
+				const Vk_RGBColor& clear_color
+			){
+				self = I_LayoutPack{.specs=specs, .clearColor=clear_color};
+			},
+			nb::arg("specs"), nb::arg("clear_color"),
+			nb::call_guard<nb::gil_scoped_release>());
 
-
-	py::class_<Vk_GridLayout, std::shared_ptr<Vk_GridLayout>>(m, "vk_grid_layout")
-		.def(py::init<int, int, int, int>(),
-			py::arg("x_count"), py::arg("y_count"), py::arg("x_spacing"), py::arg("y_spacing"),
-			py::call_guard<py::gil_scoped_release>())
+	nb::class_<Vk_GridLayout>(m, "vk_grid_layout")
+		.def(nb::init<int, int, int, int>(),
+			nb::arg("x_count"), nb::arg("y_count"), nb::arg("x_spacing"), nb::arg("y_spacing"),
+			nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_layout_list", 
 			 &Vk_GridLayout::vk_layoutList, 
-			 py::return_value_policy::reference,
-			 py::arg("width"), py::arg("height"),
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::rv_policy::reference,
+			 nb::arg("width"), nb::arg("height"),
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_count", 
 			 &Vk_GridLayout::vk_count,
-			 py::call_guard<py::gil_scoped_release>())
+			 nb::call_guard<nb::gil_scoped_release>())
 		.def("vk_add_camera", 
 			 &Vk_GridLayout::vk_addCamera, 
-			 py::arg("x"), py::arg("y"), py::arg("pack"), py::arg("override")=false,
-			 py::call_guard<py::gil_scoped_release>());
+			 nb::arg("x"), nb::arg("y"), nb::arg("pack"), nb::arg("override")=false,
+			 nb::call_guard<nb::gil_scoped_release>());
 }
 // #else
 // #include <iostream>
