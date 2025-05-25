@@ -128,57 +128,6 @@ namespace VK4 {
 
 			return obj;
 		}
-// #endif
-
-// 		static std::shared_ptr<Vk_Dot<ObjectType_P_C>> create(
-// 			Vk_Device* const device,
-// 			std::string name,
-// // #ifdef PYVK
-// // 			const py::array_t<VK4::point_type, py::array::c_style>& modelMatrix,
-// // 			const py::array_t<VK4::point_type, py::array::c_style>& points,
-// // 			const py::array_t<VK4::point_type, py::array::c_style>& colors,
-// // 			const py::array_t<VK4::index_type, py::array::c_style>& indices,
-// // #else
-// 			const glm::tmat4x4<point_type>& modelMatrix,
-// 			const std::vector<Vk_Vertex_P>& p,
-// 			const std::vector<Vk_Vertex_C>& c,
-// 			const std::vector<index_type>& i,
-// // #endif
-// 			float pointSize,
-// 			float alpha,
-// 			// Topology topology = VK4::Topology::Points,
-// 			CullMode cullMode = VK4::CullMode::NoCulling,
-// 			// RenderType renderType = VK4::RenderType::Point,
-// 			Vk_BufferUpdateBehaviour updateBehaviour = Vk_BufferUpdateBehaviour::GlobalLock,
-// 			Vk_BufferSizeBehaviour sizeBehaviour = Vk_BufferSizeBehaviour::Init_1_0_Grow_1_5
-// 		) {
-// // #ifdef PYVK
-// // 			glm::tmat4x4<point_type> m = Vk_NumpyTransformers::arrayToGLM4x4<point_type>(modelMatrix);
-// // 			size_t pLen;
-// // 			Vk_Vertex_P* p = Vk_NumpyTransformers::structArrayToCpp<Vk_Vertex_P>(points, pLen);
-// // 			size_t cLen;
-// // 			Vk_Vertex_C* c = Vk_NumpyTransformers::structArrayToCpp<Vk_Vertex_C>(colors, cLen);
-// // 			size_t iLen;
-// // 			index_type* i = Vk_NumpyTransformers::indexArrayToCpp(indices, iLen);
-// // #endif
-// 			auto obj = std::make_shared<Vk_Dot<ObjectType_P_C>>(
-// 				device,
-// 				name,
-// 				Identifier,
-// // #ifdef PYVK
-// // 				m, p, pLen, c, cLen, i, iLen,
-// // #else
-// 				modelMatrix, p.data(), p.size(), c.data(), c.size(), i.data(), i.size(), 
-// // #endif
-// 				pointSize, alpha,
-// 				cullMode,
-// 				std::unordered_map<std::string, int>{ {"P_BindingPoint", Vertex_P_BindingPoint}, {"C_BindingPoint", Vertex_C_BindingPoint} },
-// 				updateBehaviour,
-// 				sizeBehaviour
-// 			);
-
-// 			return obj;
-// 		}
 
 		static VkDescriptorSetLayout createDescriptorSetLayout(VkDevice lDev) {
 			std::vector<VkDescriptorSetLayoutBinding> bindings;

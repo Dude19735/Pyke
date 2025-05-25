@@ -32,8 +32,6 @@
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/ndarray.h>
 
-// #ifdef PYVK
-// namespace py = pybind11;
 namespace nb = nanobind;
 using namespace VK4;
 

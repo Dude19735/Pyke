@@ -68,18 +68,6 @@
 #undef max
 #undef min
 
-// #ifdef PYVK
-// 	#include <nanobind/nanobind.h>
-// 	#include <nanobind/stl/bind_vector.h>
-// 	#include <nanobind/stl/string.h>
-// 	#include <nanobind/stl/tuple.h>
-// 	#include <nanobind/stl/set.h>
-// 	#include <nanobind/stl/map.h>
-
-// 	// namespace py = pybind11;
-// 	namespace nb = nanobind;
-// #endif
-
 #include <cinttypes>
 #include "Vk_Coloring.hpp"
 
@@ -185,57 +173,6 @@ namespace VK4 {
 		}
 	};
 
-// #ifdef PYVK
-//     class Vk_NumpyTransformers {
-//     public:
-//         template<class T>
-//         static glm::tmat4x4<T> arrayToGLM4x4(const nb::array_t<point_type, nb::array::c_style>& inData){
-//             nb::buffer_info pInfo = inData.request();
-//             T* p = static_cast<T*>(pInfo.ptr);
-//             return glm::make_mat4x4(p);
-//         }
-
-//         template<class T>
-//         static glm::tvec3<T> arrayToGLMv3(const nb::array_t<T, nb::array::c_style>& arr){
-// 			nb::buffer_info info = arr.request();
-// 			T* ptr = static_cast<T*>(info.ptr);
-// 			return glm::make_vec3(ptr);
-//         }
-
-//         template<class T>
-//         static T* structArrayToCpp(const py::array_t<point_type, py::array::c_style>& inData, size_t& outLen){
-//             // NOTE: this way of passing numpy data is absolutely not copying anything
-//             // For example, the following code
-//             // 		std::cout << glm::to_string(p[0].pos) << std::endl;
-//             //		p[0].pos.x = 5.5f;
-//             // 		std::cout << glm::to_string(p[0].pos) << std::endl;
-//             // will output 5.5 as the x-component of the first entry
-//             // If we then output the first entry of the numpy array on the python side,
-//             // we get the same thing
-
-//             // using 
-//             // 		py::array_t<VK4::point_type, py::array::c_style>& points
-//             // or
-//             // 		py::array_t<VK4::point_type, py::array::c_style> points
-//             // doesn't make any difference, so use the reference type for now
-            
-//             int innerDimensionLen = T::innerDimensionLen();
-//             py::buffer_info pInfo = inData.request();
-//             if(pInfo.size % innerDimensionLen != 0){
-//                 Vk_Logger::RuntimeError(typeid(NoneObj), std::string(typeid(T).name()) + std::string(" array must be of size Nx") + std::to_string(innerDimensionLen) + std::string("!"));
-//             }
-//             outLen = static_cast<size_t>(pInfo.size/innerDimensionLen);
-//             return static_cast<T*>(pInfo.ptr);
-//         }
-
-//         static index_type* indexArrayToCpp(const py::array_t<index_type, py::array::c_style>& inData, size_t& outLen){
-//             py::buffer_info pInfo = inData.request();
-//             outLen = static_cast<size_t>(pInfo.size);
-//             return static_cast<index_type*>(pInfo.ptr);
-//         }
-//     };
-// #endif
-
 	struct Vk_ViewportMargins {
 		int32_t left;
 		int32_t right;
@@ -278,29 +215,6 @@ namespace VK4 {
 		point_type wNear;
 		point_type wFar;
 		Vk_SteeringType steeringType;
-
-// #ifdef PYVK
-// 		Vk_CameraSpecs(
-// 			Vk_CameraType p_type,
-// 			const py::array_t<VK4::point_type, py::array::c_style>& p_wPos,
-// 			const py::array_t<VK4::point_type, py::array::c_style>& p_wLook,
-// 			const py::array_t<VK4::point_type, py::array::c_style>& p_wUp,
-// 			point_type p_fow,
-// 			point_type p_wNear,
-// 			point_type p_wFar,
-// 			Vk_SteeringType p_steeringType
-// 		)
-// 		: type(p_type), fow(p_fow), wNear(p_wNear), wFar(p_wFar), steeringType(p_steeringType)
-// 		{
-// 			std::cout << "hello world 1" << std::endl;
-// 			wPos = Vk_NumpyTransformers::arrayToGLMv3(p_wPos);
-// 			std::cout << "hello world 2" << std::endl;
-// 			wLook = Vk_NumpyTransformers::arrayToGLMv3(p_wLook);
-// 			std::cout << "hello world 3" << std::endl;
-// 			wUp = Vk_NumpyTransformers::arrayToGLMv3(p_wUp);
-// 			std::cout << "hello world 4" << std::endl;
-// 		}
-// #endif
 	};
 
 	struct Vk_CameraInit {

@@ -20,19 +20,7 @@ namespace VK4 {
 	public:
 		friend class I_Renderer;
 		friend class Vk_RenderableTypeCaster;
-// #ifdef PYVK
-// 		Vk_Renderable() 
-// 			: 
-// 			_device(nullptr),
-// 			_shaderName("shaderName"),
-// 			_objectName("objectName"),
-// 			_typeName("typeName"),
-// 			_modelMatrix(UniformBufferType_ModelMat4{ .mat = glm::zero<glm::mat4x4>() }),
-// 			_topology(Topology::Points),
-// 			_cullMode(CullMode::NoCulling),
-// 			_renderType(RenderType::Point)
-// 		{}
-// #endif
+
 		Vk_Renderable()
 			:
 			_device(nullptr),
@@ -131,16 +119,8 @@ namespace VK4 {
 //                       █     █ █       █     █ █     █    █    █       █    █  █     █                       
 //                        █████  █       ██████  █     █    █    ███████ █     █  █████                        
 // ############################################################################################################
-// #ifdef PYVK
-// 		void vk_updateModelMatrix(py::array_t<VK4::point_type, py::array::c_style>& modelMatrix) {
-// 			// py::buffer_info p_modelMatrix = modelMatrix.request();
-// 			// VK4::point_type* p_modelMatrix_ptr = static_cast<VK4::point_type*>(p_modelMatrix.ptr);
-// 			// glm::tmat4x4<point_type> m = glm::make_mat4x4(p_modelMatrix_ptr);
-// 			_modelMatrix.mat = Vk_NumpyTransformers::arrayToGLM4x4<VK4::point_type>(modelMatrix);
-// #else
 		void vk_updateModelMatrix(const glm::tmat4x4<point_type>& modelMatrix) { 
 			_modelMatrix.mat = modelMatrix;
-// #endif
 
 			//int s = _uBuffer->vk_frameCount(); // this is a reminder => don't use it, just remember where it comes from and remember that the uBuffer has 10 frames by default!!!
 			int s = static_cast<int>(_device->bridge.updates.size());

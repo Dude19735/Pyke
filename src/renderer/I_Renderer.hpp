@@ -55,18 +55,6 @@ namespace VK4 {
 
 			// create command buffers
 			// allocate command buffers
-// #ifdef PYVK
-// 			py::gil_scoped_acquire acquire;
-// 			py::object pyvkMod = py::module::import("pyvk");
-//   			_shaderPathPrefix = pyvkMod.attr("__file__").cast<std::string>();
-// 			auto location = _shaderPathPrefix.find("__init__.py");
-// 			if(location != std::string::npos){
-// 				_shaderPathPrefix = _shaderPathPrefix.substr(0, location) + "shaderprograms/";
-// 			}
-// 			py::gil_scoped_release nogil;
-// #else
-// 			_shaderPathPrefix = "shaderprograms/";
-// #endif
 			_shaderPathPrefix = ""; // don't use this in any other way!
 			auto caps = _device->vk_swapchainSupportActiveDevice(_pipelineAuxilliaries.surface);
 

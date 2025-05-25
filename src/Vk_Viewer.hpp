@@ -469,11 +469,7 @@ namespace VK4 {
 		std::shared_mutex _runMutex;
 		int _initWidth;
 		int _initHeight;
-// #ifdef PYVK
-// 		std::map<int, py::function> _actions;
-// #else
 		std::map<int, std::shared_ptr<VK4::Vk_Func>> _actions;
-// #endif
 
 		int _freshPoolSize;
 		std::unordered_map<int, std::unique_ptr<Vk_Camera>> _cameras;
