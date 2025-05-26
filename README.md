@@ -129,7 +129,7 @@ $> source /home/lol/.venvs/standard/bin/activate
       <figcaption></figcaption>
       <br>
    </div>
-2. Follow the instructions on https://vulkan.lunarg.com/doc/sdk/1.3.283.0/windows/getting_started.html (especially the **Install the SDK** part)
+2. Follow the instructions on https://vulkan.lunarg.com/doc/sdk/1.4.313.0/windows/getting_started.html (especially the **Install the SDK** part)
 3. Add environment variables for the **validation layers**. Make sure to adjust for the correct version!
    ```
    C:\> set VK_LAYER_PATH=C:\Libraries\VulkanSDK\1.3.211.0\Bin
