@@ -60,8 +60,8 @@ namespace VK4 {
 			_updateBehaviour(updateBehaviour),
 			_type(getInitBufferType()),
 			_associatedObject("(=" + associatedObject + "=)"),
-			_buffer(nullptr),
-			_bufferMemory(nullptr)
+			_buffer(VK_NULL_HANDLE),
+			_bufferMemory(VK_NULL_HANDLE)
 		{
 			Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle(
 				formatWithObjName(_objName, (std::string("Create Vertex Buffer ") + std::string(typeid(T_StructureType).name()) + _associatedObject))));

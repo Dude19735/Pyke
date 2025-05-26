@@ -4,6 +4,7 @@
 #include <winuser.h>
 #include <tchar.h>
 #include <cstdlib>
+#include <chrono>
 
 #include "lwws_window.hpp"
 

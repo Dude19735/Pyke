@@ -961,7 +961,7 @@ namespace VK4 {
 
 			auto t1 = std::chrono::high_resolution_clock::now();
 			// std::cout << "hello world" << std::endl;
-			VkResult res = Vk_ThreadSafe::Vk_ThreadSafe_QueueSubmit(singleTimeCommand.queue, 1, &submitInfo, nullptr);
+			VkResult res = Vk_ThreadSafe::Vk_ThreadSafe_QueueSubmit(singleTimeCommand.queue, 1, &submitInfo, VK_NULL_HANDLE);
 			if(res != VK_SUCCESS){
 				if(res == VK_ERROR_OUT_OF_HOST_MEMORY){
 					Vk_Logger::RuntimeError(typeid(NoneObj), "vkQueueSubmit failed with VK_ERROR_OUT_OF_HOST_MEMORY ({0})!", static_cast<int64_t>(res));

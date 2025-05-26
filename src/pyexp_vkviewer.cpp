@@ -45,7 +45,7 @@ public:
 			return false;
 		}
 		outKey = intKey;
-		return True;
+		return true;
 	}
 
 	static bool lwwsSpecialKey2Int(const LWWS::LWWS_Key::Special& key, int& outKey){
@@ -55,7 +55,7 @@ public:
 			return false;
 		}
 		outKey = intKey;
-		return True;
+		return true;
 	}
 };
 

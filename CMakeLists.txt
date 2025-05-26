@@ -9,7 +9,7 @@ set(MODULE_NAME_1 "_pyke")
 set(PROJECT_NAME_1 "pyke")
 project (vkviewer LANGUAGES CXX)
 
-set(PYTHON_BUILD OFF)
+set(PYTHON_BUILD ON)
 set(NB_TESTBUILD OFF)
 if (PYTHON_BUILD)
     message("Set PYVK (${CMAKE_CURRENT_SOURCE_DIR})==============================")
@@ -22,8 +22,10 @@ endif()
 set(CMAKE_CXX_STANDARD 23)
     
 if(WIN32)
+    message("<<<<<<<<<<<<<<<<< Windows >>>>>>>>>>>>>>>>>")
     add_compile_options(/bigobj /std:c++latest) # /showIncludes)
 elseif(UNIX)
+    message("<<<<<<<<<<<<<<<<< Linux >>>>>>>>>>>>>>>>>")
     add_compile_options(-std=c++23 -lX11 -L/usr/X11R6/lib -I/usr/X)
 
     # no wayland yet because it apparently sucks on Nvidia
@@ -54,28 +56,26 @@ endif()
 
 message("Vulkan =============================================")
 if(UNIX)
+    message("<<<<<<<<<<<<<<<<< Linux >>>>>>>>>>>>>>>>>")
     find_package(Vulkan REQUIRED)
     message("Include dir:\t${Vulkan_INCLUDE_DIRS}")
     message("Link dir:\t\t${Vulkan_LIBRARIES}")
 elseif(WIN32)
+    message("<<<<<<<<<<<<<<<<< Windows >>>>>>>>>>>>>>>>>")
     # Retrieve the Vulkan SDK path from an environment variable
     set(VULKAN_SDK $ENV{VULKAN_SDK})
     message("Vulkan SDK path: ${VULKAN_SDK}")
     set(Vulkan_INCLUDE_DIR "${VULKAN_SDK}/Include")
     set(Vulkan_LIBRARY "${VULKAN_SDK}/Lib")
     find_package(Vulkan REQUIRED)
-    # -DVulkan_INCLUDE_DIR=<path-to-sdk>/Include
-    # -DVulkan_LIBRARY=<path-to-sdk>/Lib/vulkan-1.lib
 
     message("Include dir:\t${Vulkan_INCLUDE_DIRS}")
-    message("Libraries dir:\t${Vulkan_LIBRARIES}")
-    # string(FIND "${Vulkan_LIBRARIES}" "/vulkan-1.lib" vulkan_pos REVERSE)
-    # string(SUBSTRING "${Vulkan_LIBRARIES}" 0 ${vulkan_pos} Vulkan_LIBRARIES)
-    # message("Link dir:\t\t${Vulkan_LIBRARIES}")
+    message("Libraries dir:\t${Vulkan_LIBRARY}")
 endif()
 
 message("GLM =============================================")
 if(WIN32)
+    message("<<<<<<<<<<<<<<<<< Windows >>>>>>>>>>>>>>>>>")
     string(COMPARE EQUAL "$ENV{glm_INCLUDE_DIRS}" "" result)
     if(result)
         message("GLM environment variable not found!")
@@ -115,30 +115,17 @@ if (PYTHON_BUILD)
             target_include_directories("${MODULE_NAME_1}" PRIVATE Python)
             target_include_directories("${MODULE_NAME_1}" PRIVATE src/external/nanobind/include)
             if(UNIX)
+                message("<<<<<<<<<<<<<<<<< Linux >>>>>>>>>>>>>>>>>")
                 target_include_directories("${MODULE_NAME_1}" PRIVATE ${X11_INCLUDE_DIR})
                 target_link_libraries("${MODULE_NAME_1}" PRIVATE ${Vulkan_LIBRARIES} ${X11_LIBRARIES} ${X11_xcb_LIB})
             elseif(WIN32)
-                target_link_directories("${MODULE_NAME_1}" PRIVATE ${Vulkan_LIBRARIES})
+                message("<<<<<<<<<<<<<<<<< Windows >>>>>>>>>>>>>>>>>")
+                target_include_directories("${MODULE_NAME_1}" PRIVATE ${glm_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})
+                target_link_directories("${MODULE_NAME_1}" PRIVATE ${Vulkan_LIBRARY})
                 target_link_libraries("${MODULE_NAME_1}" PRIVATE vulkan-1)
             endif()
-            # target_include_directories("${MODULE_NAME_1}" PRIVATE ${glm_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})
-            # if(UNIX)
-            #     target_include_directories("${MODULE_NAME_1}" PRIVATE ${X11_INCLUDE_DIR})
-            #     target_link_libraries("${MODULE_NAME_1}" PRIVATE ${Vulkan_LIBRARIES} ${X11_LIBRARIES} ${X11_xcb_LIB})
-            # elseif(WIN32)
-            #     target_link_directories("${MODULE_NAME_1}" PRIVATE ${Vulkan_LIBRARIES})
-            #     target_link_libraries("${MODULE_NAME_1}" PRIVATE vulkan-1)
-            # endif()
-
-            # # add_custom_command( # compile shaders and put them inside an h file
-            # #     TARGET "${MODULE_NAME_1}"
-            # #     PRE_BUILD
-            # #     COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/src/vk_renderer4/objects/compile_glsl2.py"
-            # #     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            # # )
         endif()
 
-        # if(NB_TESTBUILD)
         nanobind_add_stub(
             "${MODULE_NAME_1}_stub"
             MODULE "${MODULE_NAME_1}"
@@ -147,26 +134,11 @@ if (PYTHON_BUILD)
             DEPENDS "${MODULE_NAME_1}"
             MARKER_FILE py.typed
         )
-        # else()
-        #     nanobind_add_stub(
-        #         "${MODULE_NAME_1}_stub"
-        #         MODULE "${MODULE_NAME_1}"
-        #         OUTPUT "${MODULE_NAME_1}.pyi"
-        #         PYTHON_PATH $<TARGET_FILE_DIR:${MODULE_NAME_1}>
-        #         DEPENDS "${MODULE_NAME_1}"
-        #         MARKER_FILE py.typed
-        #     )
-        # endif()
 
         # Install directive for scikit-build-core
         # =======================================
-        # if(NB_TESTBUILD)
         install(TARGETS "${MODULE_NAME_1}" LIBRARY DESTINATION ${PROJECT_NAME_1})
         install(FILES "${CMAKE_BINARY_DIR}/${MODULE_NAME_1}.pyi" "${CMAKE_BINARY_DIR}/py.typed" DESTINATION ${PROJECT_NAME_1})
-        # else()
-        #     install(TARGETS "${MODULE_NAME_1}" LIBRARY DESTINATION ${PROJECT_NAME_1})
-        #     install(FILES "${CMAKE_BINARY_DIR}/${MODULE_NAME_1}.pyi" "${CMAKE_BINARY_DIR}/py.typed" DESTINATION ${PROJECT_NAME_1})
-        # endif()
     else()
         message("Regular Python Build =============================================")
         # src: https://nanobind.readthedocs.io/en/latest/building.html
@@ -190,10 +162,13 @@ if (PYTHON_BUILD)
             target_include_directories("${MODULE_NAME_1}" PRIVATE Python)
             target_include_directories("${MODULE_NAME_1}" PRIVATE src/external/nanobind/include)
             if(UNIX)
+                message("<<<<<<<<<<<<<<<<< Linux >>>>>>>>>>>>>>>>>")
                 target_include_directories("${MODULE_NAME_1}" PRIVATE ${X11_INCLUDE_DIR})
                 target_link_libraries("${MODULE_NAME_1}" PRIVATE ${Vulkan_LIBRARIES} ${X11_LIBRARIES} ${X11_xcb_LIB})
             elseif(WIN32)
-                target_link_directories("${MODULE_NAME_1}" PRIVATE ${Vulkan_LIBRARIES})
+                message("<<<<<<<<<<<<<<<<< Windows >>>>>>>>>>>>>>>>>")
+                target_include_directories("${MODULE_NAME_1}" PRIVATE ${glm_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})
+                target_link_directories("${MODULE_NAME_1}" PRIVATE ${Vulkan_LIBRARY})
                 target_link_libraries("${MODULE_NAME_1}" PRIVATE vulkan-1)
             endif()
         endif()
@@ -207,7 +182,7 @@ else()
     message("${Boost_INCLUDE_DIRS}")
 
     if (PYTHON_BUILD)
-        message("Set PYVK (${CMAKE_CURRENT_SOURCE_DIR})==============================")
+        message("Set PYVK (${CMAKE_CURRENT_SOURC$E_DIR})==============================")
         add_compile_definitions(PYVK)
     endif()
 
@@ -215,19 +190,20 @@ else()
     # some primitive test for colors
     add_executable(test_terminal_colors "tests/test_terminal_colors.cpp")
     target_compile_definitions(test_terminal_colors PRIVATE $<$<CONFIG:Debug>:_DEBUG=1>) # this actually works (adds _DEBUG=1 if the setting is debug mode)
-    target_include_directories(test_terminal_colors PRIVATE ${Boost_INCLUDE_DIRS})
+    target_include_directories(test_terminal_colors PRIVATE ${Boost_INCLUDE_DIRS} ${glm_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})
 
     ##########################################################################################################
     # extensive tests for the viewer
     add_executable(test_vk4_application "tests/test_vk4_application.cpp")
     target_compile_definitions(test_vk4_application PRIVATE $<$<CONFIG:Debug>:_DEBUG=1>) # this actually works (adds _DEBUG=1 if the setting is debug mode)
     target_include_directories(test_vk4_application PRIVATE ${Boost_INCLUDE_DIRS} ${glm_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})
-    # target_link_libraries(test_vk4_application ExternalLib)
     if(UNIX)
+        message("<<<<<<<<<<<<<<<<< Linux >>>>>>>>>>>>>>>>>")
         target_include_directories(test_vk4_application PRIVATE ${X11_INCLUDE_DIR})
         target_link_libraries(test_vk4_application ${Vulkan_LIBRARIES} ${X11_LIBRARIES} ${X11_xcb_LIB})
     elseif(WIN32)
-        target_link_directories(test_vk4_application PRIVATE ${Vulkan_LIBRARIES})
+        message("<<<<<<<<<<<<<<<<< Windows >>>>>>>>>>>>>>>>>")
+        target_link_directories(test_vk4_application PRIVATE ${Vulkan_LIBRARY})
         target_link_libraries(test_vk4_application vulkan-1)
     endif()
 
@@ -235,14 +211,14 @@ else()
     # sample viewer
     add_executable(sample_viewer "sample_viewer.cpp")
     target_compile_definitions(sample_viewer PRIVATE $<$<CONFIG:Debug>:_DEBUG=1>) # this actually works (adds _DEBUG=1 if the setting is debug mode)
-    target_include_directories(sample_viewer PRIVATE ${glm_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})
-
-    # target_link_libraries(sample_viewer ExternalLib)
+    target_include_directories(sample_viewer PRIVATE ${Boost_INCLUDE_DIRS} ${glm_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})
     if(UNIX)
+        message("<<<<<<<<<<<<<<<<< Linux >>>>>>>>>>>>>>>>>")
         target_include_directories(sample_viewer PRIVATE ${X11_INCLUDE_DIR})
         target_link_libraries(sample_viewer ${Vulkan_LIBRARIES} ${X11_LIBRARIES} ${X11_xcb_LIB})
     elseif(WIN32)
-        target_link_directories(sample_viewer PRIVATE ${Vulkan_LIBRARIES})
+        message("<<<<<<<<<<<<<<<<< Windows >>>>>>>>>>>>>>>>>")
+        target_link_directories(sample_viewer PRIVATE ${Vulkan_LIBRARY})
         target_link_libraries(sample_viewer PRIVATE vulkan-1)
     endif()
 

@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include "./src/Vk_SampleObjects.hpp"
 #include "./src/Vk_ColorOp.hpp"
