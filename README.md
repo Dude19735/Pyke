@@ -11,7 +11,7 @@ The viewer works on Linux and Windows and has custom windowing systems based on 
 
 | A 3x3 window with 9 times the same objects rendered by 9 different and independent cameras. |
 :-------------------------:|
-![](./png/screenshot.png){width=50%}  |
+![](/png/screenshot.png) |
 
 # Intention
 * data can be transfered between CPU and GPU **without blocking**
