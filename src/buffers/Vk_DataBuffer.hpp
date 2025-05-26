@@ -60,8 +60,8 @@ namespace VK4 {
 			_updateBehaviour(updateBehaviour),
 			_type(getInitBufferType()),
 			_associatedObject("(=" + associatedObject + "=)"),
-			_buffer(nullptr),
-			_bufferMemory(nullptr)
+			_buffer(VK_NULL_HANDLE),
+			_bufferMemory(VK_NULL_HANDLE)
 		{
 			Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle(
 				formatWithObjName(_objName, (std::string("Create Vertex Buffer ") + std::string(typeid(T_StructureType).name()) + _associatedObject))));
@@ -528,7 +528,7 @@ namespace VK4 {
 		void copyGpuToGpu(const std::string& objName, VkBuffer srcBuffer, VkBuffer dstBuffer, std::uint64_t size, std::uint64_t srcOffset=0, std::uint64_t dstOffset=0) {
 			assert(size > srcOffset);
 			_device->vk_copyBuffer(
-				Vk_Device::CommandCapabilities::RuntimeCopy,
+				CommandCapabilities::RuntimeCopy,
 				srcBuffer, dstBuffer,
 				static_cast<VkDeviceSize>(size),
 				static_cast<VkDeviceSize>(srcOffset),

@@ -62,43 +62,6 @@ namespace VK4{
             return rgb_res;
         }
 
-// #ifdef PYVK
-//         static void py_rgb_target_vector_lerp(
-//             const py::array_t<point_type, py::array::c_style>& p, 
-//             const Vk_RGBColor& from, 
-//             const Vk_RGBColor& to, 
-//             py::array_t<point_type, py::array::c_style>& target, bool enableWarnings=false) 
-//         {
-//             if(p.ndim() != 1){
-//                 Vk_Logger::RuntimeError(typeid(NoneObj), "Dimension of array with lerp factors must be 1 but is {0}", p.ndim());
-//             }
-//             if(target.ndim() != 2){
-//                 Vk_Logger::RuntimeError(typeid(NoneObj), "Dimension of target array must be 2 but is {0}", target.ndim());
-//             }
-//             auto shape = target.shape();
-//             if(shape[0] != p.size()){
-//                 Vk_Logger::RuntimeError(typeid(NoneObj), "Dimension 1 of target array must be the same as the length of the lerp array but is {0}", shape[0]);
-//             }
-//             if(shape[1] != 3){
-//                 Vk_Logger::RuntimeError(typeid(NoneObj), "Dimension 2 of target array must be 3 (like for r,g,b) but is {0}", shape[1]);
-//             }
-
-//             size_t len;
-//             Vk_RGBColor* localTarget = Vk_NumpyTransformers::structArrayToCpp<Vk_RGBColor>(target, len);
-
-//             for(size_t i=0; i<len; ++i){
-//                 float pp = p.at(i);
-//                 pp = std::abs(pp);
-//                 if(pp > 1.0f) {
-//                     pp = 1.0f;
-//                     if(enableWarnings) Vk_Logger::Warn(typeid(NoneObj), "Lerp value {0} greater than 1.0", pp);
-//                 }
-//                 auto color = rgb_lerp(pp, from, to);
-//                 localTarget[i] = color;
-//             }
-//         }
-// #endif
-
         static std::vector<Vk_RGBColor> rgb_vector_lerp(const std::vector<float>& p, const Vk_RGBColor& from, const Vk_RGBColor& to) {
             std::vector<Vk_RGBColor> res;
             res.reserve(p.size());

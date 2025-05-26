@@ -28,7 +28,7 @@ namespace VK4 {
 			_resizable(resizable),
 			_disableMousePointerOnHover(disableMousePointerOnHover),
 			_hoverTimeoutMS(hoverTimeoutMS),
-			_surface(nullptr)
+			_surface(VK_NULL_HANDLE)
 			{
 			Vk_Logger::Log(typeid(this), GlobalCasters::castConstructorTitle("Create Surface"));
 #if defined(VK_USE_PLATFORM_WIN32_KHR)

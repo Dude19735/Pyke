@@ -16,11 +16,6 @@
 namespace VK4 {
 	class  Vk_Device {
 	public:
-		enum class CommandCapabilities {
-			Render,
-			RuntimeCopy,
-			Initialization
-		};
 
 		Vk_Device(std::string deviceName, Vk_DevicePreference devicePreference = Vk_DevicePreference::USE_ANY_GPU)
 			:
@@ -29,9 +24,9 @@ namespace VK4 {
 			_device(nullptr),
 			_graphicsQueues({}),
 			_presentationQueues({}),
-			_renderingCommandPool(nullptr),
-			_copyCommandPool(nullptr),
-			_initializationCommandPool(nullptr),
+			_renderingCommandPool(VK_NULL_HANDLE),
+			_copyCommandPool(VK_NULL_HANDLE),
+			_initializationCommandPool(VK_NULL_HANDLE),
 			_swapchainSupportDetails({}),
 			_swapchainSupportDetailsUpToDate(false),
 			_multiImageBuffering(true),
@@ -251,9 +246,10 @@ namespace VK4 {
 			return _activePhysicalDevice->maxUsableSampleCount;
 		}
 
-		void vk_submitWork(VkCommandBuffer cmdBuffer) {
+		void vk_submitWork(VkCommandBuffer cmdBuffer, CommandCapabilities commandCapabilities) {
 			auto lock = AcquireGlobalLock("vk_device[vk_submitWork]");
-			Vk_DeviceLib::submitWork(_device, cmdBuffer, _graphicsQueues[0]);
+			
+			Vk_DeviceLib::submitWork(_device, cmdBuffer, selectQueue(commandCapabilities));
 		}
 
 		void vk_copyDeviceBufferToVector(void* dstPtr, VkDeviceMemory deviceBufferMemory, VkDeviceSize size) {
@@ -413,7 +409,7 @@ namespace VK4 {
 			default:
 				Vk_Logger::RuntimeError(typeid(this), "Unsuported command capability");
 			}
-			return nullptr;
+			return VK_NULL_HANDLE;
 		}
 
 		inline VkQueue selectQueue(CommandCapabilities command) {

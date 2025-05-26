@@ -1,6 +1,6 @@
 #pragma once
 
-// #include <vulkan/vulkan.h>
+#include <span>
 #include "../Defines.h"
 #include "../buffers/Vk_UniformBuffer.hpp"
 
@@ -20,19 +20,20 @@ namespace VK4 {
 	public:
 		friend class I_Renderer;
 		friend class Vk_RenderableTypeCaster;
-#ifdef PYVK
-		Vk_Renderable() 
-			: 
+
+		Vk_Renderable()
+			:
 			_device(nullptr),
-			_shaderName("shaderName"),
-			_objectName("objectName"),
-			_typeName("typeName"),
-			_modelMatrix(UniformBufferType_ModelMat4{ .mat = glm::zero<glm::mat4x4>() }),
+			_shaderName(""),
+			_objectName(""),
+			_typeName(""),
+			_modelMatrix(UniformBufferType_ModelMat4{ .mat = glm::tmat4x4<point_type>(0) }),
 			_topology(Topology::Points),
 			_cullMode(CullMode::NoCulling),
 			_renderType(RenderType::Point)
-		{}
-#endif
+		{
+			Vk_Logger::RuntimeError(typeid(this), "This is just so that Python has a constructor to make this one know to the outside world. Nothing else. Don't use it!");
+		}
 
 		Vk_Renderable(Vk_Device* const device, std::string objectName, std::string shaderName, glm::tmat4x4<point_type> modelMatrix, std::string typeName, Topology topology, CullMode cullMode, RenderType renderType) 
 			: 
@@ -118,16 +119,13 @@ namespace VK4 {
 //                       █     █ █       █     █ █     █    █    █       █    █  █     █                       
 //                        █████  █       ██████  █     █    █    ███████ █     █  █████                        
 // ############################################################################################################
-#ifdef PYVK
-		void vk_updateModelMatrix(py::array_t<VK4::point_type, py::array::c_style>& modelMatrix) {
-			// py::buffer_info p_modelMatrix = modelMatrix.request();
-			// VK4::point_type* p_modelMatrix_ptr = static_cast<VK4::point_type*>(p_modelMatrix.ptr);
-			// glm::tmat4x4<point_type> m = glm::make_mat4x4(p_modelMatrix_ptr);
-			_modelMatrix.mat = Vk_NumpyTransformers::arrayToGLM4x4<VK4::point_type>(modelMatrix);
-#else
+		void vk_updateModelMatrix(const std::span<const point_type>& modelMatrix) { 
+			glm::tmat4x4<point_type> glmModelMatrix = glm::make_mat4x4(modelMatrix.data());
+			vk_updateModelMatrix(glmModelMatrix);
+		}
+
 		void vk_updateModelMatrix(const glm::tmat4x4<point_type>& modelMatrix) { 
 			_modelMatrix.mat = modelMatrix;
-#endif
 
 			//int s = _uBuffer->vk_frameCount(); // this is a reminder => don't use it, just remember where it comes from and remember that the uBuffer has 10 frames by default!!!
 			int s = static_cast<int>(_device->bridge.updates.size());

@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include "./src/Vk_SampleObjects.hpp"
 #include "./src/Vk_ColorOp.hpp"
@@ -73,7 +74,7 @@ class Viewer {
 		_line = VK4::S_Line_P_C::create(
 			_device.get(),
 			"test_line_obj",
-			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, -1.5,1.5,0,1},
+			std::vector<VK4::point_type>{1,0,0,0, 0,1,0,0, 0,0,1,0, -1.5,1.5,0,1},
 			VK4::Vk_SampleObjects::Line_P(), VK4::Vk_SampleObjects::Line_C(), VK4::Vk_SampleObjects::Line_P_C_Indices(),
 			_lineWidth, 1.0f,
 			VK4::CullMode::NoCulling

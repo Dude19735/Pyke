@@ -118,6 +118,12 @@ namespace VK4 {
 			const std::vector<point_type>& points,
 			size_t newFrom
 		){
+			vk_updatePoints(std::span<const point_type>(points.data(), points.size()), newFrom);
+		}
+		void vk_updatePoints(
+			const std::span<const point_type>& points,
+			size_t newFrom
+		){
 			if(!(points.size()%Vk_Vertex_P::innerDimensionLen() == 0)){
 				Vk_Logger::RuntimeError(typeid(NoneObj), "Vertices size must be a multiple of {0} but is {1}", Vk_Vertex_P::innerDimensionLen(), points.size());
 			}
@@ -130,10 +136,8 @@ namespace VK4 {
 			
 			_vBuffer->vk_update(p, pLen, newFrom);
 		}
-		
-#ifndef PYVK // need to avoid methods with the same name and we want to export the one with the regular vector
 		void vk_updatePoints(
-			const std::vector<Vk_Vertex_P>& points,
+			const std::span<Vk_Vertex_P>& points,
 			size_t newFrom
 		){
 			size_t pLen = points.size();
@@ -144,26 +148,15 @@ namespace VK4 {
 			
 			_vBuffer->vk_update(p, pLen, newFrom);
 		}
-#endif
-
-#ifdef PYVK
-		void vk_update_points(
-			const py::array_t<VK4::point_type, py::array::c_style>& points,
-			size_t newFrom
-		){
-			size_t pLen;
-			Vk_Vertex_P* p = Vk_NumpyTransformers::structArrayToCpp<Vk_Vertex_P>(points, pLen);
-
-			if(newFrom >= pLen){
-				Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, pLen);
-			}
-			
-			_vBuffer->vk_update(p, pLen, newFrom);
-		}
-#endif
 
 		void vk_updateColors(
 			const std::vector<point_type>& colors,
+			size_t newFrom
+		){
+			vk_updateColors(std::span<const point_type>(colors.data(), colors.size()), newFrom);
+		}
+		void vk_updateColors(
+			const std::span<const point_type>& colors,
 			size_t newFrom
 		){
 			if(!(colors.size()%Vk_Vertex_C::innerDimensionLen() == 0)){
@@ -180,10 +173,8 @@ namespace VK4 {
 			
 			_cBuffer->vk_update(c, cLen, newFrom);
 		}
-
-#ifndef PYVK // need to avoid methods with the same name and we want to export the one with the regular vector
 		void vk_updateColors(
-			const std::vector<Vk_Vertex_C>& colors,
+			const std::span<Vk_Vertex_C>& colors,
 			size_t newFrom
 		){
 			size_t cLen = colors.size();
@@ -194,28 +185,15 @@ namespace VK4 {
 			
 			_cBuffer->vk_update(c, cLen, newFrom);
 		}
-#endif
 
-#ifdef PYVK
-		void vk_update_colors(
-			const py::array_t<VK4::point_type, py::array::c_style>& colors,
+		void vk_updateIndices(
+			const std::vector<index_type>& indices,
 			size_t newFrom
 		){
-			size_t cLen;
-			Vk_Vertex_C* c = Vk_NumpyTransformers::structArrayToCpp<Vk_Vertex_C>(colors, cLen);
-
-			if(newFrom >= cLen){
-				Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, cLen);
-			}
-			
-			_cBuffer->vk_update(c, cLen, newFrom);
+			vk_updateIndices(std::span<const index_type>(indices.data(), indices.size()), newFrom);
 		}
-#endif
-
-
-
-		void vk_updateIndces(
-			const std::vector<index_type>& indices,
+		void vk_updateIndices(
+			const std::span<const index_type>& indices,
 			size_t newFrom
 		){
 			size_t iLen = indices.size();
@@ -226,22 +204,6 @@ namespace VK4 {
 			
 			_iBuffer->vk_update(i, iLen, newFrom);
 		}
-
-#ifdef PYVK
-		void vk_update_indices(
-			const py::array_t<VK4::index_type, py::array::c_style>& indices,
-			size_t newFrom
-		){
-			size_t iLen;
-			index_type* i = Vk_NumpyTransformers::indexArrayToCpp(indices, iLen);
-
-			if(newFrom >= iLen){
-				Vk_Logger::RuntimeError(typeid(this), "'newFrom' must be smaller than 'newCount' but newFrom={0} and newCount={0}", newFrom, iLen);
-			}
-			
-			_iBuffer->vk_update(i, iLen, newFrom);
-		}
-#endif
 
 		void vk_updateAlpha(float alpha){
 			_alpha = alpha;
