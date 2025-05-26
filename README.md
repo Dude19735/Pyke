@@ -1,41 +1,40 @@
-# Introduction
-This is a 3D viewer based on the Vulkan API with Python bindings.
+# Pyke3D
+This is a 3D viewer based on the Vulkan API with Python bindings using Nanobind.
 
-**Note:** This is a prototyle. It may be a bit unstable but it generally works.
-**Note**: The Python bindings use Nanobind.
-**Note**: Tested with Python 3.12 on Ubuntu 24.04 and with Python 3.13 (single-threaded version) on Windows 11.
-**Note**: Tested with Vulkan 1.4.3 SDK, though, no features above 1.2 should be used.
-**Note**: MacOs is not tested.
-**Note**: installation guides for Windows and Linux are at the end of this document
+* this is a prototype. It may be a bit unstable if pushed to the limit but it generally works.
+* tested with Python 3.12 on Ubuntu 24.04 and with Python 3.13 (single-threaded version) on Windows 11.
+* tested with Vulkan 1.4.3 SDK, though, no features above 1.2 should be used.
+* never touched a Mac, ever
+* installation guides for Windows and Linux are at the end of this document
 
-The viewer should work on Linux and Windows and has custom windowing systems based on the Windows API and X11. It has never been tested on a Mac and will probably not work there out-of-the-box.
+The viewer works on Linux and Windows and has custom windowing systems based on the Windows API and X11.
 
 <div style="text-align: center">
-   <img src="./png/screenshot.png" style="width: 70%;">
+   <img src="./png/screenshot.png" style="width: 50%;">
    <figcaption>A 3x3 window with 9 times the same objects rendered by 9 different and independent cameras.</figcaption>
    <br>
 </div>
 
 # Intention
-* data can be transfered between CPU and GPU without blocking
-* debug points in Python can be set anywhere in the script and examined without blocking the rendering process. The user can debug a Python script while examining the rendered objects without interruption, enabling interactive debugging of 3D data, represented by Numpy arrays, similar to how Python can be interactively debugged.
-* the GUI containing the cameras runs in a separate thread, managed by C++ (this is the main reason for the custom window implementations)
-* 3D objects can be transfered using Numpy arrays (in Python) or std::vector (in C++). No need for an external library (Thank You for the new Nanobind ndarray!!). Enable drawing with Numpy on a GPU accelerated surface.
-* computations can be performed inside of the main loop or inside of callback functions
-* callback functions have a parameter ```repeat``` that causes the callback function to run again. Note: this is not a recursive mechanism. ```repeat``` maps to a cpp lambda function that re-enqueues the current callback into the queue for an execution thread.
-* the API is slim and comprehensive
-* objects can be created separatedly and bound independently to one or multiple cameras as well as unbound and re-bound at runtime
-* all cameras can be moved separatly or synched
-* the rotation point of the cameras can be either an object (i.e a point in the 3D space) or the camera origin
-* ability to modify data and update the 3D representations from within the debugger
-* can create and save screenshots as jpeg (using ctrl+s)
+* data can be transfered between CPU and GPU **without blocking**
+* **debug points** in Python can be set anywhere in the script and examined without blocking the rendering process. The user can set a debug point in a Python script, change some 3D object represented as Numpy array and update the visualization without pressing 'continue'
+* the **GUI** containing the cameras runs in a **separate thread**, managed by C++ (this is the main reason for the custom window implementations based on X11 and the Windows API)
+* 3D objects can be transfered using Numpy arrays (in Python) or std::vector (in C++)
+* computations can be performed inside of the main loop or inside of callback functions, both of which don't block the rendering process
+* callback functions have a parameter ```repeat``` that causes the callback function to run again without using recursion
+* slim API
+* objects can be created separatedly and bound independently to one or multiple cameras as well as unbound, re-bound and updated individually at runtime
+* all cameras can be moved separatly or in sync
+* the rotation point of the cameras can be either an object (i.e a point in 3D space) or the camera origin
+* save screenshots as jpeg using ctrl+s
 
 # Shortcomings
-* the graphics are limited to dots, lines and surfaces (no lights, the original usecase was limited to geometry)
+* the graphics are limited to dots, lines and surfaces (no lights, the original usecase was limited to geometry and observing optimization processes)
 * all cameras share the same frame buffer
 * there is one central bottleneck, albeit a short one
-* terminating a Python script that runs the viewer causes some Vulkan API problems because the sequence in how Python destroys objects is "difficult" to control
-* no mechanism for user interaction with the rendered 3D objects using the mouse pointer (only zoom, pan and rotation)
+* scenes can't be recorded
+* terminating a Python script that runs the viewer causes some Vulkan API problems because Vulkan requires all parts to be destroyed in reversed order but the sequence in how Python destroys objects can't really be controlled.
+* no mechanism for direct user interaction with the rendered objects using the mouse pointer (only zoom, pan and rotation)
 
 # How to use
 The two sample files `sample_viewer.cpp` and `test_py/test_vkviewer.py` showcase how the viewer works. The `test_py/test_vkviewer.py` contains a lot of comments while `sample_viewer.cpp` doesn't but essentially does exactly the same as the Python version.
@@ -90,7 +89,7 @@ The **only notable difference** is that Nanobind doesn't seem to support binding
 * Numpy: data handling in Python uses Numpy
 * Scipy: this is required to run the test script *test_viewer.py*, some test data uses Scipy to rotate in put vertices
 ##### C++
-* Boost
+* Boost: for the unit tests
 
 -------------------------------------------------------------------
 

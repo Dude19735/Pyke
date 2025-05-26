@@ -6,8 +6,8 @@ from _test_data import *
 import time
 
 # =================================================================================================
-# All callback functions must be placed outside of any class. Nanobind doesn't seem to work (yet?)
-# with nb::callable that is bound to an object.
+# In Python, all callback functions must be placed outside of any class. Nanobind doesn't 
+# seem to work (yet?) with nb::callable that is bound to an object.
 # Solution: use 'self:TestAp', using type annotations for auto-completion as first argument for
 # the same behaviour
 # =================================================================================================
@@ -26,14 +26,20 @@ def cam_specs(self:TestAp, repeat):
 
 # attach and detach objects at runtime
 def attach(self:TestAp, repeat):
+    # check if self.dot object is attached to camera 0
     if self.dot.vk_is_attached_to(0):
+        # remove self.dot from camera 0
         self.cam.vk_detach_from(0, self.dot)
     else:
+        # add self.dot to camera 0
         self.cam.vk_attach_to(0, self.dot)
+    # rebuild the rendering commands (required after any change except for model matrix updates)
     self.cam.vk_rebuild_and_redraw()
 
+# make the size of the dots larger
 def incr_p_size(self:TestAp, repeat):
     self.point_size+=1
+    # change the size of the dots
     self.dot.vk_update_point_size(self.point_size)
     self.cam.vk_rebuild_and_redraw()
 
@@ -41,6 +47,7 @@ def decr_p_size(self:TestAp, repeat):
     self.point_size -= 1
     if self.point_size < 1:
         self.point_size = 1
+    # change the size of the dots
     self.dot.vk_update_point_size(self.point_size)
     self.cam.vk_rebuild_and_redraw()
 
@@ -48,6 +55,7 @@ def decr_alpha(self:TestAp, repeat):
     self.alpha -= 0.1
     if self.alpha < 0.0:
         self.alpha = 0.0
+    # change build-in transparency value
     self.dot.vk_update_alpha(self.alpha)
     self.cam.vk_rebuild_and_redraw()
 
@@ -55,19 +63,23 @@ def incr_alpha(self:TestAp, repeat):
     self.alpha += 0.1
     if self.alpha > 1.0:
         self.alpha = 1.0
+    # change build-in transparency value
     self.dot.vk_update_alpha(self.alpha)
     self.cam.vk_rebuild_and_redraw()
 
 def onoff(self:TestAp, repeat):
+    # set a flag that will enable the repeat() function for rotate() and scale()
     self.on = not self.on
 
 def rotate(self:TestAp, repeat):
     self.angle += 1.0
     if(self.angle >= 360.0):
         self.angle -= 360.0
+    # update dots with rotation
     self.dot.vk_update_points(TestData.Point_P(self.angle), 0)
     self.cam.vk_rebuild_and_redraw()
 
+    # if the flag is set, run the callback in a loop
     if(self.on):
         repeat()
 
@@ -81,15 +93,17 @@ def scale(self:TestAp, repeat):
         self.step = 0.01
 
     self.size += self.step
+    # update the model matrix
     self.dot.vk_update_model_matrix(model_matrix=np.array([[self.size,0,0,0],[0,self.size,0,0],[0,0,self.size,0],[1.5,1.5,0,1]], np.float32))
     self.cam.vk_rebuild_and_redraw()
 
+    # if the flag is set, run the callback in a loop
     if(self.on):
         repeat()
 
 class TestAp:
     def __init__(self):
-        # Set up some camera specs using some common descriptors for
+        # Set up two camera specs using some common descriptors for
         # computer graphics cameras
         camera_specs_oc = pyke.vk_camera_specs(
             type=pyke.vk_camera_type.Rasterizer_IM,
@@ -144,7 +158,9 @@ class TestAp:
             name="Pyke", 
             width=1024, 
             height=800, 
-            viewing_type=pyke.vk_viewing_type.local)
+            viewing_type=pyke.vk_viewing_type.all)
+        # pyke.vk_viewing_type.all => broadcast mouse movements on all cameras
+        # pyke.vk_viewing_type.local => move camera that contains the mouse pointer on click
         print("Created viewer params")
 
         self.cam = pyke.vk_viewer(self.device, v_params)
@@ -156,6 +172,8 @@ class TestAp:
         print("Added all cameras to viewer")
 
         # register some actions
+        # the first param ('self') must be the object that contains the stuff that should be modifiable
+        # inside the callbacks.
         self.cam.vk_register_action(self, pyke.lwws_key.RControl, cam_specs)
         self.cam.vk_register_action(self, "r", rotate)
         self.cam.vk_register_action(self, "o", onoff)
