@@ -85,7 +85,7 @@ public:
 	}
 };
 
-NB_MODULE(_pyke, m) {
+NB_MODULE(_pyke3d, m) {
 	m.doc() = "Vulkan Viewer for Numpy"; // optional module docstring
 
 	nb::enum_<LWWS::LWWS_Key::Special>(m, "lwws_key", nb::is_flag())

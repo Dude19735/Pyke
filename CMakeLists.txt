@@ -5,8 +5,8 @@ cmake_minimum_required (VERSION 3.22)
 # readme.md on this issue.
 ################################################################################################
 
-set(MODULE_NAME_1 "_pyke")
-set(PROJECT_NAME_1 "pyke")
+set(MODULE_NAME_1 "_pyke3d")
+set(PROJECT_NAME_1 "pyke3d")
 project (vkviewer LANGUAGES CXX)
 
 set(PYTHON_BUILD ON)

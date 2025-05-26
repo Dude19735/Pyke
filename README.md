@@ -18,7 +18,7 @@ The viewer should work on Linux and Windows and has custom windowing systems bas
 
 # Intention
 * data can be transfered between CPU and GPU without blocking
-* debug points in Python can be set anywhere in the script and examined without blocking the rendering process. The user can debug a Python script while examining the rendered objects without interruption
+* debug points in Python can be set anywhere in the script and examined without blocking the rendering process. The user can debug a Python script while examining the rendered objects without interruption, enabling interactive debugging of 3D data, represented by Numpy arrays, similar to how Python can be interactively debugged.
 * the GUI containing the cameras runs in a separate thread, managed by C++ (this is the main reason for the custom window implementations)
 * 3D objects can be transfered using Numpy arrays (in Python) or std::vector (in C++). No need for an external library (Thank You for the new Nanobind ndarray!!). Enable drawing with Numpy on a GPU accelerated surface.
 * computations can be performed inside of the main loop or inside of callback functions

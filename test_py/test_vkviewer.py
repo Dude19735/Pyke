@@ -1,5 +1,5 @@
 from __future__ import annotations
-import pyke
+import pyke3d as pyke
 import numpy as np
 import os
 from _test_data import *
