@@ -9,11 +9,9 @@ This is a 3D viewer based on the Vulkan API with Python bindings using Nanobind.
 
 The viewer works on Linux and Windows and has custom windowing systems based on the Windows API and X11.
 
-<div style="text-align: center">
-   <img src="./png/screenshot.png" style="width: 50%;">
-   <figcaption>A 3x3 window with 9 times the same objects rendered by 9 different and independent cameras.</figcaption>
-   <br>
-</div>
+| A 3x3 window with 9 times the same objects rendered by 9 different and independent cameras. |
+:-------------------------:|
+![](./png/screenshot.png){width=50%}  |
 
 # Intention
 * data can be transfered between CPU and GPU **without blocking**
