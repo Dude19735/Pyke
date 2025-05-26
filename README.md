@@ -64,7 +64,7 @@ The **only notable difference** is that Nanobind doesn't seem to support binding
       add_compile_definitions(PYVK)
   endif()
   ```
-  then select *_pyke* as build target. This does **not** require Boost to be installed.
+  then select ```_pyke3d``` as build target. This does **not** require Boost to be installed.
 * **Python module**: test_py/test_viewer.py
   This will build the module and install it in the current Python's lib folder.
   ```Cmake
@@ -122,20 +122,20 @@ All installation steps are included. If C++ and Python are already set-up, most 
 8. Check out this repository. Make sure to initialize the submodule with Nanobind
 9.  Open a terminal inside the main folder (Pyke)
 10. Create a virtual environment for Python or activate an existing one
-   ```bash
-   sudo apt-get install python3-virtualenv
-   mkdir /home/[user]/.venvs
-   virtualenv /home/[user]/.venvs/standard
-   ```
-   and activate it
-   ```bash
-   source /home/[user]/.venvs/standard/bin/activate
-   ```
+    ```bash
+    sudo apt-get install python3-virtualenv
+    mkdir /home/[user]/.venvs
+    virtualenv /home/[user]/.venvs/standard
+    ```
+    and activate it
+    ```bash
+    source /home/[user]/.venvs/standard/bin/activate
+    ```
 11. run
-   ```bash
-   pip install . --verbose
-   ```
-   or build for C++ using the target `sample_viewer`
+    ```bash
+    pip install . --verbose
+    ```
+    or build for C++ using the target `sample_viewer`
 
 -------------------------------------------------------------------
 
@@ -233,4 +233,4 @@ All installation steps are included. If C++ and Python are already set-up, most 
    ```
    pip install . --verbose
    ```
-   or compile in C++ using the build target `sample_viewer.cpp`
+   or compile in C++ using the build target ```sample_viewer```
