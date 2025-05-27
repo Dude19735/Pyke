@@ -14,6 +14,9 @@ The viewer works on Linux and Windows and has custom windowing systems based on 
 ![](/png/screenshot.png) |
 
 # Intention
+* enable producing 3D data in Python and visualize it in a GPU accelerated window from multiple perspectives at the same time
+* data buffers that resize automatically depending on the data size
+* multiple data update strategies
 * data can be transfered between CPU and GPU **without blocking**
 * **debug points** in Python can be set anywhere in the script and examined without blocking the rendering process. The user can set a debug point in a Python script, change some 3D object represented as Numpy array and update the visualization without pressing 'continue'
 * the **GUI** containing the cameras runs in a **separate thread**, managed by C++ (this is the main reason for the custom window implementations based on X11 and the Windows API)
@@ -29,15 +32,15 @@ The viewer works on Linux and Windows and has custom windowing systems based on 
 # Shortcomings
 * the graphics are limited to dots, lines and surfaces (no lights, the original usecase was limited to geometry and observing optimization processes)
 * all cameras share the same frame buffer
-* there is one central bottleneck, albeit a short one
-* scenes can't be recorded
+* there is one central bottleneck, albeit a short one. The concurrency model is not too sophisticated
+* scenes can't be recorded as video
 * terminating a Python script that runs the viewer causes some Vulkan API problems because Vulkan requires all parts to be destroyed in reversed order but the sequence in how Python destroys objects can't really be controlled.
 * no mechanism for direct user interaction with the rendered objects using the mouse pointer (only zoom, pan and rotation)
 
 # How to use
-The two sample files `sample_viewer.cpp` and `test_py/test_vkviewer.py` showcase how the viewer works. The `test_py/test_vkviewer.py` contains a lot of comments while `sample_viewer.cpp` doesn't but essentially does exactly the same as the Python version.
+The two sample files `sample_viewer.cpp` and `test_py/test_vkviewer.py` showcase how the viewer works. The `test_py/test_vkviewer.py` contains a lot of comments while `sample_viewer.cpp` doesn't but essentially does exactly the same as the Python version. `test_py/fluctuating_noise_cube.py` outlines the buffer update mechanism.
 
-The **only notable difference** is that Nanobind doesn't seem to support binding Python methods that belong to a class to C++. Thus, the callback methods in the Python script are defined outside of the test application while in the C++ example, they are inside of it.
+The **only notable difference** between the C++ and Python versions is that Nanobind doesn't seem to support binding Python methods that belong to a class. Thus, the callback methods in the Python script are defined outside of the test application while in the C++ example, they are inside of it.
 
 (**Note**: more instructions for dependencies etc. are below)
 
