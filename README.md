@@ -44,7 +44,7 @@ The **only notable difference** between the C++ and Python versions is that Nano
 
 (**Note**: more instructions for dependencies etc. are below)
 
-* **C++**: sample_viewer.cpp
+* **C++**:
   Set CMakeLists.txt as follows:
   ```Cmake
   set(PYTHON_BUILD OFF)
@@ -55,7 +55,7 @@ The **only notable difference** between the C++ and Python versions is that Nano
   endif()
   ```
   then select *sample_viewer* as build target. This requires Boost to be installed.
-* **Python build**: test_py/test_viewer.py
+* **Python build**:
   This way of building produces a Python extension without installing it to the current Python lib folder. The extension can be found inside the ./build folder.
   Configure CMakeLists.txt as follows:
   Set CMakeLists.txt as follows:
@@ -68,7 +68,7 @@ The **only notable difference** between the C++ and Python versions is that Nano
   endif()
   ```
   then select ```_pyke3d``` as build target. This does **not** require Boost to be installed.
-* **Python module**: test_py/test_viewer.py
+* **Python module**:
   This will build the module and install it in the current Python's lib folder.
   ```Cmake
   set(PYTHON_BUILD ON)
