@@ -15,7 +15,7 @@ class Viewer {
 		std::string name = "Pyke";
 		uint32_t width = 1024;
 		uint32_t height = 800;
-		_device = std::make_unique<VK4::Vk_Device>(name, VK4::Vk_DevicePreference::USE_DISCRETE_GPU);
+		_device = std::make_unique<VK4::Vk_Device>(name, VK4::Vk_DevicePreference::USE_ANY_GPU);
 		_cam = std::make_unique<VK4::Vk_Viewer>(_device.get(), VK4::Vk_ViewerParams(name, width, height, VK4::Vk_ViewingType::LOCAL, "."));
 
 		VK4::Vk_CameraSpecs specs_ObjectCentric {
@@ -66,7 +66,7 @@ class Viewer {
 		_dot = VK4::S_Dot_P_C::create(
 			_device.get(),
 			"test_object",
-			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 1.5,1.5,0,1},
+			std::vector<VK4::point_type>{1,0,0,0, 0,1,0,0, 0,0,1,0, 1.5,1.5,0,1},
 			cp, cc, ci, _pointSize, _alpha,
 			VK4::CullMode::NoCulling
 		);
@@ -86,7 +86,7 @@ class Viewer {
 		_coords = VK4::S_Line_P_C::create(
 			_device.get(),
 			"coords",
-			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
+			std::vector<VK4::point_type>{1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1},
 			VK4::Vk_SampleObjects::Coords_P(f,t,l, f,t,l, f,t,l), 
 			VK4::Vk_SampleObjects::Coords_C(1.0f, 1.0f, 1.0f), 
 			VK4::Vk_SampleObjects::Coords_P_C_Indices(),
@@ -97,7 +97,7 @@ class Viewer {
 		_mesh = VK4::S_Mesh_P_C::create(
 			_device.get(),
 			"mesh",
-			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, -1.5,-1.5,0,1},
+			std::vector<VK4::point_type>{1,0,0,0, 0,1,0,0, 0,0,1,0, -1.5,-1.5,0,1},
 			VK4::Vk_SampleObjects::Cube1_P(),
 			VK4::Vk_SampleObjects::Cube1_C(),
 			VK4::Vk_SampleObjects::Cube1_P_C_Indices(),
@@ -110,7 +110,7 @@ class Viewer {
 		_mesh2 = VK4::S_Mesh_P_C::create(
 			_device.get(),
 			"mesh2",
-			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 1.5,-1.5,0,1},
+			std::vector<VK4::point_type>{1,0,0,0, 0,1,0,0, 0,0,1,0, 1.5,-1.5,0,1},
 			VK4::Vk_SampleObjects::Cube2_P(_angle),
 			VK4::Vk_SampleObjects::Cube2_C(),
 			VK4::Vk_SampleObjects::Cube2_P_C_N_Indices(),
@@ -123,7 +123,7 @@ class Viewer {
 		_mesh2Normals = VK4::S_Line_P_C::create(
 			_device.get(),
 			"mesh2_normals",
-			glm::tmat4x4<VK4::point_type> {1,0,0,0, 0,1,0,0, 0,0,1,0, 1.5,-1.5,0,1},
+			std::vector<VK4::point_type>{1,0,0,0, 0,1,0,0, 0,0,1,0, 1.5,-1.5,0,1},
 			VK4::Vk_SampleObjects::Cube2_NormalLines_P(0.5f, _angle), VK4::Vk_SampleObjects::Cube2_NormalLines_C(), VK4::Vk_SampleObjects::Cube2_NormalLines_Indices(),
 			_lineWidth, 1.0f,
 			VK4::CullMode::NoCulling
@@ -231,7 +231,7 @@ private:
 
 		_dot->vk_updatePoints(VK4::Vk_SampleObjects::Point_P(_angle / 180.0f * M_PI), 0);
 		_cam->vk_rebuildAndRedraw();
-		std::this_thread::sleep_for(std::chrono::microseconds(5000));
+		// std::this_thread::sleep_for(std::chrono::microseconds(5));
 		
 		if(_on) repeat();
 	}
