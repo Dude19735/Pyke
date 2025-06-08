@@ -66,6 +66,7 @@ jobs:
       name: testpypi # or pypi
       url: https://test.pypi.org/p/pyke3d
     permissions:
+      contents: read
       id-token: write
     steps:
       - name: Install dependencies
@@ -80,6 +81,10 @@ jobs:
           mv -n */*.tar.gz dist/ || true
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create version
+        run: |
+          echo v0.1.0 > VERSION.txt
 
       - name: Upload package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
