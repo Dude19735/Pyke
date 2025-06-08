@@ -71,7 +71,7 @@ jobs:
         id: list-artifacts
         run: |
           echo "ARTIFACTS<<EOF" >> $GITHUB_ENV
-          gh run artifacts ${{ github.run_id }} --json name -q '.[].name' >> $GITHUB_ENV
+          gh run list ${{ github.run_id }} --json name -q '.[].name' >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
