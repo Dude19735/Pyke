@@ -67,23 +67,12 @@ jobs:
         run: |
           python -m pip install twine
 
-      - name: List all artifacts
-        id: list-artifacts
-        run: |
-          echo "ARTIFACTS<<EOF" >> $GITHUB_ENV
-          gh run list ${{ github.run_id }} --json name -q '.[].name' >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Download all artifacts
         run: |
-          mkdir -p dist tmp
-          echo "$ARTIFACTS" | while read name; do
-            echo "Downloading artifact: $name"
-            gh run download ${{ github.run_id }} -n "$name" -D "tmp"
-            unzip -q -o "tmp/$name.zip" -d dist
-          done
+          gh run download ${{ github.run_id }} --repo ${{ github.repository }}
+          mkdir -p dist
+          mv -n */*.whl dist/ || true
+          mv -n */*.tar.gz dist/ || true
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
