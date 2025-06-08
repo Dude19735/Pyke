@@ -63,8 +63,8 @@ jobs:
     needs: build
     # if: github.event_name == 'release' && github.event.action == 'published'
     environment:
-      name: pypi
-      url: https://test.pypi.org/legacy/pyke3d
+      name: testpypi # or pypi
+      url: https://test.pypi.org/p/pyke3d
     permissions:
       id-token: write
     steps:
