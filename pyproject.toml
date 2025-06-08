@@ -27,6 +27,3 @@ minimum-version = "0.11.3"
 
 # Setuptools-style build caching in a local directory
 build-dir = "build/{wheel_tag}"
-
-# Build stable ABI wheels for CPython 3.12+
-wheel.py-api = "cp312"
