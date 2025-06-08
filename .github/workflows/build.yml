@@ -1,0 +1,58 @@
+name: Build and Release
+
+on:
+  pull_request:
+  push:
+    tags:
+      - '*'
+    branches:
+      - '*package*'
+  release:
+    types: [published]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm64
+        python-version:
+          - '3.12'
+          - '3.13'
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install twine build
+          sudo apt install -y \
+                  g++-13 \
+                  libx11-dev \
+                  libxpm-dev \
+                  libxft-dev \
+                  libxext-dev \
+                  mesa-common-dev \
+                  cmake \
+                  libglm-dev
+
+      - name: Build the package
+        run: |
+          python -m build
+          twine check dist/*
+
+      - name: Uplaod package to GitHub Actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: pyke3d-${{ matrix.python-version }}-${{ matrix.runner }}
+          path: dist/*
